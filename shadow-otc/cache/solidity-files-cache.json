@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "C:\\Users\\Asuzu Emmanuel\\Desktop\\Ritual app\\shadow-otc\\contracts\\src\\ShadowOTC.sol": {
+      "lastModificationDate": 1777412131613,
+      "contentHash": "990819efed4c70e264b91159d51fa4fe",
+      "sourceName": "contracts/src/ShadowOTC.sol",
+      "solcConfig": {
+        "version": "0.8.20",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.20"
+      ],
+      "artifacts": [
+        "ShadowOTC"
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "intent": "build",
+  "project": "Shadow OTC MVP",
+  "wallet": "0x4cAbB3C6C0e27e28956d66Dd75FCA995f20FA47D",
+  "features": [
+    "HTTP precompile",
+    "LLM inference",
+    "Scheduled retry",
+    "Escrow contract",
+    "Verification agent"
+  ],
+  "current_phase": 2,
+  "phases": [
+    {
+      "phase": 0,
+      "name": "Intake & Projection",
+      "status": "complete"
+    },
+    {
+      "phase": 1,
+      "name": "Architecture",
+      "status": "complete"
+    },
+    {
+      "phase": 2,
+      "name": "Smart Contracts",
+      "status": "in_progress"
+    }
+  ],
+  "files_read": [
+    "skills/ritual/SKILL.md",
+    "skills/ritual-meta-projection/SKILL.md",
+    "agents/ritual-dapp-builder.md",
+    "examples/registry.json",
+    "skills/ritual-dapp-overview/SKILL.md",
+    "skills/ritual-dapp-precompiles/SKILL.md",
+    "skills/ritual-dapp-http/SKILL.md",
+    "skills/ritual-dapp-contracts/SKILL.md",
+    "skills/ritual-dapp-deploy/SKILL.md"
+  ],
+  "next_file": "skills/ritual-dapp-wallet/SKILL.md",
+  "markers": {
+    "chain_connection": true,
+    "wallet_funded": false,
+    "contract_compiled": false,
+    "contract_deployed": false,
+    "precompile_simulated": false,
+    "precompile_settled": false,
+    "frontend_renders": false,
+    "frontend_connects": false,
+    "e2e_complete": false
+  }
+}"scripts": {
+  "deploy": "npx hardhat run scripts/deploy.js --network ritual",
+  "server": "node server/index.js"
+}

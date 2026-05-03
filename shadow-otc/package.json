@@ -2,6 +2,7 @@
   "name": "shadow-otc",
   "version": "1.0.0",
   "scripts": {
+    "start": "node server/index.js",
     "deploy": "npx hardhat run scripts/deploy.js --network ritual",
     "server": "node server/index.js"
   },

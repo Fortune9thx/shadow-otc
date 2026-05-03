@@ -3084,7 +3084,6 @@
 
         // ── WALLET DROPDOWN ───────────────────────────────────────
         function toggleWalletMenu() {
-            if (!walletAddress) { connectWallet(); return; }
             document.getElementById('walletDropdown').classList.toggle('open');
         }
         function closeWalletMenu() {
@@ -3100,7 +3099,6 @@
             const initials = addr.slice(2, 4).toUpperCase();
             document.getElementById('wdAvatar').textContent = initials;
             document.getElementById('wdAddr').textContent = short;
-            document.getElementById('wd-sub', '').textContent = 'Ritual Testnet';
             const sub = document.querySelector('.wd-sub');
             if (sub) sub.textContent = 'Ritual Testnet · Connected';
             document.getElementById('wdConnectBtn').style.display = 'none';
@@ -3123,7 +3121,7 @@
                 loadProfile();
             } catch (e) { toast('Failed', e.message || 'Could not connect', 'error'); }
         }
-        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; updateWalletDropdown(a[0]); loadProfile(); } });
+        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; updateWalletDropdown(a[0]); loadProfile(); closeWalletMenu(); } });
 
         // ── DATA ──────────────────────────────────────────────────
         async function loadData() {

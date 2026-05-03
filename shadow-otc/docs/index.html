@@ -1301,10 +1301,18 @@
         }
 
         function openNewDeal() {
-            const type = document.getElementById('dealType')?.value || 'social';
-            const amount = document.getElementById('dealAmount')?.value || '0.01';
-            const intent = encodeURIComponent(document.getElementById('dealIntent')?.value || '');
-            window.open(`https://shadow-otc.vercel.app/new-deal?type=${type}&amount=${amount}&intent=${intent}`, '_blank');
+            showPage('dashboard');
+            setTimeout(() => {
+                const card = document.getElementById('dealType')?.closest('.card');
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    document.getElementById('dealType').focus();
+                    card.style.transition = 'border-color 0.3s,box-shadow 0.3s';
+                    card.style.borderColor = 'var(--green)';
+                    card.style.boxShadow = '0 0 0 3px rgba(26,122,62,0.15)';
+                    setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 1800);
+                }
+            }, 100);
         }
 
         async function connectWallet() {

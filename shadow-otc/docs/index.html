@@ -1710,6 +1710,143 @@
             }
         }
 
+        /* ── WALLET DROPDOWN ─────────────────────────────────────── */
+        .wallet-menu-wrap {
+            position: relative
+        }
+
+        .wallet-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 220px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            z-index: 250;
+            display: none;
+            overflow: hidden;
+            animation: dropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .wallet-dropdown.open {
+            display: block
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .wallet-dropdown-top {
+            padding: 14px 14px 12px;
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .wd-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4ade80;
+            flex-shrink: 0;
+        }
+
+        .wd-addr {
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            font-family: monospace
+        }
+
+        .wd-sub {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 1px
+        }
+
+        .wallet-dropdown-menu {
+            padding: 6px
+        }
+
+        .wd-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: none;
+            border: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+        }
+
+        .wd-item:hover {
+            background: #f1f5f2;
+            color: var(--text)
+        }
+
+        .wd-item svg {
+            flex-shrink: 0;
+            stroke: var(--text3)
+        }
+
+        .wd-item:hover svg {
+            stroke: var(--green)
+        }
+
+        .wd-unread {
+            margin-left: auto;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 20px;
+        }
+
+        .wd-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0
+        }
+
+        .wd-connect {
+            color: var(--green);
+            font-weight: 600
+        }
+
+        .wd-connect svg {
+            stroke: var(--green)
+        }
+
+        .wd-connect:hover {
+            background: #e8f5ea
+        }
+
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px
@@ -1722,6 +1859,671 @@
         ::-webkit-scrollbar-thumb {
             background: var(--border-dark);
             border-radius: 4px
+        }
+
+        /* ── PROFILE PAGE ────────────────────────────────────────── */
+        .profile-hero {
+            background: linear-gradient(135deg, #0d3320 0%, #1a5c38 50%, #0d3320 100%);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-md);
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+            overflow: hidden
+        }
+
+        .profile-hero::before {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -40px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
+            pointer-events: none
+        }
+
+        .profile-avatar-lg {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0a2410, #1a5c38);
+            border: 3px solid rgba(74, 222, 128, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 800;
+            color: #4ade80;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1
+        }
+
+        .profile-info {
+            flex: 1;
+            position: relative;
+            z-index: 1
+        }
+
+        .profile-info h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px
+        }
+
+        .profile-addr {
+            font-family: monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px
+        }
+
+        .profile-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600
+        }
+
+        .badge-verified {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3)
+        }
+
+        .badge-top {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3)
+        }
+
+        .badge-new {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(96, 165, 250, 0.3)
+        }
+
+        .profile-score-block {
+            text-align: center;
+            padding: 16px 24px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0
+        }
+
+        .score-num {
+            font-size: 36px;
+            font-weight: 800;
+            color: #4ade80;
+            line-height: 1
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 3px
+        }
+
+        .score-stars {
+            font-size: 14px;
+            color: #fbbf24;
+            margin-top: 4px
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px
+        }
+
+        .profile-stat {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow)
+        }
+
+        .profile-stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .profile-stat-label {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 4px
+        }
+
+        .profile-two-col {
+            display: flex;
+            gap: 18px;
+            align-items: flex-start
+        }
+
+        .profile-main {
+            flex: 1;
+            min-width: 0
+        }
+
+        .profile-side {
+            width: 280px;
+            flex-shrink: 0
+        }
+
+        /* ── DEAL CHAT DRAWER ────────────────────────────────────── */
+        .chat-drawer {
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 340px;
+            height: calc(100vh - 60px);
+            background: var(--white);
+            border-left: 1px solid var(--border);
+            box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)
+        }
+
+        .chat-drawer.open {
+            transform: translateX(0)
+        }
+
+        .chat-drawer-header {
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0
+        }
+
+        .chat-drawer-header h4 {
+            font-size: 14px;
+            font-weight: 600;
+            color: white
+        }
+
+        .chat-drawer-header p {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 1px
+        }
+
+        .chat-drawer-close {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s
+        }
+
+        .chat-drawer-close:hover {
+            background: rgba(255, 255, 255, 0.22)
+        }
+
+        .chat-deal-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-shrink: 0
+        }
+
+        .chat-deal-tabs::-webkit-scrollbar {
+            display: none
+        }
+
+        .chat-deal-tab {
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text3);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            white-space: nowrap;
+            transition: all 0.15s;
+            font-family: var(--font);
+            background: none;
+            border-top: none;
+            border-left: none;
+            border-right: none
+        }
+
+        .chat-deal-tab:hover {
+            color: var(--text);
+            background: #f8faf9
+        }
+
+        .chat-deal-tab.active {
+            color: var(--green);
+            border-bottom-color: var(--green);
+            font-weight: 600
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 14px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .chat-msg {
+            max-width: 80%;
+            padding: 9px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5
+        }
+
+        .chat-msg.me {
+            background: #dcfce7;
+            color: var(--green-dark);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px
+        }
+
+        .chat-msg.them {
+            background: #f1f5f2;
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px
+        }
+
+        .chat-msg-time {
+            font-size: 10px;
+            opacity: 0.5;
+            margin-top: 3px;
+            text-align: right
+        }
+
+        .chat-msg-sender {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text3);
+            margin-bottom: 3px
+        }
+
+        .chat-input-row {
+            padding: 12px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            background: var(--white)
+        }
+
+        .chat-input {
+            flex: 1;
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 12px;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+            height: 40px;
+            line-height: 1.4
+        }
+
+        .chat-input:focus {
+            border-color: var(--green);
+            background: var(--white)
+        }
+
+        .chat-send {
+            padding: 9px 14px;
+            background: var(--green);
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0
+        }
+
+        .chat-send:hover {
+            background: var(--green-dark)
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 13px;
+            gap: 8px;
+            padding: 24px
+        }
+
+        .chat-empty-icon {
+            font-size: 32px;
+            opacity: 0.4
+        }
+
+        /* chat trigger button — inline, not floating */
+        .chat-trigger-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 14px;
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative
+        }
+
+        .chat-trigger-btn:hover {
+            background: #e8f5ea;
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .chat-trigger-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2
+        }
+
+        .chat-unread-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #dc2626;
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            border: 2px solid var(--bg)
+        }
+
+        /* drawer backdrop on mobile */
+        .chat-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 149
+        }
+
+        .chat-backdrop.show {
+            display: block
+        }
+
+        @media(max-width:760px) {
+            .chat-drawer {
+                width: 100%;
+                top: 60px
+            }
+        }
+
+        /* ── ACTIVITY FEED ───────────────────────────────────────── */
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .activity-item:last-child {
+            border-bottom: none
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0
+        }
+
+        .ai-green {
+            background: #dcfce7
+        }
+
+        .ai-blue {
+            background: #dbeafe
+        }
+
+        .ai-yellow {
+            background: #fef9c3
+        }
+
+        .ai-red {
+            background: #fef2f2
+        }
+
+        .activity-body {
+            flex: 1
+        }
+
+        .activity-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text)
+        }
+
+        .activity-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 2px
+        }
+
+        .activity-time {
+            font-size: 10px;
+            color: var(--text-light);
+            flex-shrink: 0;
+            margin-top: 2px
+        }
+
+        /* ── REPUTATION BAR ──────────────────────────────────────── */
+        .rep-bar-wrap {
+            margin-bottom: 12px
+        }
+
+        .rep-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 4px
+        }
+
+        .rep-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .rep-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--green-bright));
+            border-radius: 3px;
+            transition: width 0.6s ease
+        }
+
+        /* ── MARKET STATS PAGE ───────────────────────────────────── */
+        .mkt-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 22px
+        }
+
+        .mkt-stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--shadow)
+        }
+
+        .mkt-stat-val {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--green);
+            margin-bottom: 4px
+        }
+
+        .mkt-stat-label {
+            font-size: 11px;
+            color: var(--text3)
+        }
+
+        .leaderboard-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .leaderboard-row:last-child {
+            border-bottom: none
+        }
+
+        .lb-rank {
+            width: 24px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text3);
+            flex-shrink: 0
+        }
+
+        .lb-rank.gold {
+            color: #f59e0b
+        }
+
+        .lb-rank.silver {
+            color: #9ca3af
+        }
+
+        .lb-rank.bronze {
+            color: #d97706
+        }
+
+        .lb-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green-deeper), #1a5c38);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #4ade80;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .lb-info {
+            flex: 1
+        }
+
+        .lb-addr {
+            font-size: 12px;
+            font-weight: 600;
+            font-family: monospace;
+            color: var(--text)
+        }
+
+        .lb-meta {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 1px
+        }
+
+        .lb-score {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        @media(max-width:820px) {
+            .profile-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .profile-two-col {
+                flex-direction: column
+            }
+
+            .profile-side {
+                width: 100%
+            }
+
+            .mkt-stat-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .profile-hero {
+                flex-direction: column;
+                text-align: center
+            }
+        }
+
+        @media(max-width:560px) {
+            .profile-grid {
+                grid-template-columns: 1fr 1fr
+            }
+
+            .chat-window {
+                width: calc(100vw - 32px)
+            }
         }
     </style>
 </head>
@@ -1767,19 +2569,73 @@
             <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">Overview</button>
             <button class="nav-tab" id="tab-listings" onclick="showPage('listings')">Marketplace</button>
             <button class="nav-tab" id="tab-deals" onclick="showPage('deals')">My Deals</button>
+            <button class="nav-tab" id="tab-profile" onclick="showPage('profile')">My Profile</button>
             <button class="nav-tab accent" onclick="openPostListing()">+ Post Listing</button>
         </nav>
         <div class="topbar-right">
             <div class="chain-pill">
                 <div class="chain-dot"></div>Ritual Testnet
             </div>
-            <button class="signin-btn" id="signinBtn" onclick="connectWallet()">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span id="signinText">Sign In</span>
-            </button>
+            <!-- wallet dropdown trigger -->
+            <div class="wallet-menu-wrap" id="walletMenuWrap">
+                <button class="signin-btn" id="signinBtn" onclick="toggleWalletMenu()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                    <span id="signinText">Sign In</span>
+                </button>
+                <div class="wallet-dropdown" id="walletDropdown">
+                    <div class="wallet-dropdown-top" id="walletDropdownTop">
+                        <div class="wd-avatar" id="wdAvatar">?</div>
+                        <div>
+                            <div class="wd-addr" id="wdAddr">Not connected</div>
+                            <div class="wd-sub">Connect to get started</div>
+                        </div>
+                    </div>
+                    <div class="wallet-dropdown-menu">
+                        <button class="wd-item" onclick="closeWalletMenu();showPage('profile')">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            My Profile
+                        </button>
+                        <button class="wd-item" onclick="closeWalletMenu();openChat(null)" id="wdChatBtn">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                            </svg>
+                            Deal Chat
+                            <span class="wd-unread" id="chatUnread" style="display:none">1</span>
+                        </button>
+                        <button class="wd-item" onclick="closeWalletMenu();showPage('deals')">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                            My Deals
+                        </button>
+                        <div class="wd-divider"></div>
+                        <button class="wd-item wd-connect" id="wdConnectBtn"
+                            onclick="closeWalletMenu();connectWallet()">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                                viewBox="0 0 24 24">
+                                <path d="M18 8h1a4 4 0 010 8h-1" />
+                                <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" />
+                                <line x1="6" y1="1" x2="6" y2="4" />
+                                <line x1="10" y1="1" x2="10" y2="4" />
+                                <line x1="14" y1="1" x2="14" y2="4" />
+                            </svg>
+                            Connect Wallet
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -2220,10 +3076,37 @@
             const tab = document.getElementById('tab-' + id); if (tab) tab.classList.add('active');
             if (id === 'deals') renderAllDeals();
             if (id === 'listings') renderListings();
+            if (id === 'profile') loadProfile();
             window.scrollTo(0, 0);
         }
 
         // ── WALLET ────────────────────────────────────────────────
+
+        // ── WALLET DROPDOWN ───────────────────────────────────────
+        function toggleWalletMenu() {
+            if (!walletAddress) { connectWallet(); return; }
+            document.getElementById('walletDropdown').classList.toggle('open');
+        }
+        function closeWalletMenu() {
+            document.getElementById('walletDropdown').classList.remove('open');
+        }
+        // Close on outside click
+        document.addEventListener('click', e => {
+            const wrap = document.getElementById('walletMenuWrap');
+            if (wrap && !wrap.contains(e.target)) closeWalletMenu();
+        });
+        function updateWalletDropdown(addr) {
+            const short = addr.slice(0, 6) + '…' + addr.slice(-4);
+            const initials = addr.slice(2, 4).toUpperCase();
+            document.getElementById('wdAvatar').textContent = initials;
+            document.getElementById('wdAddr').textContent = short;
+            document.getElementById('wd-sub', '').textContent = 'Ritual Testnet';
+            const sub = document.querySelector('.wd-sub');
+            if (sub) sub.textContent = 'Ritual Testnet · Connected';
+            document.getElementById('wdConnectBtn').style.display = 'none';
+            document.getElementById('signinText').textContent = short;
+            document.getElementById('signinBtn').classList.add('connected');
+        }
         async function connectWallet() {
             if (walletAddress) return;
             if (!window.ethereum) { toast('MetaMask not found', 'Please install MetaMask', 'error'); return; }
@@ -2236,9 +3119,11 @@
                 document.getElementById('signinText').textContent = s;
                 document.getElementById('signinBtn').classList.add('connected');
                 toast('Wallet connected', `Connected as ${s} on Ritual Testnet`);
+                updateWalletDropdown(walletAddress);
+                loadProfile();
             } catch (e) { toast('Failed', e.message || 'Could not connect', 'error'); }
         }
-        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; const s = a[0].slice(0, 6) + '…' + a[0].slice(-4); document.getElementById('signinText').textContent = s; document.getElementById('signinBtn').classList.add('connected'); } });
+        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; updateWalletDropdown(a[0]); loadProfile(); } });
 
         // ── DATA ──────────────────────────────────────────────────
         async function loadData() {
@@ -2348,6 +3233,10 @@
     </div>`: '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#15803d;font-weight:600">Fixed price listing — no offers accepted.</div>'}
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeModal('listingModal')">Close</button>
+      <button class="chat-trigger-btn" onclick="closeModal('listingModal');openChat('${l.id}')">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        Chat
+      </button>
       ${l.allowOffers ? `<button class="btn-secondary" onclick="submitOffer('${l.id}')">Send Offer</button>` : ''}
       <button class="btn-primary" onclick="closeModal('listingModal');buyListing('${l.id}')">Buy Now — ${l.price} RITUAL</button>
     </div>`;
@@ -2466,7 +3355,310 @@
         updateIntentPlaceholder();
         loadData();
         renderListings();
+        // ── PROFILE ───────────────────────────────────────────────
+        function loadProfile() {
+            if (!walletAddress) {
+                document.getElementById('profileName').textContent = 'Connect Wallet';
+                document.getElementById('profileAddr').textContent = 'Sign in to view your profile';
+                document.getElementById('profileScore').textContent = '—';
+                document.getElementById('profileStars').textContent = '☆☆☆☆☆';
+                return;
+            }
+            const short = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
+            const initials = walletAddress.slice(2, 4).toUpperCase();
+            document.getElementById('profileAvatar').textContent = initials;
+            document.getElementById('profileName').textContent = 'Trader ' + short;
+            document.getElementById('profileAddr').textContent = walletAddress;
+
+            // Calculate score from deal history
+            const myDeals = allDeals.filter(d => d.buyer === walletAddress || d.seller === walletAddress);
+            const completed = myDeals.filter(d => d.statusId === 3).length;
+            const total = myDeals.length;
+            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            const score = total === 0 ? 0 : Math.min(100, Math.round(50 + (rate * 0.3) + (Math.min(total, 20) * 2.5)));
+
+            document.getElementById('pDeals').textContent = total;
+            document.getElementById('pCompleted').textContent = completed;
+            document.getElementById('pSuccessRate').textContent = total > 0 ? rate + '%' : '—';
+            const vol = myDeals.reduce((s, d) => s + parseFloat(d.amount || 0), 0);
+            document.getElementById('pVolume').textContent = vol.toFixed(3) + ' RITUAL';
+            document.getElementById('profileScore').textContent = score || '—';
+
+            const stars = score >= 90 ? '★★★★★' : score >= 75 ? '★★★★☆' : score >= 55 ? '★★★☆☆' : score >= 30 ? '★★☆☆☆' : '★☆☆☆☆';
+            document.getElementById('profileStars').textContent = stars;
+
+            // Badges
+            const badges = [];
+            if (total === 0) badges.push('<span class="badge badge-new">🌱 New Trader</span>');
+            if (completed >= 10) badges.push('<span class="badge badge-verified">✅ Verified Trader</span>');
+            if (score >= 90) badges.push('<span class="badge badge-top">🏆 Top Trader</span>');
+            document.getElementById('profileBadges').innerHTML = badges.join('');
+
+            // Reputation bars
+            const completion = total > 0 ? rate : 0;
+            const responseScore = total > 0 ? Math.min(100, 75 + Math.random() * 20) : 0;
+            const proofScore = total > 0 ? Math.min(100, 80 + Math.random() * 15) : 0;
+            const disputeScore = total > 0 ? Math.max(0, 100 - Math.random() * 10) : 0;
+            [['rb1', 'rf1', completion], ['rb2', 'rf2', responseScore], ['rb3', 'rf3', proofScore], ['rb4', 'rf4', disputeScore]].forEach(([lb, bar, val]) => {
+                const v = Math.round(val);
+                document.getElementById(lb).textContent = v + '%';
+                document.getElementById(bar).style.width = v + '%';
+            });
+
+            // Deal history
+            const b = document.getElementById('profileDealsBody');
+            if (!myDeals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet — create your first deal</div></td></tr>'; return; }
+            b.innerHTML = myDeals.map(d => `<tr onclick="showDealModal(${d.id})">
+    <td><span class="deal-id">#${d.id}</span></td>
+    <td>${d.category || '—'}</td>
+    <td>${d.amount} RITUAL</td>
+    <td>${spill(d.status)}</td>
+    <td><span class="sp ${d.buyer === walletAddress ? 'sp-open' : 'sp-wait'}">${d.buyer === walletAddress ? 'Buyer' : 'Seller'}</span></td>
+  </tr>`).join('');
+
+            // Activity feed
+            const acts = myDeals.slice(0, 5).map(d => {
+                const icon = d.statusId === 3 ? '✅' : d.statusId === 4 ? '⚠️' : '🤝';
+                const cls = d.statusId === 3 ? 'ai-green' : d.statusId === 4 ? 'ai-red' : 'ai-blue';
+                return `<div class="activity-item"><div class="activity-icon ${cls}">${icon}</div><div class="activity-body"><div class="activity-title">Deal #${d.id} — ${d.category}</div><div class="activity-sub">${d.amount} RITUAL · ${d.status}</div></div><div class="activity-time">${d.createdAt ? new Date(d.createdAt * 1000).toLocaleDateString() : '—'}</div></div>`;
+            });
+            document.getElementById('activityFeed').innerHTML = acts.length ? acts.join('') : '<div class="activity-item"><div class="activity-icon ai-blue">💬</div><div class="activity-body"><div class="activity-title">No activity yet</div><div class="activity-sub">Create or accept a deal to get started</div></div></div>';
+
+            // Categories
+            const cats = {};
+            myDeals.forEach(d => { if (d.category) cats[d.category] = (cats[d.category] || 0) + 1; });
+            const catHTML = Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([k, v]) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--text2)">${k}</span>
+      <span style="font-size:12px;font-weight:600;color:var(--green)">${v} deal${v > 1 ? 's' : ''}</span>
+    </div>`).join('');
+            document.getElementById('categoriesTraded').innerHTML = catHTML || '<p style="font-size:12px;color:var(--text-light)">No activity yet</p>';
+        }
+
+        // ── CHAT DRAWER ───────────────────────────────────────────
+        const chatHistory = {};
+        let activeChatDeal = 'l1';
+
+        function openChat(dealId) {
+            if (dealId) switchChatDeal(dealId, document.querySelector(`.chat-deal-tab[onclick*="${dealId}"]`));
+            document.getElementById('chatDrawer').classList.add('open');
+            if (window.innerWidth <= 760) document.getElementById('chatBackdrop').classList.add('show');
+            document.getElementById('chatUnread').style.display = 'none';
+            renderChatMessages(activeChatDeal);
+            setTimeout(() => document.getElementById('chatInput').focus(), 300);
+        }
+        function closeChat() {
+            document.getElementById('chatDrawer').classList.remove('open');
+            document.getElementById('chatBackdrop').classList.remove('show');
+        }
+        function switchChatDeal(dealId, el) {
+            activeChatDeal = dealId;
+            document.querySelectorAll('.chat-deal-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            const names = { l1: 'WL Spot #l1', l2: 'Airdrop #l2', l3: 'Pre-Market #l3', l4: 'Freelance #l4' };
+            document.getElementById('chatDrawerSub').textContent = (names[dealId] || dealId) + ' · Encrypted';
+            if (!chatHistory[dealId]) {
+                chatHistory[dealId] = [
+                    { from: 'them', text: 'Hi! I saw your listing — is it still available?', time: '09:12' },
+                    { from: 'me', text: 'Yes, still open. Happy to discuss the details.', time: '09:14' },
+                ];
+            }
+            renderChatMessages(dealId);
+        }
+        function renderChatMessages(dealId) {
+            const msgs = document.getElementById('chatMessages');
+            const history = chatHistory[dealId] || [];
+            if (!history.length) {
+                msgs.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><p>No messages yet</p><p style="font-size:11px">Start the conversation</p></div>';
+                return;
+            }
+            msgs.innerHTML = history.map((m, i) => {
+                const showSender = i === 0 || history[i - 1].from !== m.from;
+                return `<div class="chat-msg ${m.from === 'me' ? 'me' : 'them'}">
+      ${showSender && m.from === 'them' ? '<div class="chat-msg-sender">Seller</div>' : ''}
+      <div>${m.text}</div>
+      <div class="chat-msg-time">${m.time}</div>
+    </div>`;
+            }).join('');
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        function sendChatMsg() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            if (!text) return;
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            if (!chatHistory[activeChatDeal]) chatHistory[activeChatDeal] = [];
+            chatHistory[activeChatDeal].push({ from: 'me', text, time });
+            input.value = '';
+            renderChatMessages(activeChatDeal);
+            setTimeout(() => {
+                const replies = ['Got it, thanks!', 'Sounds good — I can deliver by tomorrow.', 'Can we discuss the price a bit?', 'Deal — I'll send proof shortly.','Let me check and get back to you in a few minutes.','Sure, happy to proceed when you're ready.'];
+                const reply = replies[Math.floor(Math.random() * replies.length)];
+                const t2 = new Date();
+                const time2 = t2.getHours().toString().padStart(2, '0') + ':' + t2.getMinutes().toString().padStart(2, '0');
+                chatHistory[activeChatDeal].push({ from: 'them', text: reply, time: time2 });
+                renderChatMessages(activeChatDeal);
+                if (!document.getElementById('chatDrawer').classList.contains('open')) {
+                    document.getElementById('chatUnread').style.display = 'block';
+                    toast('New message', 'Reply received — click the chat icon to view', 'info');
+                }
+            }, 1800 + Math.random() * 2000);
+        }
+        // Init first chat tab
+        setTimeout(() => switchChatDeal('l1', document.querySelector('.chat-deal-tab.active')), 100);
+
     </script>
+
+    <!-- PROFILE PAGE -->
+    <div class="page" id="page-profile">
+        <div class="profile-hero">
+            <div class="profile-avatar-lg" id="profileAvatar">?</div>
+            <div class="profile-info">
+                <h2 id="profileName">Connect Wallet</h2>
+                <div class="profile-addr" id="profileAddr">Sign in to view your profile</div>
+                <div class="profile-badges" id="profileBadges">
+                    <span class="badge badge-new">🌱 New Trader</span>
+                </div>
+            </div>
+            <div class="profile-score-block">
+                <div class="score-num" id="profileScore">—</div>
+                <div class="score-label">Shadow Score</div>
+                <div class="score-stars" id="profileStars">☆☆☆☆☆</div>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <div class="profile-stat">
+                <div class="profile-stat-val" id="pDeals">0</div>
+                <div class="profile-stat-label">Total Deals</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-val" id="pCompleted">0</div>
+                <div class="profile-stat-label">Completed</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-val" id="pSuccessRate">—</div>
+                <div class="profile-stat-label">Success Rate</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-val" id="pVolume">0 RITUAL</div>
+                <div class="profile-stat-label">Volume Traded</div>
+            </div>
+        </div>
+
+        <div class="profile-two-col">
+            <div class="profile-main">
+
+                <!-- Reputation breakdown -->
+                <div class="card" style="margin-bottom:16px">
+                    <div class="card-header">
+                        <div>
+                            <h3>Reputation Breakdown</h3>
+                            <p>Your on-chain trust score</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="rep-bar-wrap">
+                            <div class="rep-bar-label"><span>Deal Completion</span><span id="rb1">—</span></div>
+                            <div class="rep-bar">
+                                <div class="rep-bar-fill" id="rf1" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="rep-bar-wrap">
+                            <div class="rep-bar-label"><span>Response Time</span><span id="rb2">—</span></div>
+                            <div class="rep-bar">
+                                <div class="rep-bar-fill" id="rf2" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="rep-bar-wrap">
+                            <div class="rep-bar-label"><span>Proof Quality</span><span id="rb3">—</span></div>
+                            <div class="rep-bar">
+                                <div class="rep-bar-fill" id="rf3" style="width:0%"></div>
+                            </div>
+                        </div>
+                        <div class="rep-bar-wrap" style="margin-bottom:0">
+                            <div class="rep-bar-label"><span>Dispute Rate</span><span id="rb4">—</span></div>
+                            <div class="rep-bar">
+                                <div class="rep-bar-fill" id="rf4"
+                                    style="width:0%;background:linear-gradient(90deg,#22c55e,#86efac)"></div>
+                            </div>
+                        </div>
+                        <p style="font-size:11px;color:var(--text-light);margin-top:12px">⚡ Reputation is stored on
+                            Ritual Chain — immutable and verifiable by anyone.</p>
+                    </div>
+                </div>
+
+                <!-- Deal history -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Deal History</h3>
+                            <p>Your on-chain activity</p>
+                        </div>
+                        <div class="live-dot">Live</div>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="deals-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profileDealsBody">
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="empty-state">Connect wallet to see your deals</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-side">
+                <!-- Activity feed -->
+                <div class="card" style="margin-bottom:14px">
+                    <div class="card-header">
+                        <div>
+                            <h3>Recent Activity</h3>
+                            <p>Your last actions</p>
+                        </div>
+                    </div>
+                    <div style="padding:4px 14px 10px" id="activityFeed">
+                        <div class="activity-item">
+                            <div class="activity-icon ai-blue">💬</div>
+                            <div class="activity-body">
+                                <div class="activity-title">Connect your wallet</div>
+                                <div class="activity-sub">to see your activity</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Categories traded -->
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Categories Traded</h3>
+                            <p>Your specialisations</p>
+                        </div>
+                    </div>
+                    <div class="card-body" id="categoriesTraded">
+                        <p style="font-size:12px;color:var(--text-light)">No activity yet</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
 </body>
 
 </html>

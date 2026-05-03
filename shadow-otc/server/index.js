@@ -1,109 +1,159 @@
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
-
-const chain = require("./chain");
-const dealManager = require("./dealManager");
+const express = require('express');
+const cors = require('cors');
+const { ethers } = require('ethers');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
-
 const PORT = process.env.PORT || 3001;
 
-// ── Health check ─────────────────────────────────────
-app.get("/", (req, res) => {
+// ── CORS: allow Vercel frontend + localhost ──────────────────────────────────
+app.use(cors({
+    origin: [
+        'https://shadow-otc.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5000',
+        /\.vercel\.app$/
+    ],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type']
+}));
+app.use(express.json());
+
+// ── Ritual Chain provider ────────────────────────────────────────────────────
+const RPC_URL = process.env.RITUAL_RPC_URL || 'https://rpc.ritualfoundation.org';
+const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS_V2 || '0xe48aB58BEA9AD3d4c94A3d09c5Fd98320151bF80';
+
+const ABI = [
+    "function dealCount() view returns (uint256)",
+    "function getDeal(uint256 dealId) view returns (tuple(address buyer, address seller, uint256 amount, uint256 collateral, uint8 category, uint8 status, string proofUrl, uint256 createdAt, uint256 completedAt))",
+    "event DealCreated(uint256 indexed dealId, address indexed buyer, uint8 category, uint256 amount)",
+    "event DealCompleted(uint256 indexed dealId)",
+    "event DealDisputed(uint256 indexed dealId)"
+];
+
+// Status map
+const STATUS = ['Open', 'Accepted', 'Delivered', 'Completed', 'Disputed', 'Cancelled'];
+const CATEGORY = [
+    'Social Media', 'Content Creation', 'Freelance', 'NFT OTC Sale',
+    'NFT Whitelist', 'Airdrop Allocation', 'Token Allocation', 'Pre-Market',
+    'Marketing', 'Bug Bounty', 'Escrow', 'Conditional'
+];
+
+let provider;
+let contract;
+
+async function initChain() {
+    try {
+        provider = new ethers.JsonRpcProvider(RPC_URL);
+        contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, provider);
+        const network = await provider.getNetwork();
+        console.log(`✅ Connected to Ritual Chain ID: ${network.chainId}`);
+    } catch (err) {
+        console.error('❌ Chain connection failed:', err.message);
+    }
+}
+initChain();
+
+// ── Helper: fetch all deals ──────────────────────────────────────────────────
+async function fetchAllDeals() {
+    const count = await contract.dealCount();
+    const total = Number(count);
+    const deals = [];
+
+    for (let i = 0; i < total; i++) {
+        try {
+            const d = await contract.getDeal(i);
+            deals.push({
+                id: i,
+                buyer: d.buyer,
+                seller: d.seller,
+                amount: ethers.formatEther(d.amount),
+                collateral: ethers.formatEther(d.collateral),
+                category: CATEGORY[Number(d.category)] || `Category ${d.category}`,
+                categoryId: Number(d.category),
+                status: STATUS[Number(d.status)] || `Status ${d.status}`,
+                statusId: Number(d.status),
+                proofUrl: d.proofUrl,
+                createdAt: Number(d.createdAt),
+                completedAt: Number(d.completedAt)
+            });
+        } catch (e) {
+            console.error(`Error fetching deal ${i}:`, e.message);
+        }
+    }
+    return deals;
+}
+
+// ── Routes ───────────────────────────────────────────────────────────────────
+
+// Health check
+app.get('/', (req, res) => {
+    res.json({ status: 'ok', service: 'Shadow OTC Backend', network: 'Ritual Testnet', chainId: 1979 });
+});
+
+// GET /deals — summary stats
+app.get('/deals', async (req, res) => {
+    try {
+        const deals = await fetchAllDeals();
+        const open = deals.filter(d => d.statusId === 0).length;
+        const completed = deals.filter(d => d.statusId === 3).length;
+        const disputed = deals.filter(d => d.statusId === 4).length;
+        const totalLocked = deals.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+
+        res.json({
+            total: deals.length,
+            open,
+            completed,
+            disputed,
+            totalLocked: totalLocked.toFixed(4),
+            deals
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// GET /deal/:id — single deal
+app.get('/deal/:id', async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const d = await contract.getDeal(id);
+        res.json({
+            id,
+            buyer: d.buyer,
+            seller: d.seller,
+            amount: ethers.formatEther(d.amount),
+            collateral: ethers.formatEther(d.collateral),
+            category: CATEGORY[Number(d.category)] || `Category ${d.category}`,
+            categoryId: Number(d.category),
+            status: STATUS[Number(d.status)] || `Status ${d.status}`,
+            statusId: Number(d.status),
+            proofUrl: d.proofUrl,
+            createdAt: Number(d.createdAt),
+            completedAt: Number(d.completedAt)
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// POST /deal/create — pipeline trigger (agents handle actual tx)
+app.post('/deal/create', (req, res) => {
+    const { category, amount } = req.body;
+    if (!category || !amount) {
+        return res.status(400).json({ error: 'category and amount required' });
+    }
     res.json({
-        name: "Shadow OTC API",
-        network: "Ritual Testnet",
-        contract: process.env.CONTRACT_ADDRESS,
-        status: "running",
+        message: 'Deal creation queued',
+        category,
+        amount,
+        note: 'Run: node agents/buyer.js ' + category + ' ' + amount
     });
 });
 
-// ── GET /deal/:id — fetch deal from chain ─────────────
-app.get("/deal/:id", async (req, res) => {
-    try {
-        const deal = await chain.getDeal(req.params.id);
-        const logs = dealManager.getLogs(req.params.id);
-        res.json({ ...deal, logs });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ── GET /deals — total deal count ────────────────────
-app.get("/deals", async (req, res) => {
-    try {
-        const total = await chain.getTotalDeals();
-        res.json({ total, contract: process.env.CONTRACT_ADDRESS });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ── POST /deal/create — full automated flow ───────────
-app.post("/deal/create", async (req, res) => {
-    const { intent, budget } = req.body;
-
-    if (!intent || !budget) {
-        return res.status(400).json({ error: "intent and budget required" });
-    }
-
-    console.log(`\n[API] New deal request — intent: "${intent}" budget: ${budget}`);
-
-    // Respond immediately, run deal in background
-    res.json({
-        message: "Deal pipeline started",
-        note: "Poll GET /deal/:id for updates",
-    });
-
-    // Run full pipeline async
-    dealManager.runFullDeal(intent, budget).then(result => {
-        console.log("[API] Deal pipeline complete:", result);
-    }).catch(err => {
-        console.error("[API] Deal pipeline error:", err.message);
-    });
-});
-
-// ── POST /deal/manual/accept — manual seller accept ───
-app.post("/deal/manual/accept", async (req, res) => {
-    const { dealId } = req.body;
-    if (!dealId) return res.status(400).json({ error: "dealId required" });
-    try {
-        const result = await chain.acceptDeal(dealId);
-        res.json({ success: true, ...result });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ── POST /deal/manual/verify — manual verify ──────────
-app.post("/deal/manual/verify", async (req, res) => {
-    const { dealId, forceSuccess } = req.body;
-    if (!dealId) return res.status(400).json({ error: "dealId required" });
-    try {
-        const deal = await chain.getDeal(dealId);
-        const success = forceSuccess !== undefined
-            ? forceSuccess
-            : await dealManager.verifyCondition(deal.intent);
-        const result = await chain.executeDeal(dealId, success);
-        res.json({ success, ...result });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// ── Start server ──────────────────────────────────────
+// ── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-    console.log(`\n🚀 Shadow OTC Backend running on http://localhost:${PORT}`);
-    console.log(`📡 Network: Ritual Testnet`);
-    console.log(`📄 Contract: ${process.env.CONTRACT_ADDRESS}`);
-    console.log(`\nEndpoints:`);
-    console.log(`  GET  /              — health check`);
-    console.log(`  GET  /deals         — total deals`);
-    console.log(`  GET  /deal/:id      — get deal status`);
-    console.log(`  POST /deal/create   — create + auto-run deal`);
-    console.log(`  POST /deal/manual/accept  — manual accept`);
-    console.log(`  POST /deal/manual/verify  — manual verify\n`);
+    console.log(`🚀 Shadow OTC backend running on port ${PORT}`);
+    console.log(`📡 Contract: ${CONTRACT_ADDRESS}`);
+    console.log(`🌐 RPC: ${RPC_URL}`);
 });

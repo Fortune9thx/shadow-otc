@@ -8,30 +8,25 @@
     <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.1/dist/ethers.umd.min.js"></script>
     <style>
         :root {
-            /* Original palette: white base, dark green sidebar/accents */
-            --green: #1a7a3e;
-            --green-bright: #1db954;
+            --green: #16a34a;
+            --green-bright: #22c55e;
+            --green-light: #4ade80;
             --green-dark: #0f5c2e;
-            --green-deeper: #093d1e;
-            --green-accent: #22c55e;
-            --sidebar-from: #0d3320;
-            --sidebar-to: #061a0e;
+            --green-deeper: #0d3320;
+            --green-bg: #052e16;
             --bg: #f8faf9;
-            --bg2: #ffffff;
-            --surface: #f1f5f2;
-            --surface2: #e8f0ea;
+            --white: #ffffff;
             --border: #d4e4d8;
             --border-dark: #b8d4be;
             --text: #111827;
             --text2: #374151;
             --text3: #6b7280;
             --text-light: #9ca3af;
-            --white: #ffffff;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
             --radius: 10px;
             --radius-lg: 16px;
-            --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
         }
 
         * {
@@ -58,9 +53,8 @@
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
-            z-index: 100;
-            box-shadow: var(--shadow);
-            gap: 0;
+            z-index: 200;
+            box-shadow: var(--shadow)
         }
 
         .logo {
@@ -69,7 +63,7 @@
             gap: 10px;
             flex-shrink: 0;
             margin-right: 24px;
-            cursor: pointer;
+            cursor: pointer
         }
 
         .logo-icon {
@@ -82,8 +76,7 @@
             display: block;
             font-size: 15px;
             font-weight: 700;
-            color: var(--text);
-            letter-spacing: 0.2px
+            color: var(--text)
         }
 
         .logo-text span {
@@ -100,11 +93,18 @@
             display: flex;
             align-items: center;
             gap: 2px;
-            flex: 1
+            flex: 1;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none
+        }
+
+        .topbar-nav::-webkit-scrollbar {
+            display: none
         }
 
         .nav-tab {
-            padding: 7px 14px;
+            padding: 7px 13px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 500;
@@ -114,27 +114,27 @@
             border: none;
             background: transparent;
             font-family: var(--font);
-            white-space: nowrap;
+            white-space: nowrap
         }
 
         .nav-tab:hover {
             color: var(--text);
-            background: var(--surface)
+            background: #f1f5f2
         }
 
         .nav-tab.active {
             color: var(--green);
-            background: var(--surface2);
+            background: #e8f5ea;
             font-weight: 600
         }
 
-        .nav-tab.new-deal {
+        .nav-tab.accent {
             color: var(--green);
             font-weight: 600
         }
 
-        .nav-tab.new-deal:hover {
-            background: var(--surface2)
+        .nav-tab.accent:hover {
+            background: #e8f5ea
         }
 
         .topbar-right {
@@ -151,19 +151,19 @@
             gap: 6px;
             padding: 5px 12px;
             border-radius: 20px;
-            background: var(--surface);
+            background: #f1f5f2;
             border: 1px solid var(--border-dark);
             font-size: 12px;
             color: var(--text2);
             font-weight: 500;
-            white-space: nowrap;
+            white-space: nowrap
         }
 
         .chain-dot {
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: var(--green-accent);
+            background: var(--green-bright);
             animation: pulse 2s infinite
         }
 
@@ -175,7 +175,7 @@
             }
 
             50% {
-                opacity: 0.45
+                opacity: 0.4
             }
         }
 
@@ -193,83 +193,106 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(26, 122, 62, 0.3);
+            box-shadow: 0 1px 3px rgba(22, 163, 74, 0.3)
         }
 
         .signin-btn:hover {
             background: var(--green-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(26, 122, 62, 0.35)
+            transform: translateY(-1px)
         }
 
         .signin-btn.connected {
-            background: var(--surface);
+            background: #f1f5f2;
             border: 1px solid var(--border-dark);
             color: var(--text2);
-            box-shadow: none;
+            box-shadow: none
         }
 
         .signin-btn.connected:hover {
             border-color: var(--green);
-            background: var(--surface2);
+            background: #e8f5ea;
             transform: none
         }
 
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 7px;
-            border-radius: 7px;
-            background: var(--surface);
-            border: 1px solid var(--border)
-        }
-
-        .hamburger span {
-            display: block;
-            width: 17px;
-            height: 2px;
-            background: var(--text2);
-            border-radius: 2px;
-            transition: all 0.3s
-        }
-
-        .hamburger.open span:nth-child(1) {
-            transform: translateY(7px) rotate(45deg)
-        }
-
-        .hamburger.open span:nth-child(2) {
-            opacity: 0
-        }
-
-        .hamburger.open span:nth-child(3) {
-            transform: translateY(-7px) rotate(-45deg)
-        }
-
-        .mobile-drawer {
-            display: none;
+        /* ── TOAST ──────────────────────────────────────────────── */
+        #toast-container {
             position: fixed;
-            top: 60px;
-            left: 0;
-            right: 0;
+            top: 72px;
+            right: 16px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none
+        }
+
+        .toast {
             background: var(--white);
-            border-bottom: 1px solid var(--border);
-            z-index: 99;
-            padding: 10px;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--green);
+            border-radius: 10px;
+            padding: 12px 16px;
             box-shadow: var(--shadow-md);
+            min-width: 270px;
+            max-width: 320px;
+            pointer-events: all;
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px
         }
 
-        .mobile-drawer.open {
-            display: block
+        .toast.error {
+            border-left-color: #dc2626
         }
 
-        .mobile-drawer .nav-tab {
-            display: block;
-            width: 100%;
-            text-align: left;
-            padding: 11px 14px;
+        .toast.info {
+            border-left-color: #3b82f6
+        }
+
+        .toast-icon {
+            font-size: 15px;
+            flex-shrink: 0;
+            margin-top: 1px
+        }
+
+        .toast-body {
+            flex: 1
+        }
+
+        .toast-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
             margin-bottom: 2px
+        }
+
+        .toast-msg {
+            font-size: 12px;
+            color: var(--text3);
+            line-height: 1.4
+        }
+
+        .toast-close {
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 14px;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            padding: 0
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(16px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
         }
 
         /* ── PAGES ──────────────────────────────────────────────── */
@@ -284,15 +307,15 @@
             display: block
         }
 
-        /* ── HERO — dark green gradient ─────────────────────────── */
+        /* ── HERO ───────────────────────────────────────────────── */
         .hero {
-            background: linear-gradient(135deg, var(--sidebar-from) 0%, #1a5c38 45%, var(--sidebar-from) 100%);
+            background: linear-gradient(135deg, #0d3320 0%, #1a5c38 45%, #0d3320 100%);
             border-radius: var(--radius-lg);
             padding: 36px 40px;
             position: relative;
             overflow: hidden;
             margin-bottom: 22px;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-md)
         }
 
         .hero::before {
@@ -303,7 +326,7 @@
             width: 260px;
             height: 260px;
             background: radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%);
-            pointer-events: none;
+            pointer-events: none
         }
 
         .hero::after {
@@ -314,7 +337,7 @@
             width: 180px;
             height: 180px;
             background: radial-gradient(circle, rgba(29, 185, 84, 0.1) 0%, transparent 70%);
-            pointer-events: none;
+            pointer-events: none
         }
 
         .hero-badge {
@@ -330,7 +353,7 @@
             padding: 4px 12px;
             border-radius: 20px;
             margin-bottom: 14px;
-            text-transform: uppercase;
+            text-transform: uppercase
         }
 
         .hero-badge::before {
@@ -347,7 +370,7 @@
             font-weight: 700;
             line-height: 1.25;
             margin-bottom: 10px;
-            color: #ffffff
+            color: #fff
         }
 
         .hero p {
@@ -370,7 +393,7 @@
             color: rgba(255, 255, 255, 0.85);
             font-size: 11px;
             padding: 5px 12px;
-            border-radius: 20px;
+            border-radius: 20px
         }
 
         /* ── STATS ──────────────────────────────────────────────── */
@@ -389,7 +412,7 @@
             transition: all 0.2s;
             box-shadow: var(--shadow);
             position: relative;
-            overflow: hidden;
+            overflow: hidden
         }
 
         .stat-card::before {
@@ -397,9 +420,7 @@
             position: absolute;
             inset: 0;
             border-radius: var(--radius);
-            opacity: 1;
-            pointer-events: none;
-            transition: opacity 0.2s;
+            pointer-events: none
         }
 
         .stat-card:nth-child(1)::before {
@@ -424,22 +445,17 @@
             box-shadow: var(--shadow-md)
         }
 
-        .stat-card:hover::before {
-            opacity: 1;
-            filter: brightness(1.15)
-        }
-
         .stat-icon {
             width: 34px;
             height: 34px;
-            background: linear-gradient(135deg, var(--sidebar-from), #1a5c38);
+            background: linear-gradient(135deg, var(--green-deeper), #1a5c38);
             border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 14px;
             position: relative;
-            z-index: 1;
+            z-index: 1
         }
 
         .stat-icon svg {
@@ -483,7 +499,7 @@
         }
 
         .col-side {
-            width: 290px;
+            width: 296px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
@@ -496,7 +512,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             overflow: hidden;
-            box-shadow: var(--shadow);
+            box-shadow: var(--shadow)
         }
 
         .card-header {
@@ -504,8 +520,7 @@
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            background: var(--white);
+            justify-content: space-between
         }
 
         .card-header h3 {
@@ -531,7 +546,7 @@
             font-size: 11px;
             color: var(--green);
             font-weight: 600;
-            white-space: nowrap;
+            white-space: nowrap
         }
 
         .live-dot::before {
@@ -539,8 +554,867 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: var(--green-accent);
+            background: var(--green-bright);
             animation: pulse 2s infinite
+        }
+
+        /* ── LISTINGS ───────────────────────────────────────────── */
+        .listings-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+            flex-wrap: wrap
+        }
+
+        .listings-toolbar h2 {
+            font-size: 20px;
+            font-weight: 700;
+            flex: 1
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap
+        }
+
+        .filter-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--white);
+            color: var(--text3);
+            transition: all 0.15s;
+            font-family: var(--font)
+        }
+
+        .filter-tab:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .filter-tab.active {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+            font-weight: 600
+        }
+
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 3px
+        }
+
+        .view-btn {
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text3);
+            font-size: 12px;
+            transition: all 0.15s
+        }
+
+        .view-btn.active {
+            background: var(--white);
+            color: var(--green);
+            box-shadow: var(--shadow);
+            font-weight: 600
+        }
+
+        .listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 14px
+        }
+
+        .listing-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer
+        }
+
+        .listing-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-dark)
+        }
+
+        .listing-card-top {
+            padding: 16px 16px 12px
+        }
+
+        .listing-cat {
+            display: inline-flex;
+            align-items: center;
+            background: #dcfce7;
+            color: var(--green-dark);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 3px 9px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px
+        }
+
+        .listing-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.4;
+            margin-bottom: 6px
+        }
+
+        .listing-desc {
+            font-size: 12px;
+            color: var(--text3);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden
+        }
+
+        .listing-seller {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border)
+        }
+
+        .seller-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green-deeper), #1a5c38);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #4ade80;
+            font-weight: 700;
+            flex-shrink: 0
+        }
+
+        .seller-addr {
+            font-size: 11px;
+            color: var(--text2);
+            font-family: monospace;
+            font-weight: 600
+        }
+
+        .seller-rep {
+            font-size: 10px;
+            color: var(--text3)
+        }
+
+        .listing-card-bottom {
+            padding: 12px 16px;
+            background: #fafcfb;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .listing-price {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .listing-price span {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text3);
+            margin-left: 3px
+        }
+
+        .listing-actions {
+            display: flex;
+            gap: 6px
+        }
+
+        .btn-buy {
+            padding: 7px 16px;
+            background: var(--green);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .btn-buy:hover {
+            background: var(--green-dark);
+            transform: translateY(-1px)
+        }
+
+        .btn-offer {
+            padding: 7px 12px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .btn-offer:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .listing-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            color: var(--text-light)
+        }
+
+        .listings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px
+        }
+
+        .listing-row {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: var(--shadow);
+            transition: all 0.2s;
+            cursor: pointer
+        }
+
+        .listing-row:hover {
+            border-color: var(--border-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md)
+        }
+
+        .listing-row-main {
+            flex: 1;
+            min-width: 0
+        }
+
+        .listing-row-main h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .listing-row-main p {
+            font-size: 12px;
+            color: var(--text3);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .listing-row-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--green);
+            white-space: nowrap
+        }
+
+        .empty-listings {
+            padding: 60px 24px;
+            text-align: center
+        }
+
+        .empty-listings .empty-icon {
+            font-size: 40px;
+            margin-bottom: 14px;
+            opacity: 0.5
+        }
+
+        .empty-listings h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px
+        }
+
+        .empty-listings p {
+            font-size: 13px;
+            color: var(--text3);
+            max-width: 300px;
+            margin: 0 auto 20px
+        }
+
+        /* ── MODALS ─────────────────────────────────────────────── */
+        .moverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px)
+        }
+
+        .moverlay.show {
+            display: flex
+        }
+
+        .modal {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md)
+        }
+
+        .modal-lg {
+            max-width: 580px
+        }
+
+        .mh {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .mh h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text)
+        }
+
+        .mclose {
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            color: var(--text2);
+            width: 27px;
+            height: 27px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s
+        }
+
+        .mclose:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .mbody {
+            padding: 20px
+        }
+
+        /* listing detail */
+        .listing-detail-header {
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: white
+        }
+
+        .listing-detail-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .listing-detail-header p {
+            font-size: 12px;
+            opacity: 0.75;
+            line-height: 1.5
+        }
+
+        .listing-detail-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #4ade80;
+            margin-top: 8px
+        }
+
+        /* negotiation */
+        .neg-thread {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+            max-height: 180px;
+            overflow-y: auto
+        }
+
+        .neg-msg {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 85%
+        }
+
+        .neg-msg.seller {
+            background: #f1f5f2;
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 3px
+        }
+
+        .neg-msg.buyer {
+            background: #dcfce7;
+            color: var(--green-dark);
+            align-self: flex-end;
+            border-bottom-right-radius: 3px
+        }
+
+        .neg-msg .neg-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            opacity: 0.6
+        }
+
+        .neg-msg .neg-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 4px
+        }
+
+        .neg-msg .neg-note {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-top: 3px
+        }
+
+        .offer-form {
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px
+        }
+
+        .offer-form h4 {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px
+        }
+
+        .offer-input {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 700;
+            padding: 9px 48px 9px 11px;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .offer-input:focus {
+            border-color: var(--green)
+        }
+
+        .offer-wrap {
+            position: relative
+        }
+
+        .offer-wrap .offer-suf {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .offer-note {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            resize: none;
+            height: 60px;
+            margin-top: 8px;
+            transition: border-color 0.2s
+        }
+
+        .offer-note:focus {
+            border-color: var(--green)
+        }
+
+        .offer-note::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        /* twitter share */
+        .twitter-box {
+            background: linear-gradient(135deg, #e8f5ff, #f0f9ff);
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px
+        }
+
+        .twitter-box h4 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .tweet-preview {
+            background: var(--white);
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-family: monospace;
+            white-space: pre-wrap
+        }
+
+        .tweet-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #1d9bf0;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .tweet-btn:hover {
+            background: #1a8cd8;
+            transform: translateY(-1px)
+        }
+
+        /* modal actions */
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border)
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: var(--green);
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px
+        }
+
+        .btn-primary:hover {
+            background: var(--green-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25)
+        }
+
+        .btn-secondary {
+            padding: 12px 18px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        /* ── FORM ───────────────────────────────────────────────── */
+        .form-group {
+            margin-bottom: 13px
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            color: var(--text3);
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 5px
+        }
+
+        .form-select,
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none
+        }
+
+        .form-select:focus,
+        .form-input:focus,
+        .form-textarea:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
+        }
+
+        .form-textarea {
+            resize: none;
+            height: 76px;
+            line-height: 1.5
+        }
+
+        .form-textarea::placeholder,
+        .form-input::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .input-wrap {
+            position: relative
+        }
+
+        .input-wrap .form-input {
+            padding-right: 62px
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .form-hint {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 4px;
+            line-height: 1.4
+        }
+
+        .fg {
+            margin-bottom: 13px
+        }
+
+        .fl {
+            display: block;
+            font-size: 10px;
+            color: var(--text3);
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 5px
+        }
+
+        .fs,
+        .fi,
+        .fta {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none
+        }
+
+        .fs:focus,
+        .fi:focus,
+        .fta:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
+        }
+
+        .fta {
+            resize: none;
+            height: 72px;
+            line-height: 1.5
+        }
+
+        .fta::placeholder,
+        .fi::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        .iw {
+            position: relative
+        }
+
+        .iw .fi {
+            padding-right: 62px
+        }
+
+        .isuf {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .fhint {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 4px;
+            line-height: 1.4
+        }
+
+        .ibtn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3)
+        }
+
+        .ibtn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(22, 163, 74, 0.35)
+        }
+
+        .ibtn svg {
+            width: 14px;
+            height: 14px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2.5
+        }
+
+        .lrow {
+            display: flex;
+            gap: 8px
+        }
+
+        .lrow .fi {
+            flex: 1
+        }
+
+        .fbtn {
+            padding: 9px 13px;
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap
+        }
+
+        .fbtn:hover {
+            background: #e8f5ea;
+            border-color: var(--green);
+            color: var(--green)
         }
 
         /* ── TABLE ──────────────────────────────────────────────── */
@@ -559,8 +1433,8 @@
             text-transform: uppercase;
             border-bottom: 1px solid var(--border);
             font-weight: 600;
-            white-space: nowrap;
-            background: var(--surface);
+            background: #f8faf9;
+            white-space: nowrap
         }
 
         .deals-table td {
@@ -579,7 +1453,7 @@
         }
 
         .deals-table tbody tr:hover td {
-            background: var(--surface)
+            background: #f8faf9
         }
 
         .deal-id {
@@ -645,7 +1519,7 @@
         }
 
         .feed-item:hover {
-            background: var(--surface)
+            background: #f8faf9
         }
 
         .fdot {
@@ -657,7 +1531,7 @@
         }
 
         .fd-g {
-            background: var(--green-accent)
+            background: var(--green-bright)
         }
 
         .fd-b {
@@ -680,208 +1554,7 @@
             margin-top: 2px
         }
 
-        /* ── FORM ───────────────────────────────────────────────── */
-        .fg {
-            margin-bottom: 13px
-        }
-
-        .fl {
-            display: block;
-            font-size: 10px;
-            color: var(--text3);
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-bottom: 5px
-        }
-
-        .fs,
-        .fi,
-        .fta {
-            width: 100%;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 13px;
-            padding: 9px 11px;
-            outline: none;
-            transition: border-color 0.2s;
-            appearance: none;
-        }
-
-        .fs:focus,
-        .fi:focus,
-        .fta:focus {
-            border-color: var(--green);
-            box-shadow: 0 0 0 2px rgba(26, 122, 62, 0.08)
-        }
-
-        .fta {
-            resize: none;
-            height: 72px;
-            line-height: 1.5
-        }
-
-        .fta::placeholder,
-        .fi::placeholder {
-            color: var(--text-light);
-            font-size: 12px
-        }
-
-        .iw {
-            position: relative
-        }
-
-        .iw .fi {
-            padding-right: 62px
-        }
-
-        .isuf {
-            position: absolute;
-            right: 11px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--green);
-            letter-spacing: 1px
-        }
-
-        .fhint {
-            font-size: 10px;
-            color: var(--text-light);
-            margin-top: 4px;
-            line-height: 1.4
-        }
-
-        .ibtn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, var(--green) 0%, var(--green-dark) 100%);
-            border: none;
-            border-radius: 9px;
-            color: white;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            box-shadow: 0 2px 6px rgba(26, 122, 62, 0.3);
-        }
-
-        .ibtn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 14px rgba(26, 122, 62, 0.35)
-        }
-
-        .ibtn svg {
-            width: 14px;
-            height: 14px;
-            stroke: white;
-            fill: none;
-            stroke-width: 2.5
-        }
-
-        .lrow {
-            display: flex;
-            gap: 8px
-        }
-
-        .lrow .fi {
-            flex: 1
-        }
-
-        .fbtn {
-            padding: 9px 13px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text2);
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .fbtn:hover {
-            background: var(--surface2);
-            border-color: var(--green);
-            color: var(--green)
-        }
-
-        /* ── MODAL ──────────────────────────────────────────────── */
-        .moverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 200;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-        }
-
-        .moverlay.show {
-            display: flex
-        }
-
-        .modal {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            width: 90%;
-            max-width: 450px;
-            max-height: 85vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-md);
-        }
-
-        .mh {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between
-        }
-
-        .mh h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text)
-        }
-
-        .mclose {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text2);
-            width: 27px;
-            height: 27px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s
-        }
-
-        .mclose:hover {
-            border-color: var(--green);
-            color: var(--green)
-        }
-
-        .mbody {
-            padding: 18px 20px
-        }
-
+        /* ── DEAL DETAIL ────────────────────────────────────────── */
         .drow {
             display: flex;
             align-items: flex-start;
@@ -909,6 +1582,62 @@
             word-break: break-all
         }
 
+        /* ── PROOF FIELDS ───────────────────────────────────────── */
+        .proof-section {
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 13px
+        }
+
+        .proof-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px
+        }
+
+        .proof-field {
+            margin-bottom: 10px
+        }
+
+        .proof-field:last-child {
+            margin-bottom: 0
+        }
+
+        .proof-field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text3);
+            margin-bottom: 4px
+        }
+
+        .proof-field input {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 8px 11px;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .proof-field input:focus {
+            border-color: var(--green)
+        }
+
+        .proof-field input::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
         /* ── RESPONSIVE ─────────────────────────────────────────── */
         @media(max-width:1060px) {
             .stats {
@@ -920,7 +1649,7 @@
             }
         }
 
-        @media(max-width:800px) {
+        @media(max-width:820px) {
             .two-col {
                 flex-direction: column
             }
@@ -929,12 +1658,12 @@
                 width: 100%
             }
 
-            .topbar-nav {
-                display: none
+            .listings-grid {
+                grid-template-columns: 1fr 1fr
             }
 
-            .hamburger {
-                display: flex
+            .chain-pill {
+                display: none
             }
 
             .logo-text span {
@@ -942,7 +1671,7 @@
             }
         }
 
-        @media(max-width:520px) {
+        @media(max-width:560px) {
             .stats {
                 grid-template-columns: 1fr 1fr
             }
@@ -952,20 +1681,32 @@
             }
 
             .hero h1 {
-                font-size: 21px
+                font-size: 20px
             }
 
             .page {
                 padding: 14px
             }
 
-            .chain-pill {
+            .listings-grid {
+                grid-template-columns: 1fr
+            }
+
+            .form-row {
+                grid-template-columns: 1fr
+            }
+
+            .nav-tab {
+                padding: 6px 9px;
+                font-size: 12px
+            }
+
+            .signin-btn span {
                 display: none
             }
 
-            .deals-table th:nth-child(3),
-            .deals-table td:nth-child(3) {
-                display: none
+            .signin-btn {
+                padding: 8px 10px
             }
         }
 
@@ -986,6 +1727,8 @@
 </head>
 
 <body>
+
+    <div id="toast-container"></div>
 
     <!-- TOPBAR -->
     <header class="topbar">
@@ -1020,13 +1763,12 @@
             </div>
             <div class="logo-text"><strong>Shadow OTC</strong><span>Ritual Chain</span></div>
         </div>
-
         <nav class="topbar-nav">
             <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">Overview</button>
-            <button class="nav-tab" id="tab-deals" onclick="showPage('deals')">All Deals</button>
-            <button class="nav-tab new-deal" onclick="openNewDeal()">+ New Deal</button>
+            <button class="nav-tab" id="tab-listings" onclick="showPage('listings')">Marketplace</button>
+            <button class="nav-tab" id="tab-deals" onclick="showPage('deals')">My Deals</button>
+            <button class="nav-tab accent" onclick="openPostListing()">+ Post Listing</button>
         </nav>
-
         <div class="topbar-right">
             <div class="chain-pill">
                 <div class="chain-dot"></div>Ritual Testnet
@@ -1038,32 +1780,24 @@
                 </svg>
                 <span id="signinText">Sign In</span>
             </button>
-            <div class="hamburger" id="hamburger" onclick="toggleMenu()"><span></span><span></span><span></span></div>
         </div>
     </header>
 
-    <div class="mobile-drawer" id="drawer">
-        <button class="nav-tab" onclick="showPage('dashboard');toggleMenu()">Overview</button>
-        <button class="nav-tab" onclick="showPage('deals');toggleMenu()">All Deals</button>
-        <button class="nav-tab new-deal" onclick="openNewDeal();toggleMenu()">+ New Deal</button>
-    </div>
-
-    <!-- OVERVIEW PAGE -->
+    <!-- OVERVIEW -->
     <div class="page active" id="page-dashboard">
-
         <div class="hero">
             <div class="hero-badge">Powered by Ritual Chain EVM++</div>
-            <h1>AI agents that close deals for you.<br />No middlemen. No APIs.</h1>
-            <p>Funds locked in escrow, conditions verified by a trusted execution environment on Ritual Chain, and
-                payment released automatically when done.</p>
+            <h1>The OTC marketplace where AI closes the deal.<br />No middlemen. No trust required.</h1>
+            <p>Post what you have. Browse what's available. Negotiate on-chain. AI agents on Ritual Chain verify every
+                delivery and release payment automatically.</p>
             <div class="hero-tags">
                 <span class="hero-tag">🔒 TEE Verified</span>
                 <span class="hero-tag">🌐 Native HTTP Fetch</span>
                 <span class="hero-tag">⚡ Auto Execute</span>
+                <span class="hero-tag">🤝 On-chain Negotiation</span>
                 <span class="hero-tag">✓ Chain ID 1979</span>
             </div>
         </div>
-
         <div class="stats">
             <div class="stat-card">
                 <div class="stat-icon"><svg viewBox="0 0 24 24">
@@ -1096,10 +1830,8 @@
                 <div class="stat-label">RITUAL Locked</div>
             </div>
         </div>
-
         <div class="two-col">
             <div class="col-main">
-
                 <div class="card">
                     <div class="card-header">
                         <div>
@@ -1129,7 +1861,6 @@
                         </table>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="card-header">
                         <div>
@@ -1138,7 +1869,7 @@
                         </div>
                         <div class="live-dot">Live</div>
                     </div>
-                    <div class="feed-list" id="agentFeed">
+                    <div class="feed-list">
                         <div class="feed-item">
                             <div class="fdot fd-g"></div>
                             <div>
@@ -1164,26 +1895,31 @@
                         <div class="feed-item">
                             <div class="fdot fd-y"></div>
                             <div>
-                                <div class="feed-text">Deal #1 created. Awaiting seller acceptance</div>
-                                <div class="feed-time">09:22:05</div>
+                                <div class="feed-text">Offer accepted — negotiation complete, funds locking</div>
+                                <div class="feed-time">09:31:12</div>
+                            </div>
+                        </div>
+                        <div class="feed-item">
+                            <div class="fdot fd-g"></div>
+                            <div>
+                                <div class="feed-text">New WL spot listed — NFT Whitelist · 0.5 RITUAL</div>
+                                <div class="feed-time">09:44:05</div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
             <div class="col-side">
-
                 <div class="card">
                     <div class="card-header">
                         <div>
-                            <h3>Create Deal</h3>
-                            <p>Deploy an autonomous deal</p>
+                            <h3>Quick Deal</h3>
+                            <p>Deploy a direct deal</p>
                         </div>
                     </div>
                     <div class="card-body">
                         <div class="fg"><label class="fl">Deal Type</label>
-                            <select class="fs" id="dealType">
+                            <select class="fs" id="dealType" onchange="updateIntentPlaceholder()">
                                 <option value="social">Social Media</option>
                                 <option value="content">Content Creation</option>
                                 <option value="freelance">Freelance</option>
@@ -1204,38 +1940,59 @@
                         <div class="fg"><label class="fl">Budget</label>
                             <div class="iw"><input type="number" class="fi" id="dealAmount" value="0.01" step="0.001"
                                     min="0.005" /><span class="isuf">RITUAL</span></div>
-                            <p class="fhint">Min 0.005 RITUAL. Locked until condition is verified.</p>
+                            <p class="fhint">Min 0.005 RITUAL. Locked when both parties agree.</p>
                         </div>
-                        <button class="ibtn" onclick="openNewDeal()">
+                        <button class="ibtn"
+                            onclick="toast('Coming soon','Direct deal flow via MetaMask coming in next update','info')">
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 5v14M5 12h14" />
-                            </svg>
-                            Initiate Deal
+                            </svg>Initiate Deal
                         </button>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="card-header">
                         <div>
                             <h3>Lookup Deal</h3>
-                            <p>Fetch deal status by ID</p>
+                            <p>Fetch deal by ID</p>
                         </div>
                     </div>
                     <div class="card-body">
-                        <div class="lrow">
-                            <input type="number" class="fi" id="lookupId" placeholder="e.g. 0" min="0" />
-                            <button class="fbtn" onclick="fetchDeal()">Fetch</button>
-                        </div>
+                        <div class="lrow"><input type="number" class="fi" id="lookupId" placeholder="e.g. 0"
+                                min="0" /><button class="fbtn" onclick="fetchDeal()">Fetch</button></div>
                         <div id="dealDetail" style="margin-top:12px"></div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- ALL DEALS PAGE -->
+    <!-- MARKETPLACE -->
+    <div class="page" id="page-listings">
+        <div class="listings-toolbar">
+            <h2>Marketplace</h2>
+            <div class="filter-tabs" id="filterTabs">
+                <button class="filter-tab active" onclick="filterListings('all',this)">All</button>
+                <button class="filter-tab" onclick="filterListings('whitelist',this)">NFT Whitelist</button>
+                <button class="filter-tab" onclick="filterListings('airdrop',this)">Airdrop</button>
+                <button class="filter-tab" onclick="filterListings('allocation',this)">Token</button>
+                <button class="filter-tab" onclick="filterListings('premarket',this)">Pre-Market</button>
+                <button class="filter-tab" onclick="filterListings('freelance',this)">Freelance</button>
+                <button class="filter-tab" onclick="filterListings('social',this)">Social</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+                <div class="view-toggle">
+                    <button class="view-btn active" id="gridViewBtn" onclick="setView('grid')">⊞ Grid</button>
+                    <button class="view-btn" id="listViewBtn" onclick="setView('list')">☰ List</button>
+                </div>
+                <button class="ibtn" style="width:auto;padding:8px 16px;font-size:12px;border-radius:9px"
+                    onclick="openPostListing()">+ Post</button>
+            </div>
+        </div>
+        <div id="listingsContainer"></div>
+    </div>
+
+    <!-- MY DEALS -->
     <div class="page" id="page-deals">
         <div class="card">
             <div class="card-header">
@@ -1270,11 +2027,129 @@
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- POST LISTING MODAL -->
+    <div class="moverlay" id="postListingModal">
+        <div class="modal modal-lg">
+            <div class="mh">
+                <h3>Post a Listing</h3><button class="mclose" onclick="closeModal('postListingModal')">✕</button>
+            </div>
+            <div class="mbody">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Category</label>
+                        <select class="form-select" id="listingCat"
+                            onchange="updateListingProofFields();updateTweetPreview()">
+                            <option value="whitelist">NFT Whitelist</option>
+                            <option value="airdrop">Airdrop Allocation</option>
+                            <option value="allocation">Token Allocation</option>
+                            <option value="premarket">Pre-Market</option>
+                            <option value="nft">NFT OTC Sale</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="social">Social Media</option>
+                            <option value="content">Content Creation</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="bounty">Bug Bounty</option>
+                            <option value="escrow">Escrow</option>
+                            <option value="conditional">Conditional</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Your Price (RITUAL)</label>
+                        <div style="position:relative"><input type="number" class="form-input" id="listingPrice"
+                                placeholder="0.50" step="0.01" min="0.005" oninput="updateTweetPreview()"
+                                style="padding-right:62px" /><span
+                                style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--green)">RITUAL</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="listingTitle"
+                        placeholder="e.g. 1× NFT Whitelist Spot — ProjectX Genesis" oninput="updateTweetPreview()" />
+                </div>
+                <div class="form-group"><label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="listingDesc"
+                        placeholder="Be specific — include collection names, token details, deadlines, and any relevant links."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Expires In</label>
+                        <select class="form-select" id="listingExpiry">
+                            <option value="24">24 hours</option>
+                            <option value="48">48 hours</option>
+                            <option value="72">3 days</option>
+                            <option value="168">7 days</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Allow Offers?</label>
+                        <select class="form-select" id="listingOffers">
+                            <option value="yes">Yes — buyers can negotiate</option>
+                            <option value="no">No — fixed price only</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="listingProofFields"></div>
+                <!-- Twitter optional -->
+                <div style="margin-bottom:14px">
+                    <label
+                        style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 14px;background:#f8faf9;border:1px solid var(--border);border-radius:10px">
+                        <input type="checkbox" id="shareOnTwitter" onchange="toggleTwitterPreview()"
+                            style="width:15px;height:15px;accent-color:#1d9bf0;cursor:pointer" />
+                        <div>
+                            <div
+                                style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#1d9bf0">
+                                    <path
+                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                                Share on X after posting
+                            </div>
+                            <div style="font-size:11px;color:var(--text3);margin-top:1px">Optional — post to Twitter to
+                                attract more buyers</div>
+                        </div>
+                    </label>
+                    <div id="twitterPreviewBox" style="display:none;margin-top:8px">
+                        <div class="twitter-box">
+                            <h4><svg width="13" height="13" viewBox="0 0 24 24" fill="#1d4ed8">
+                                    <path
+                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg> Tweet preview</h4>
+                            <div class="tweet-preview" id="tweetPreview">Fill in the form to see preview…</div>
+                            <button class="tweet-btn" onclick="shareListing()">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
+                                    <path
+                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                                Post to X
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('postListingModal')">Cancel</button>
+                    <button class="btn-primary" onclick="submitListing()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>Post Listing
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LISTING DETAIL MODAL -->
+    <div class="moverlay" id="listingModal">
+        <div class="modal modal-lg">
+            <div class="mh">
+                <h3 id="listingModalTitle">Listing</h3><button class="mclose"
+                    onclick="closeModal('listingModal')">✕</button>
+            </div>
+            <div class="mbody" id="listingModalBody"></div>
+        </div>
+    </div>
+
+    <!-- DEAL DETAIL MODAL -->
     <div class="moverlay" id="dealModal">
         <div class="modal">
             <div class="mh">
-                <h3 id="modalTitle">Deal Details</h3><button class="mclose" onclick="closeModal()">✕</button>
+                <h3 id="modalTitle">Deal Details</h3><button class="mclose" onclick="closeModal('dealModal')">✕</button>
             </div>
             <div class="mbody" id="modalBody"></div>
         </div>
@@ -1283,57 +2158,92 @@
     <script>
         const API = 'https://shadow-otc.onrender.com';
         const CHAIN_ID = 1979, RITUAL_RPC = 'https://rpc.ritualfoundation.org';
-        let walletAddress = null, allDeals = [];
+        let walletAddress = null, allDeals = [], currentView = 'grid', activeFilter = 'all';
 
+        const CATS = { whitelist: 'NFT Whitelist', airdrop: 'Airdrop', allocation: 'Token', premarket: 'Pre-Market', nft: 'NFT OTC', freelance: 'Freelance', social: 'Social', content: 'Content', marketing: 'Marketing', bounty: 'Bug Bounty', escrow: 'Escrow', conditional: 'Conditional' };
+
+        const PROOF_FIELDS = {
+            whitelist: [{ id: 'pf_wallet', label: 'Destination Wallet', ph: '0x… wallet to receive WL spot' }, { id: 'pf_collection', label: 'Collection Name / Link', ph: 'https://opensea.io/collection/…' }],
+            airdrop: [{ id: 'pf_txhash', label: 'Claim Link / TX Hash', ph: '0x… or https://…' }, { id: 'pf_amount', label: 'Token Amount', ph: 'e.g. 500 SHADOW' }],
+            premarket: [{ id: 'pf_agreement', label: 'Agreement Document URL', ph: 'https://docs.google.com/…' }, { id: 'pf_token', label: 'Token Name + Contract', ph: 'e.g. RITUAL 0x…' }],
+            nft: [{ id: 'pf_txhash', label: 'Transfer TX Hash', ph: '0x…' }, { id: 'pf_tokenid', label: 'NFT Contract + Token ID', ph: '0x… #1234' }],
+            freelance: [{ id: 'pf_github', label: 'GitHub Repo / Deliverable URL', ph: 'https://github.com/…' }, { id: 'pf_milestone', label: 'Milestone Description', ph: 'What marks this as done?' }],
+            social: [{ id: 'pf_url', label: 'Post / Tweet URL', ph: 'https://x.com/…' }, { id: 'pf_metric', label: 'Target Metric', ph: 'e.g. 200 likes, 50 retweets' }],
+            content: [{ id: 'pf_url', label: 'Content URL', ph: 'https://…' }, { id: 'pf_wordcount', label: 'Word Count / Duration', ph: 'e.g. 1000 words' }],
+            marketing: [{ id: 'pf_url', label: 'Campaign URL', ph: 'https://…' }, { id: 'pf_reach', label: 'Guaranteed Reach', ph: 'e.g. 10,000 impressions' }],
+            bounty: [{ id: 'pf_report', label: 'Bug Report URL', ph: 'https://…' }, { id: 'pf_severity', label: 'Severity Level', ph: 'Critical / High / Medium' }],
+            escrow: [{ id: 'pf_terms', label: 'Escrow Terms URL', ph: 'https://docs.google.com/…' }],
+            conditional: [{ id: 'pf_condition', label: 'Trigger Condition', ph: 'e.g. ETH price > $4000' }, { id: 'pf_oracle', label: 'Oracle / Data Source', ph: 'https://…' }],
+        };
+
+        const INTENT_PLACEHOLDERS = {
+            social: 'e.g. Promote this tweet to 200 likes — URL: https://x.com/yourtweet. Deliver screenshot when target is reached.',
+            content: 'e.g. Write a 1000-word blog post on DeFi trends. Deliver Google Docs link as proof.',
+            freelance: 'e.g. Build a React landing page per the Figma file. Deliver GitHub repo + live URL.',
+            nft: 'e.g. Transfer NFT #4821 from collection 0xABC… to my wallet 0xDEF… Proof: on-chain tx hash.',
+            whitelist: 'e.g. Add wallet 0xDEF… to the whitelist for MintProject. Proof: whitelist confirmation link.',
+            airdrop: 'e.g. Allocate 500 tokens from Genesis airdrop to wallet 0xDEF… Proof: on-chain tx hash.',
+            allocation: 'e.g. Reserve 10,000 SHADOW tokens at seed price. Proof: allocation confirmation.',
+            premarket: 'e.g. Sell 5,000 RITUAL tokens at $0.08 pre-TGE. Deliver signed agreement.',
+            marketing: 'e.g. Publish sponsored thread about Shadow OTC to 10K+ followers. Deliver tweet URL.',
+            bounty: 'e.g. Find and report a critical vulnerability. Proof: detailed bug report + PoC.',
+            escrow: 'e.g. Hold 1 ETH until both parties confirm the off-chain agreement is settled.',
+            conditional: 'e.g. Release payment when ETH price exceeds $4,000. Proof: oracle price feed.',
+        };
+
+        const SAMPLE_LISTINGS = [
+            { id: 'l1', cat: 'whitelist', title: '2× NFT Whitelist Spots — Ritual Genesis Drop', desc: 'Two guaranteed WL spots for the official Ritual Chain Genesis NFT collection. Mint date Jan 30. Floor expected 2+ ETH.', price: 0.8, seller: '0x7f3a…b291', sellerDeals: 14, sellerScore: 98, expires: Date.now() + 86400000 * 2, allowOffers: true },
+            { id: 'l2', cat: 'airdrop', title: '500 SHADOW Token Airdrop Allocation', desc: 'Selling my full airdrop allocation of 500 SHADOW tokens from Season 1. Tokens unlock Feb 15.', price: 0.5, seller: '0x2c9d…f441', sellerDeals: 7, sellerScore: 91, expires: Date.now() + 86400000 * 1, allowOffers: true },
+            { id: 'l3', cat: 'premarket', title: '10,000 RITUAL Tokens — Pre-TGE Price', desc: 'Selling 10,000 RITUAL at $0.06 pre-TGE. Signed agreement + token lock proof provided. TGE expected Q1 2025.', price: 1.2, seller: '0x9a1e…c883', sellerDeals: 22, sellerScore: 99, expires: Date.now() + 86400000 * 3, allowOffers: false },
+            { id: 'l4', cat: 'freelance', title: 'Full-Stack dApp Development — Solidity + React', desc: 'Building smart contracts + frontend for your Web3 project. 5 years experience, 3 deployed protocols.', price: 2.0, seller: '0x4d7b…a112', sellerDeals: 31, sellerScore: 97, expires: Date.now() + 86400000 * 7, allowOffers: true },
+            { id: 'l5', cat: 'social', title: 'Twitter Thread — 50K+ reach guaranteed', desc: 'Writing + posting a high-quality thread about your project to my 52K crypto followers.', price: 0.15, seller: '0x8e2f…d334', sellerDeals: 45, sellerScore: 94, expires: Date.now() + 86400000 * 2, allowOffers: true },
+            { id: 'l6', cat: 'allocation', title: 'Seed Round Allocation — 5,000 USDC equivalent', desc: 'Transferring my seed round allocation at 30% discount. KYC completed. Vesting: 6mo cliff, 18mo linear.', price: 0.9, seller: '0x1b5c…e667', sellerDeals: 9, sellerScore: 88, expires: Date.now() + 86400000 * 4, allowOffers: true },
+        ];
+
+        // ── TOASTS ────────────────────────────────────────────────
+        function toast(title, msg, type = 'success') {
+            const id = 't' + Date.now();
+            const icons = { success: '✅', error: '❌', info: '💡' };
+            const el = document.createElement('div');
+            el.className = `toast ${type}`; el.id = id;
+            el.innerHTML = `<div class="toast-icon">${icons[type] || '✅'}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="removeToast('${id}')">✕</button>`;
+            document.getElementById('toast-container').appendChild(el);
+            setTimeout(() => removeToast(id), 5000);
+        }
+        function removeToast(id) { const el = document.getElementById(id); if (el) { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.3s'; setTimeout(() => el.remove(), 300); } }
+
+        // ── NAV ───────────────────────────────────────────────────
         function showPage(id) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + id).classList.add('active');
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            const tab = document.getElementById('tab-' + id);
-            if (tab) tab.classList.add('active');
+            document.querySelectorAll('.nav-tab:not(.accent)').forEach(t => t.classList.remove('active'));
+            const tab = document.getElementById('tab-' + id); if (tab) tab.classList.add('active');
             if (id === 'deals') renderAllDeals();
+            if (id === 'listings') renderListings();
             window.scrollTo(0, 0);
         }
 
-        function toggleMenu() {
-            document.getElementById('drawer').classList.toggle('open');
-            document.getElementById('hamburger').classList.toggle('open');
-        }
-
-        function openNewDeal() {
-            showPage('dashboard');
-            setTimeout(() => {
-                const card = document.getElementById('dealType')?.closest('.card');
-                if (card) {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    document.getElementById('dealType').focus();
-                    card.style.transition = 'border-color 0.3s,box-shadow 0.3s';
-                    card.style.borderColor = 'var(--green)';
-                    card.style.boxShadow = '0 0 0 3px rgba(26,122,62,0.15)';
-                    setTimeout(() => { card.style.borderColor = ''; card.style.boxShadow = ''; }, 1800);
-                }
-            }, 100);
-        }
-
+        // ── WALLET ────────────────────────────────────────────────
         async function connectWallet() {
             if (walletAddress) return;
-            if (!window.ethereum) { alert('MetaMask not found. Please install MetaMask.'); return; }
+            if (!window.ethereum) { toast('MetaMask not found', 'Please install MetaMask', 'error'); return; }
             try {
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 walletAddress = accounts[0];
                 try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x7BB' }] }); }
                 catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x7BB', chainName: 'Ritual Testnet', rpcUrls: [RITUAL_RPC], nativeCurrency: { name: 'RITUAL', symbol: 'RITUAL', decimals: 18 }, blockExplorerUrls: ['https://explorer.ritualfoundation.org'] }] }); }
-                const short = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
-                document.getElementById('signinText').textContent = short;
+                const s = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
+                document.getElementById('signinText').textContent = s;
                 document.getElementById('signinBtn').classList.add('connected');
-            } catch (e) { console.error(e); }
+                toast('Wallet connected', `Connected as ${s} on Ritual Testnet`);
+            } catch (e) { toast('Failed', e.message || 'Could not connect', 'error'); }
         }
-        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; document.getElementById('signinText').textContent = a[0].slice(0, 6) + '…' + a[0].slice(-4); document.getElementById('signinBtn').classList.add('connected'); } });
+        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; const s = a[0].slice(0, 6) + '…' + a[0].slice(-4); document.getElementById('signinText').textContent = s; document.getElementById('signinBtn').classList.add('connected'); } });
 
+        // ── DATA ──────────────────────────────────────────────────
         async function loadData() {
             try {
-                const res = await fetch(API + '/deals');
-                const data = await res.json();
+                const res = await fetch(API + '/deals'); const data = await res.json();
                 allDeals = data.deals || [];
                 document.getElementById('statTotal').textContent = data.total ?? allDeals.length;
                 document.getElementById('statOpen').textContent = data.open ?? allDeals.filter(d => d.statusId === 0).length;
@@ -1343,103 +2253,219 @@
             } catch (e) {
                 ['statTotal', 'statOpen', 'statCompleted'].forEach(id => document.getElementById(id).textContent = '—');
                 document.getElementById('statLocked').textContent = '—';
-                document.getElementById('dealsBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">Backend offline — run: npm run server</div></td></tr>';
+                document.getElementById('dealsBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">Backend offline</div></td></tr>';
             }
         }
-
-        function spill(s) {
-            const m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad' };
-            return `<span class="sp ${m[s] || 'sp-open'}">${s || 'Open'}</span>`;
-        }
-
+        function spill(s) { const m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad' }; return `<span class="sp ${m[s] || 'sp-open'}">${s || 'Open'}</span>`; }
         function renderDeals(deals) {
             const b = document.getElementById('dealsBody');
-            if (!deals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet — create your first →</div></td></tr>'; return; }
-            b.innerHTML = deals.map(d => `<tr onclick="showDealModal(${d.id})">
-    <td><span class="deal-id">#${d.id}</span></td>
-    <td>${d.category || '—'}</td>
-    <td>${d.amount} RITUAL</td>
-    <td>${spill(d.status)}</td>
-    <td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td>
-  </tr>`).join('');
+            if (!deals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet</div></td></tr>'; return; }
+            b.innerHTML = deals.map(d => `<tr onclick="showDealModal(${d.id})"><td><span class="deal-id">#${d.id}</span></td><td>${d.category || '—'}</td><td>${d.amount} RITUAL</td><td>${spill(d.status)}</td><td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td></tr>`).join('');
         }
-
         function renderAllDeals() {
             const b = document.getElementById('allDealsBody');
             if (!allDeals.length) { b.innerHTML = '<tr><td colspan="7"><div class="empty-state">No deals found</div></td></tr>'; return; }
-            b.innerHTML = allDeals.map(d => `<tr onclick="showDealModal(${d.id})">
-    <td><span class="deal-id">#${d.id}</span></td>
-    <td>${d.category || '—'}</td>
-    <td>${d.amount} RITUAL</td>
-    <td>${d.collateral} RITUAL</td>
-    <td>${spill(d.status)}</td>
-    <td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td>
-    <td style="font-family:monospace;font-size:11px">${d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—'}</td>
-  </tr>`).join('');
+            b.innerHTML = allDeals.map(d => `<tr onclick="showDealModal(${d.id})"><td><span class="deal-id">#${d.id}</span></td><td>${d.category || '—'}</td><td>${d.amount} RITUAL</td><td>${d.collateral} RITUAL</td><td>${spill(d.status)}</td><td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td><td style="font-family:monospace;font-size:11px">${d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—'}</td></tr>`).join('');
         }
 
+        // ── LISTINGS ──────────────────────────────────────────────
+        function timeLeft(ts) { const d = ts - Date.now(); if (d <= 0) return 'Expired'; const h = Math.floor(d / 3600000); return h < 24 ? h + 'h left' : Math.floor(h / 24) + 'd left'; }
+        function scoreStars(s) { return `<span style="color:#f59e0b;font-size:11px">${s >= 95 ? '★★★★★' : s >= 85 ? '★★★★☆' : '★★★☆☆'}</span> <span style="color:var(--text3);font-size:10px">${s}%</span>`; }
+
+        function filterListings(cat, el) {
+            activeFilter = cat;
+            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active'); renderListings();
+        }
+        function setView(v) {
+            currentView = v;
+            document.getElementById('gridViewBtn').classList.toggle('active', v === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', v === 'list');
+            renderListings();
+        }
+        function renderListings() {
+            const filtered = activeFilter === 'all' ? SAMPLE_LISTINGS : SAMPLE_LISTINGS.filter(l => l.cat === activeFilter);
+            const c = document.getElementById('listingsContainer');
+            if (!filtered.length) { c.innerHTML = `<div class="empty-listings"><div class="empty-icon">🔍</div><h3>No listings here yet</h3><p>Be the first to post in this category.</p><button class="ibtn" style="width:auto;padding:10px 24px;border-radius:9px;font-size:13px;display:inline-flex" onclick="openPostListing()">+ Post Listing</button></div>`; return; }
+            if (currentView === 'grid') {
+                c.innerHTML = `<div class="listings-grid">${filtered.map(l => `
+      <div class="listing-card" onclick="openListingDetail('${l.id}')">
+        <div class="listing-card-top">
+          <div class="listing-cat">${CATS[l.cat] || l.cat}</div>
+          <div class="listing-title">${l.title}</div>
+          <div class="listing-desc">${l.desc}</div>
+          <div class="listing-seller">
+            <div class="seller-avatar">${l.seller.slice(2, 4).toUpperCase()}</div>
+            <div><div class="seller-addr">${l.seller}</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px">${scoreStars(l.sellerScore)}<span style="font-size:10px;color:var(--text3)">${l.sellerDeals} deals</span></div></div>
+          </div>
+        </div>
+        <div class="listing-card-bottom">
+          <div><div class="listing-price">${l.price} <span>RITUAL</span></div><div class="listing-meta">⏱ ${timeLeft(l.expires)}${l.allowOffers ? ' · Offers OK' : ''}</div></div>
+          <div class="listing-actions">
+            ${l.allowOffers ? `<button class="btn-offer" onclick="event.stopPropagation();openListingDetail('${l.id}')">Offer</button>` : ''}
+            <button class="btn-buy" onclick="event.stopPropagation();buyListing('${l.id}')">Buy Now</button>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+            } else {
+                c.innerHTML = `<div class="listings-list">${filtered.map(l => `
+      <div class="listing-row" onclick="openListingDetail('${l.id}')">
+        <div style="width:110px;flex-shrink:0"><span class="listing-cat">${CATS[l.cat] || l.cat}</span></div>
+        <div class="listing-row-main"><h4>${l.title}</h4><p>${l.desc}</p></div>
+        <div style="font-size:11px;font-family:monospace;color:var(--text2);width:100px;flex-shrink:0">${l.seller}</div>
+        <div style="font-size:11px;color:var(--text3);width:60px;flex-shrink:0">${timeLeft(l.expires)}</div>
+        <div class="listing-row-price">${l.price} <span style="font-size:11px;color:var(--text3);font-weight:500">RITUAL</span></div>
+        <div class="listing-actions" style="flex-shrink:0">
+          ${l.allowOffers ? `<button class="btn-offer" onclick="event.stopPropagation();openListingDetail('${l.id}')">Offer</button>` : ''}
+          <button class="btn-buy" onclick="event.stopPropagation();buyListing('${l.id}')">Buy</button>
+        </div>
+      </div>`).join('')}</div>`;
+            }
+        }
+
+        function openListingDetail(id) {
+            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
+            document.getElementById('listingModalTitle').textContent = CATS[l.cat] + ' Listing';
+            document.getElementById('listingModalBody').innerHTML = `
+    <div class="listing-detail-header">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:5px">${CATS[l.cat]}</div>
+      <h4>${l.title}</h4><p>${l.desc}</p>
+      <div class="listing-detail-price">${l.price} <span style="font-size:13px;font-weight:500;opacity:0.7">RITUAL</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8faf9;border:1px solid var(--border);border-radius:9px;margin-bottom:14px">
+      <div class="seller-avatar" style="width:36px;height:36px;font-size:13px">${l.seller.slice(2, 4).toUpperCase()}</div>
+      <div><div style="font-size:13px;font-weight:600;font-family:monospace">${l.seller}</div><div style="display:flex;align-items:center;gap:8px;margin-top:3px">${scoreStars(l.sellerScore)}<span style="font-size:11px;color:var(--text3)">${l.sellerDeals} completed deals</span></div></div>
+      <div style="margin-left:auto;text-align:right"><div style="font-size:10px;color:var(--text3)">Expires</div><div style="font-size:12px;font-weight:600">${timeLeft(l.expires)}</div></div>
+    </div>
+    ${l.allowOffers ? `
+    <div class="offer-form">
+      <h4>Make an Offer</h4>
+      <div class="neg-thread" id="negThread_${l.id}">
+        <div class="neg-msg seller"><div class="neg-label">Seller asking</div><div class="neg-price">${l.price} RITUAL</div></div>
+      </div>
+      <div class="offer-wrap" style="margin-bottom:8px"><input type="number" class="offer-input" id="offerAmt_${l.id}" value="${(l.price * 0.85).toFixed(2)}" step="0.01" placeholder="Your offer"/><span class="offer-suf">RITUAL</span></div>
+      <textarea class="offer-note" id="offerNote_${l.id}" placeholder="Add a note — introduce yourself or explain your offer…"></textarea>
+    </div>`: '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#15803d;font-weight:600">Fixed price listing — no offers accepted.</div>'}
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('listingModal')">Close</button>
+      ${l.allowOffers ? `<button class="btn-secondary" onclick="submitOffer('${l.id}')">Send Offer</button>` : ''}
+      <button class="btn-primary" onclick="closeModal('listingModal');buyListing('${l.id}')">Buy Now — ${l.price} RITUAL</button>
+    </div>`;
+            document.getElementById('listingModal').classList.add('show');
+        }
+
+        function submitOffer(id) {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to make an offer', 'info'); return; }
+            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
+            const amt = parseFloat(document.getElementById('offerAmt_' + id)?.value || 0);
+            const note = document.getElementById('offerNote_' + id)?.value || '';
+            if (!amt || amt <= 0) { toast('Invalid offer', 'Enter a valid amount', 'error'); return; }
+            const thread = document.getElementById('negThread_' + id);
+            if (thread) { const m = document.createElement('div'); m.className = 'neg-msg buyer'; m.innerHTML = `<div class="neg-label">Your offer</div><div class="neg-price">${amt} RITUAL</div>${note ? `<div class="neg-note">${note}</div>` : ''}`; thread.appendChild(m); thread.scrollTop = thread.scrollHeight; }
+            toast('Offer sent!', `${amt} RITUAL offer sent. Seller has 24hrs to respond.`);
+            setTimeout(() => {
+                const counter = (amt * 1.1).toFixed(2);
+                const t2 = document.getElementById('negThread_' + id);
+                if (t2) { const m = document.createElement('div'); m.className = 'neg-msg seller'; m.innerHTML = `<div class="neg-label">Counter-offer</div><div class="neg-price">${counter} RITUAL</div><div class="neg-note">Best I can do — ${counter} RITUAL.</div>`; t2.appendChild(m); t2.scrollTop = t2.scrollHeight; }
+                toast('Counter-offer received!', `Seller countered at ${counter} RITUAL`, 'info');
+            }, 3000);
+        }
+
+        function buyListing(id) {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to buy this listing', 'info'); connectWallet(); return; }
+            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
+            toast('Deal initiating…', `Locking ${l.price} RITUAL into escrow for "${l.title.slice(0, 40)}…"`);
+            setTimeout(() => toast('Deal created!', 'Funds locked on Ritual Chain. Share the deal ID with the seller.'), 1500);
+        }
+
+        // ── POST LISTING ──────────────────────────────────────────
+        function openPostListing() {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to post a listing', 'info'); connectWallet(); return; }
+            updateListingProofFields();
+            document.getElementById('postListingModal').classList.add('show');
+        }
+        function updateListingProofFields() {
+            const cat = document.getElementById('listingCat')?.value || 'whitelist';
+            const fields = PROOF_FIELDS[cat] || [];
+            const el = document.getElementById('listingProofFields');
+            if (!fields.length) { el.innerHTML = ''; return; }
+            el.innerHTML = `<div class="proof-section"><div class="proof-section-label">Proof requirements — what the buyer will need from you</div>${fields.map(f => `<div class="proof-field"><label>${f.label}</label><input type="text" id="${f.id}" placeholder="${f.ph}"/></div>`).join('')}</div>`;
+        }
+        function toggleTwitterPreview() {
+            const checked = document.getElementById('shareOnTwitter')?.checked;
+            const box = document.getElementById('twitterPreviewBox');
+            if (box) box.style.display = checked ? 'block' : 'none';
+            if (checked) updateTweetPreview();
+        }
+        function updateTweetPreview() {
+            const cat = document.getElementById('listingCat')?.value || 'whitelist';
+            const price = document.getElementById('listingPrice')?.value || '0.00';
+            const title = document.getElementById('listingTitle')?.value || 'New listing on Shadow OTC';
+            const el = document.getElementById('tweetPreview');
+            if (el) el.textContent = `🔒 New ${CATS[cat]} listed on Shadow OTC\n\n${title.slice(0, 55)}${title.length > 55 ? '…' : ''}\n\n💰 ${price} RITUAL\n✅ AI-verified on Ritual Chain\n⚡ TEE-secured escrow\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain #OTC`;
+        }
+        function shareListing() {
+            const text = document.getElementById('tweetPreview')?.textContent || '';
+            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'width=550,height=420');
+        }
+        function submitListing() {
+            const title = document.getElementById('listingTitle')?.value?.trim();
+            const price = parseFloat(document.getElementById('listingPrice')?.value || 0);
+            const desc = document.getElementById('listingDesc')?.value?.trim();
+            const cat = document.getElementById('listingCat')?.value;
+            if (!title) { toast('Missing title', 'Add a listing title', 'error'); return; }
+            if (!price || price <= 0) { toast('Missing price', 'Set a price', 'error'); return; }
+            if (!desc) { toast('Missing description', 'Describe what you are selling', 'error'); return; }
+            const newL = { id: 'l' + Date.now(), cat, title, desc, price, seller: walletAddress || '0x…', sellerDeals: 0, sellerScore: 100, expires: Date.now() + parseInt(document.getElementById('listingExpiry')?.value || '48') * 3600000, allowOffers: document.getElementById('listingOffers')?.value === 'yes' };
+            SAMPLE_LISTINGS.unshift(newL);
+            const doTweet = document.getElementById('shareOnTwitter')?.checked;
+            closeModal('postListingModal');
+            toast('Listing posted!', `"${title}" is now live on the marketplace`);
+            if (doTweet) {
+                const tweet = `🔒 New ${CATS[cat]} listed on Shadow OTC\n\n${title.slice(0, 55)}\n\n💰 ${price} RITUAL\n✅ AI-verified on Ritual Chain\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain`;
+                window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweet), '_blank', 'width=550,height=420');
+            }
+            if (document.getElementById('page-listings').classList.contains('active')) renderListings();
+        }
+
+        // ── DEAL MODAL ────────────────────────────────────────────
         function showDealModal(id) {
             const d = allDeals.find(x => x.id === id); if (!d) return;
             document.getElementById('modalTitle').textContent = `Deal #${id} — ${d.category || ''}`;
-            document.getElementById('modalBody').innerHTML = [
-                ['Status', spill(d.status)], ['Category', d.category],
-                ['Amount', d.amount + ' RITUAL'], ['Collateral', d.collateral + ' RITUAL'],
-                ['Buyer', d.buyer || '—'],
-                ['Seller', (d.seller && d.seller !== '0x0000000000000000000000000000000000000000') ? d.seller : 'Awaiting'],
-                ['Proof URL', d.proofUrl || '—'],
-                ['Created', d.createdAt ? new Date(d.createdAt * 1000).toLocaleString() : '—']
-            ].map(([k, v]) => `<div class="drow"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join('');
+            document.getElementById('modalBody').innerHTML = [['Status', spill(d.status)], ['Category', d.category], ['Amount', d.amount + ' RITUAL'], ['Collateral', d.collateral + ' RITUAL'], ['Buyer', d.buyer || '—'], ['Seller', (d.seller && d.seller !== '0x0000000000000000000000000000000000000000') ? d.seller : 'Awaiting'], ['Proof URL', d.proofUrl || '—'], ['Created', d.createdAt ? new Date(d.createdAt * 1000).toLocaleString() : '—']].map(([k, v]) => `<div class="drow"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join('');
             document.getElementById('dealModal').classList.add('show');
         }
-        function closeModal() { document.getElementById('dealModal').classList.remove('show'); }
-        document.getElementById('dealModal').addEventListener('click', e => { if (e.target.id === 'dealModal') closeModal(); });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+        // ── FETCH DEAL ────────────────────────────────────────────
         async function fetchDeal() {
             const id = document.getElementById('lookupId').value;
             const el = document.getElementById('dealDetail');
             if (id === '') { el.innerHTML = '<p style="font-size:12px;color:var(--text-light)">Enter a deal ID</p>'; return; }
             el.innerHTML = '<p style="font-size:12px;color:var(--green)">Fetching…</p>';
             try {
-                const res = await fetch(`${API}/deal/${id}`);
-                const d = await res.json();
+                const res = await fetch(`${API}/deal/${id}`); const d = await res.json();
                 if (d.error) throw new Error(d.error);
                 if (!allDeals.find(x => x.id === d.id)) allDeals.push(d);
-                el.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:11px;font-size:12px;margin-top:2px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Status</span>${spill(d.status)}</div>
-      <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Amount</span><span style="color:var(--text2)">${d.amount} RITUAL</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Category</span><span style="color:var(--text2)">${d.category}</span></div>
-    </div>
-    <button onclick="showDealModal(${d.id})" style="margin-top:8px;width:100%;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:7px;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font)">View Full Details →</button>`;
+                el.innerHTML = `<div style="background:#f8faf9;border:1px solid var(--border);border-radius:8px;padding:11px;font-size:12px"><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Status</span>${spill(d.status)}</div><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Amount</span><span>${d.amount} RITUAL</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Category</span><span>${d.category}</span></div></div><button onclick="showDealModal(${d.id})" style="margin-top:8px;width:100%;padding:8px;background:#f1f5f2;border:1px solid var(--border);border-radius:7px;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font)">View Full Details →</button>`;
             } catch (e) { el.innerHTML = `<p style="font-size:12px;color:#dc2626">Not found: ${e.message}</p>`; }
         }
 
-        // ── DEAL TYPE → INTENT PLACEHOLDER ────────────────────────
-        const intentPlaceholders = {
-            social: 'e.g. Promote my tweet to 200 likes — URL: https://x.com/yourtweet. Deliver screenshot proof when target is reached.',
-            content: 'e.g. Write a 1000-word blog post on DeFi trends and deliver a Google Docs link as proof of completion.',
-            freelance: 'e.g. Build a React landing page as per the attached Figma file. Deliver GitHub repo link + live URL.',
-            nft: 'e.g. Transfer NFT #4821 from collection 0xABC… to my wallet 0xDEF… Proof: on-chain transfer tx hash.',
-            whitelist: 'e.g. Add wallet 0xDEF… to the whitelist for MintProject before Jan 31. Proof: whitelist confirmation link.',
-            airdrop: 'e.g. Allocate 500 tokens from the Genesis airdrop to wallet 0xDEF… Proof: on-chain tx hash.',
-            allocation: 'e.g. Reserve 10,000 SHADOW tokens at seed price for wallet 0xDEF… Proof: allocation confirmation from team.',
-            premarket: 'e.g. Sell 5,000 RITUAL tokens at $0.08 pre-TGE. Deliver signed agreement + wallet confirmation.',
-            marketing: 'e.g. Publish a sponsored thread about Shadow OTC to 10,000+ followers. Deliver tweet URL as proof.',
-            bounty: 'e.g. Find and report a critical vulnerability in the ShadowOTC contract. Proof: detailed bug report + PoC.',
-            escrow: 'e.g. Hold 1 ETH in escrow until both parties confirm the off-chain agreement is settled.',
-            conditional: 'e.g. Release payment when ETH price exceeds $4,000. Proof: oracle price feed confirmation.',
-        };
-
+        // ── INTENT PLACEHOLDER ────────────────────────────────────
         function updateIntentPlaceholder() {
-            const type = document.getElementById('dealType').value;
+            const t = document.getElementById('dealType')?.value;
             const ta = document.getElementById('dealIntent');
-            ta.placeholder = intentPlaceholders[type] || 'Describe the deliverable…';
+            if (ta) ta.placeholder = INTENT_PLACEHOLDERS[t] || 'Describe the deliverable…';
         }
 
-        document.getElementById('dealType').addEventListener('change', updateIntentPlaceholder);
-        updateIntentPlaceholder();
+        // ── MODAL UTILS ───────────────────────────────────────────
+        function closeModal(id) { document.getElementById(id)?.classList.remove('show'); }
+        document.querySelectorAll('.moverlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.moverlay.show').forEach(o => o.classList.remove('show')); });
 
+        // ── INIT ──────────────────────────────────────────────────
+        updateIntentPlaceholder();
         loadData();
+        renderListings();
     </script>
 </body>
 

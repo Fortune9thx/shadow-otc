@@ -3058,6 +3058,216 @@
             margin-bottom: 10px
         }
 
+        /* ── MARKETPLACE IMPROVEMENTS ────────────────────────────── */
+        .listing-card-banner {
+            height: 90px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .listing-card-banner-emoji {
+            font-size: 36px;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2))
+        }
+
+        .listing-card-banner-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.9
+        }
+
+        .listing-card .listing-cat {
+            margin-bottom: 8px
+        }
+
+        .cat-whitelist .listing-card-banner-bg {
+            background: linear-gradient(135deg, #0d3320, #1a7a3e)
+        }
+
+        .cat-airdrop .listing-card-banner-bg {
+            background: linear-gradient(135deg, #1e1b4b, #4338ca)
+        }
+
+        .cat-premarket .listing-card-banner-bg {
+            background: linear-gradient(135deg, #431407, #9a3412)
+        }
+
+        .cat-nft .listing-card-banner-bg {
+            background: linear-gradient(135deg, #1a1a2e, #6d28d9)
+        }
+
+        .cat-freelance .listing-card-banner-bg {
+            background: linear-gradient(135deg, #0c4a6e, #0284c7)
+        }
+
+        .cat-social .listing-card-banner-bg {
+            background: linear-gradient(135deg, #0f172a, #1d9bf0)
+        }
+
+        .cat-content .listing-card-banner-bg {
+            background: linear-gradient(135deg, #1c1917, #78350f)
+        }
+
+        .cat-allocation .listing-card-banner-bg {
+            background: linear-gradient(135deg, #052e16, #15803d)
+        }
+
+        .cat-marketing .listing-card-banner-bg {
+            background: linear-gradient(135deg, #2d1654, #7c3aed)
+        }
+
+        .cat-bounty .listing-card-banner-bg {
+            background: linear-gradient(135deg, #450a0a, #dc2626)
+        }
+
+        .cat-escrow .listing-card-banner-bg {
+            background: linear-gradient(135deg, #0f2027, #203a43)
+        }
+
+        .cat-conditional .listing-card-banner-bg {
+            background: linear-gradient(135deg, #1a0533, #9333ea)
+        }
+
+        .listing-card-verified {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            z-index: 2;
+            backdrop-filter: blur(4px)
+        }
+
+        .listing-price-tag {
+            display: flex;
+            align-items: baseline;
+            gap: 4px
+        }
+
+        .listing-price-tag .price-main {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--green)
+        }
+
+        .listing-price-tag .price-unit {
+            font-size: 11px;
+            color: var(--text3);
+            font-weight: 500
+        }
+
+        .listing-offers-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            background: #f0fdf4;
+            color: var(--green-dark);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 20px;
+            border: 1px solid #bbf7d0
+        }
+
+        /* ── NAV TABS COMPACT ────────────────────────────────────── */
+        .topbar-nav {
+            display: flex;
+            align-items: center;
+            gap: 1px;
+            flex: 1;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none
+        }
+
+        .topbar-nav::-webkit-scrollbar {
+            display: none
+        }
+
+        .nav-tab {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 11px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text3);
+            cursor: pointer;
+            transition: all 0.15s;
+            border: none;
+            background: transparent;
+            font-family: var(--font);
+            white-space: nowrap
+        }
+
+        .nav-tab svg {
+            flex-shrink: 0;
+            opacity: 0.7
+        }
+
+        .nav-tab:hover {
+            color: var(--text);
+            background: #f1f5f2
+        }
+
+        .nav-tab:hover svg {
+            opacity: 1
+        }
+
+        .nav-tab.active {
+            color: var(--green);
+            background: #e8f5ea;
+            font-weight: 600
+        }
+
+        .nav-tab.active svg {
+            opacity: 1;
+            stroke: var(--green)
+        }
+
+        .nav-tab.accent {
+            color: var(--green);
+            font-weight: 600
+        }
+
+        .nav-tab.accent:hover {
+            background: #e8f5ea
+        }
+
+        /* sign out button style */
+        .wd-signout {
+            color: #dc2626 !important
+        }
+
+        .wd-signout svg {
+            stroke: #dc2626 !important
+        }
+
+        .wd-signout:hover {
+            background: #fef2f2 !important
+        }
+
+        @media(max-width:700px) {
+            .nav-tab span {
+                display: none
+            }
+
+            .nav-tab {
+                padding: 7px 10px
+            }
+        }
+
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px
@@ -3112,13 +3322,46 @@
             <div class="logo-text"><strong>Shadow OTC</strong><span>Ritual Chain</span></div>
         </div>
         <nav class="topbar-nav">
-            <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">Overview</button>
-            <button class="nav-tab" id="tab-listings" onclick="showPage('listings')">Marketplace</button>
-            <button class="nav-tab" id="tab-deals" onclick="showPage('deals')">My Deals</button>
-            <button class="nav-tab" id="tab-profile" onclick="showPage('profile')">My Profile</button>
-            <button class="nav-tab" id="tab-stats" onclick="showPage('stats')">Market Stats</button>
-            <button class="nav-tab" id="tab-projects" onclick="showPage('projects')">Projects</button>
-            <button class="nav-tab accent" onclick="openPostListing()">+ Post Listing</button>
+            <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')" title="Overview">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                <span>Overview</span>
+            </button>
+            <button class="nav-tab" id="tab-listings" onclick="showPage('listings')" title="Marketplace">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 01-8 0" />
+                </svg>
+                <span>Marketplace</span>
+            </button>
+            <button class="nav-tab" id="tab-deals" onclick="showPage('deals')" title="My Deals">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                <span>My Deals</span>
+            </button>
+            <button class="nav-tab" id="tab-stats" onclick="showPage('stats')" title="Market Stats">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <span>Stats</span>
+            </button>
+            <button class="nav-tab" id="tab-projects" onclick="showPage('projects')" title="Projects">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
+                </svg>
+                <span>Projects</span>
+            </button>
         </nav>
         <div class="topbar-right">
             <div class="chain-pill">
@@ -3780,8 +4023,22 @@
         function closeWalletMenu() {
             document.getElementById('walletDropdown').classList.remove('open');
         }
+        function signOut() {
+            walletAddress = null;
+            document.getElementById('signinText').textContent = 'Sign In';
+            document.getElementById('signinBtn').classList.remove('connected');
+            document.getElementById('wdAvatar').textContent = '?';
+            document.getElementById('wdAddr').textContent = 'Not connected';
+            const sub = document.getElementById('wdSub'); if (sub) sub.textContent = 'Connect to get started';
+            document.getElementById('wdConnectBtn').style.display = '';
+            const sob = document.getElementById('wdSignOutBtn'); if (sob) sob.style.display = 'none';
+            closeWalletMenu();
+            toast('Signed out', 'Wallet disconnected successfully');
+            const pn = document.getElementById('profileName'); if (pn) pn.textContent = 'Connect Wallet';
+            const pa = document.getElementById('profileAddr'); if (pa) pa.textContent = 'Sign in to view your profile';
+        }
         document.addEventListener('click', function (e) {
-            var wrap = document.getElementById('walletWrap');
+            var wrap = document.getElementById('walletMenuWrap') || document.getElementById('walletWrap');
             if (wrap && !wrap.contains(e.target)) closeWalletMenu();
         });
         function updateWalletUI(addr) {
@@ -3791,6 +4048,7 @@
             document.getElementById('wdAddr').textContent = short;
             document.getElementById('wdSub').textContent = 'Ritual Testnet · Connected';
             document.getElementById('wdConnectBtn').style.display = 'none';
+            const signOutBtn = document.getElementById('wdSignOutBtn'); if (signOutBtn) signOutBtn.style.display = '';
             document.getElementById('signinText').textContent = short;
             document.getElementById('signinBtn').classList.add('connected');
         }
@@ -3879,7 +4137,23 @@
             }
             if (currentView === 'grid') {
                 c.innerHTML = '<div class="listings-grid">' + filtered.map(function (l) {
-                    return '<div class="listing-card" onclick="openListingDetail(\'' + l.id + '\')"><div class="listing-card-top"><div class="listing-cat">' + (CATS[l.cat] || l.cat) + '</div><div class="listing-title">' + l.title + '</div><div class="listing-desc">' + l.desc + '</div><div class="listing-seller"><div class="seller-avatar">' + l.seller.slice(2, 4).toUpperCase() + '</div><div><div class="seller-addr">' + l.seller + '</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px">' + scoreStars(l.sellerScore) + '<span style="font-size:10px;color:var(--text3)">' + l.sellerDeals + ' deals</span></div></div></div></div><div class="listing-card-bottom"><div><div class="listing-price">' + l.price + ' <span>RITUAL</span></div><div class="listing-meta">⏱ ' + timeLeft(l.expires) + (l.allowOffers ? ' · Offers OK' : '') + '</div></div><div class="listing-actions">' + (l.allowOffers ? '<button class="btn-offer" onclick="event.stopPropagation();openListingDetail(\'' + l.id + '\')">Offer</button>' : '') + '<button class="btn-buy" onclick="event.stopPropagation();buyListing(\'' + l.id + '\')">Buy Now</button></div></div></div>';
+                    var icon = CAT_ICONS[l.cat] || '🔒';
+                    var verified = l.sellerDeals >= 10 ? '<div class="listing-card-verified">✓ Verified</div>' : '';
+                    return '<div class="listing-card cat-' + l.cat + '" onclick="openListingDetail(\'' + l.id + '\')">' +
+                        '<div class="listing-card-banner"><div class="listing-card-banner-bg"></div><div class="listing-card-banner-emoji">' + icon + '</div>' + verified + '</div>' +
+                        '<div class="listing-card-top">' +
+                        '<div class="listing-cat">' + (CATS[l.cat] || l.cat) + '</div>' +
+                        '<div class="listing-title">' + l.title + '</div>' +
+                        '<div class="listing-desc">' + l.desc + '</div>' +
+                        '<div class="listing-seller"><div class="seller-avatar">' + l.seller.slice(2, 4).toUpperCase() + '</div>' +
+                        '<div><div class="seller-addr">' + l.seller + '</div>' +
+                        '<div style="display:flex;align-items:center;gap:6px;margin-top:2px">' + scoreStars(l.sellerScore) + '<span style="font-size:10px;color:var(--text3)">' + l.sellerDeals + ' deals</span></div>' +
+                        '</div></div></div>' +
+                        '<div class="listing-card-bottom">' +
+                        '<div><div class="listing-price-tag"><span class="price-main">' + l.price + '</span><span class="price-unit">RITUAL</span></div>' +
+                        '<div class="listing-meta" style="margin-top:3px">⏱ ' + timeLeft(l.expires) + (l.allowOffers ? ' &nbsp;<span class="listing-offers-badge">Offers OK</span>' : '') + '</div></div>' +
+                        '<div class="listing-actions">' + (l.allowOffers ? '<button class="btn-offer" onclick="event.stopPropagation();openListingDetail(\'' + l.id + '\')">Offer</button>' : '') + '<button class="btn-buy" onclick="event.stopPropagation();buyListing(\'' + l.id + '\')">Buy Now</button></div>' +
+                        '</div></div>';
                 }).join('') + '</div>';
             } else {
                 c.innerHTML = '<div class="listings-list">' + filtered.map(function (l) {
@@ -4131,6 +4405,8 @@
             'event DealCreated(uint256 indexed dealId, address indexed buyer, uint8 category, uint256 amount)',
         ];
 
+        const CAT_ICONS = { whitelist: '🎫', airdrop: '🪂', premarket: '🚀', nft: '🖼️', freelance: '💻', social: '📣', content: '✍️', allocation: '🪙', marketing: '📢', bounty: '🐛', escrow: '🔐', conditional: '⚡' };
+
         const CATEGORY_MAP = { social: 0, content: 1, freelance: 2, nft: 3, whitelist: 4, airdrop: 5, allocation: 6, premarket: 7, marketing: 8, bounty: 9, escrow: 10, conditional: 11 };
         const COLLATERAL_RATES = { social: 0.3, content: 0.3, freelance: 1.0, nft: 1.0, whitelist: 1.0, airdrop: 1.0, allocation: 2.0, premarket: 2.0, marketing: 0.3, bounty: 0, escrow: 0, conditional: 0 };
 
@@ -4178,7 +4454,7 @@
             if (el) { el.style.display = 'block'; el.innerHTML = html; }
         }
 
-        async function createDealOnChain(type, amount, intent) {
+        async function createDealOnChain(type, amount, intent, listingRef) {
             if (!walletAddress) { await connectWallet(); return; }
             const catId = CATEGORY_MAP[type] ?? 0;
             const collateralRate = COLLATERAL_RATES[type] ?? 0;
@@ -4223,6 +4499,25 @@
         <button onclick="closeModal('txModal');loadData()" style="flex:1;padding:9px;background:#f1f5f2;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">View Dashboard</button>
       </div></div>`);
                 toast('Deal created!', `Deal #${dealId} is live on Ritual Chain`);
+                // Add to local deals so My Deals page shows it immediately
+                if (dealId !== '—') {
+                    allDeals.unshift({
+                        id: parseInt(dealId) || Date.now(),
+                        buyer: walletAddress,
+                        seller: '0x0000000000000000000000000000000000000000',
+                        amount: amountEth.toFixed(4),
+                        collateral: '0.0000',
+                        category: CATS[type] || type,
+                        categoryId: CATEGORY_MAP[type] || 0,
+                        status: 'Open',
+                        statusId: 0,
+                        proofUrl: '',
+                        createdAt: Math.floor(Date.now() / 1000),
+                        completedAt: 0
+                    });
+                    renderDeals(allDeals.slice(0, 10));
+                    renderAllDeals();
+                }
                 loadData();
             } catch (err) {
                 const msg = err.reason || err.message || 'Transaction failed';
@@ -4327,7 +4622,7 @@
             if (!walletAddress) { toast('Connect wallet', 'Sign in to buy', 'info'); connectWallet(); return; }
             const l = SAMPLE_LISTINGS.find(x => x.id === id);
             if (!l) return;
-            createDealOnChain(l.cat, l.price.toString(), l.title);
+            createDealOnChain(l.cat, l.price.toString(), l.title, id);
         }
 
         // ── INIT ──────────────────────────────────────────────────

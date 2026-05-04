@@ -1081,6 +1081,18 @@
             border: 1px solid #fde68a
         }
 
+        .sp-neg {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe
+        }
+
+        .sp-counter {
+            background: #f5f3ff;
+            color: #7c3aed;
+            border: 1px solid #ddd6fe
+        }
+
         .empty-state {
             padding: 44px;
             text-align: center;
@@ -4095,21 +4107,34 @@
             }
         }
         function spill(s) {
-            var m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad' };
+            var m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad', Negotiating: 'sp-neg', 'Counter-offer': 'sp-counter' };
             return '<span class="sp ' + (m[s] || 'sp-open') + '">' + (s || 'Open') + '</span>';
         }
         function renderDeals(deals) {
             var b = document.getElementById('dealsBody');
             if (!deals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet</div></td></tr>'; return; }
             b.innerHTML = deals.map(function (d) {
-                return '<tr onclick="showDealModal(' + d.id + ')"><td><span class="deal-id">#' + d.id + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + spill(d.status) + '</td><td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td></tr>';
+                var isNeg = typeof d.id === 'string' && d.id.startsWith('neg_');
+                var idDisplay = isNeg ? '🤝 Offer' : '#' + d.id;
+                return '<tr onclick="showDealModal2(\'' + d.id + '\')"><td><span class="deal-id">' + idDisplay + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + spill(d.status) + '</td><td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td></tr>';
             }).join('');
         }
         function renderAllDeals() {
             var b = document.getElementById('allDealsBody');
             if (!allDeals.length) { b.innerHTML = '<tr><td colspan="7"><div class="empty-state">No deals found</div></td></tr>'; return; }
             b.innerHTML = allDeals.map(function (d) {
-                return '<tr onclick="showDealModal(' + d.id + ')"><td><span class="deal-id">#' + d.id + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + d.collateral + ' RITUAL</td><td>' + spill(d.status) + '</td><td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td><td style="font-family:monospace;font-size:11px">' + (d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—') + '</td></tr>';
+                var isNeg = typeof d.id === 'string' && d.id.startsWith('neg_');
+                var idDisplay = isNeg ? '🤝' : '#' + d.id;
+                var titleExtra = d.listingTitle ? '<div style="font-size:10px;color:var(--text3);margin-top:1px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + d.listingTitle + '</div>' : '';
+                return '<tr onclick="showDealModal2(\'' + d.id + '\')">'
+                    + '<td><span class="deal-id">' + idDisplay + '</span></td>'
+                    + '<td>' + (d.category || '—') + titleExtra + '</td>'
+                    + '<td>' + d.amount + ' RITUAL</td>'
+                    + '<td>' + d.collateral + ' RITUAL</td>'
+                    + '<td>' + spill(d.status) + '</td>'
+                    + '<td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td>'
+                    + '<td style="font-family:monospace;font-size:11px">' + (d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—') + '</td>'
+                    + '</tr>';
             }).join('');
         }
 
@@ -4177,21 +4202,67 @@
             var amt = parseFloat(amtEl ? amtEl.value : 0);
             var note = noteEl ? noteEl.value : '';
             if (!amt || amt <= 0) { toast('Invalid offer', 'Enter a valid amount', 'error'); return; }
+
+            // Add offer thread message
             var thread = document.getElementById('negThread_' + id);
             if (thread) { var m = document.createElement('div'); m.className = 'neg-msg buyer'; m.innerHTML = '<div class="neg-label">Your offer</div><div class="neg-price">' + amt + ' RITUAL</div>' + (note ? '<div class="neg-note">' + note + '</div>' : ''); thread.appendChild(m); thread.scrollTop = thread.scrollHeight; }
-            toast('Offer sent!', amt + ' RITUAL offer sent. Seller has 24hrs to respond.');
+
+            // ── Add to My Deals as "Negotiating" immediately ──────────
+            var negId = 'neg_' + id + '_' + Date.now();
+            var existingNeg = allDeals.find(function (d) { return d.negRef === id; });
+            if (!existingNeg) {
+                allDeals.unshift({
+                    id: negId,
+                    negRef: id,
+                    buyer: walletAddress,
+                    seller: l.seller || 'Awaiting',
+                    amount: amt.toFixed(4),
+                    collateral: '0.0000',
+                    category: CATS[l.cat] || l.cat,
+                    categoryId: CATEGORY_MAP[l.cat] || 0,
+                    status: 'Negotiating',
+                    statusId: -1,
+                    proofUrl: '',
+                    note: note,
+                    listingTitle: l.title,
+                    createdAt: Math.floor(Date.now() / 1000),
+                    completedAt: 0
+                });
+                renderDeals(allDeals.slice(0, 10));
+                renderAllDeals();
+            } else {
+                // Update existing negotiation amount
+                existingNeg.amount = amt.toFixed(4);
+                existingNeg.status = 'Negotiating';
+                renderDeals(allDeals.slice(0, 10));
+                renderAllDeals();
+            }
+
+            toast('Offer sent!', amt + ' RITUAL offer sent — visible in My Deals');
+
+            // Simulate counter-offer after 3 seconds
             setTimeout(function () {
                 var counter = (amt * 1.1).toFixed(2);
                 var t2 = document.getElementById('negThread_' + id);
                 if (t2) { var m2 = document.createElement('div'); m2.className = 'neg-msg seller'; m2.innerHTML = '<div class="neg-label">Counter-offer</div><div class="neg-price">' + counter + ' RITUAL</div><div class="neg-note">Best I can do — ' + counter + ' RITUAL.</div>'; t2.appendChild(m2); t2.scrollTop = t2.scrollHeight; }
-                toast('Counter-offer received!', 'Seller countered at ' + counter + ' RITUAL', 'info');
+                // Update deal in My Deals to show counter
+                var negDeal = allDeals.find(function (d) { return d.negRef === id; });
+                if (negDeal) {
+                    negDeal.amount = counter;
+                    negDeal.status = 'Counter-offer';
+                    renderDeals(allDeals.slice(0, 10));
+                    renderAllDeals();
+                }
+                toast('Counter-offer received!', 'Seller countered at ' + counter + ' RITUAL — check My Deals', 'info');
             }, 3000);
         }
         function buyListing(id) {
             if (!walletAddress) { toast('Connect wallet', 'Sign in to buy this listing', 'info'); connectWallet(); return; }
             var l = SAMPLE_LISTINGS.find(function (x) { return x.id === id; }); if (!l) return;
-            toast('Deal initiating…', 'Locking ' + l.price + ' RITUAL into escrow');
-            setTimeout(function () { toast('Deal created!', 'Funds locked on Ritual Chain. Share the deal ID with the seller.'); }, 1500);
+            // Close any open modals first
+            closeModal('listingModal');
+            // Wire to real MetaMask transaction
+            createDealOnChain(l.cat, l.price.toString(), l.title, id);
         }
 
         // ── POST LISTING ──────────────────────────────────────────
@@ -4625,6 +4696,45 @@
             createDealOnChain(l.cat, l.price.toString(), l.title, id);
         }
 
+
+        function showDealModal2(id) {
+            // Handle negotiation deals (string IDs starting with neg_)
+            var d = allDeals.find(function (x) { return String(x.id) === String(id); });
+            if (!d) return;
+
+            if (d.negRef) {
+                // Negotiation deal — show offer details
+                document.getElementById('modalTitle').textContent = 'Offer on: ' + d.listingTitle;
+                document.getElementById('modalBody').innerHTML =
+                    '<div class="drow"><span class="dk">Status</span><span class="dv">' + spill(d.status) + '</span></div>' +
+                    '<div class="drow"><span class="dk">Listing</span><span class="dv">' + d.listingTitle + '</span></div>' +
+                    '<div class="drow"><span class="dk">Your Offer</span><span class="dv">' + d.amount + ' RITUAL</span></div>' +
+                    '<div class="drow"><span class="dk">Category</span><span class="dv">' + d.category + '</span></div>' +
+                    '<div class="drow"><span class="dk">Seller</span><span class="dv">' + d.seller + '</span></div>' +
+                    '<div class="drow"><span class="dk">Submitted</span><span class="dv">' + new Date(d.createdAt * 1000).toLocaleString() + '</span></div>' +
+                    '<div style="padding-top:12px;border-top:1px solid var(--border);margin-top:4px">' +
+                    '<p style="font-size:12px;color:var(--text3);margin-bottom:10px">Ready to lock funds and confirm the deal?</p>' +
+                    '<button id="negAcceptBtn" style="width:100%;padding:10px;background:var(--green);border:none;border-radius:8px;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Accept & Lock Funds on Ritual Chain →</button>' +
+                    '</div>';
+                document.getElementById('dealModal').classList.add('show');
+                // Wire accept button after DOM update
+                setTimeout(function () {
+                    var btn = document.getElementById('negAcceptBtn');
+                    if (btn) {
+                        var catKey = d.categoryId || 0;
+                        var amt = d.amount;
+                        var title = d.listingTitle || '';
+                        btn.addEventListener('click', function () {
+                            closeModal('dealModal');
+                            createDealOnChain(Object.keys(CATEGORY_MAP)[catKey] || 'escrow', amt, title);
+                        });
+                    }
+                }, 50);
+            } else {
+                // Normal chain deal
+                showDealModal(typeof id === 'string' ? parseInt(id) : id);
+            }
+        }
         // ── INIT ──────────────────────────────────────────────────
         updateIntentPlaceholder();
         switchChatDeal('l1', document.querySelector('.chat-deal-tab'));

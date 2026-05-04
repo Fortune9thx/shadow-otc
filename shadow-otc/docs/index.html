@@ -4139,7 +4139,9 @@
                     return '<div class="lcard" onclick="openListing(\'' + l.id + '\')">' +
                         '<div class="lbanner"><div class="lbanner-bg" style="background:' + getBg(l.cat) + '"></div>' +
                         '<div class="lbanner-emoji">' + (ICONS[l.cat] || '🔒') + '</div>' +
-                        (l.sellerDeals >= 10 ? '<div class="lbanner-v">✓ Verified</div>' : '') + '</div>' +
+                        (l.sellerDeals >= 10 ? '<div class="lbanner-v">✓ Verified</div>' : '') +
+                        (wallet && l.seller === wallet ? '<div class="lbanner-v" style="left:8px;right:auto;background:var(--green)">Your Listing</div>' : '') +
+                        '</div>' +
                         '<div class="ltop"><div class="lcat">' + (CATS[l.cat] || l.cat) + '</div>' +
                         '<div class="ltitle">' + l.title + '</div>' +
                         '<div class="ldesc">' + l.desc + '</div>' +
@@ -4640,9 +4642,12 @@
                 allowOffers: document.getElementById('plOffers').value === 'yes'
             };
             SAMPLE_LISTINGS.unshift(newL);
+            saveListings();
             var doTweet = document.getElementById('plTweet').checked;
             closeMo('postMo');
             toast('Listing posted!', '"' + title + '" is now live on the marketplace');
+            // Switch to marketplace so user can see their listing
+            showPage('market');
             if (doTweet) shareTweet();
             if (document.getElementById('page-market').classList.contains('active')) renderMkt();
         }
@@ -4659,10 +4664,36 @@
             if (e.key === 'Escape') document.querySelectorAll('.mo.open').forEach(function (o) { o.classList.remove('open'); });
         });
 
+
+        // ═══════════════════════════════════════════════════════════
+        // LISTINGS PERSISTENCE
+        // ═══════════════════════════════════════════════════════════
+        function loadSavedListings() {
+            try {
+                var saved = JSON.parse(localStorage.getItem('shadowotc_listings') || '[]');
+                // Prepend user listings before sample listings (avoid duplicates)
+                saved.forEach(function (l) {
+                    if (!SAMPLE_LISTINGS.find(function (s) { return s.id === l.id; })) {
+                        SAMPLE_LISTINGS.unshift(l);
+                    }
+                });
+            } catch (e) { console.log('Could not load saved listings:', e); }
+        }
+
+        function saveListings() {
+            try {
+                // Only save user-posted listings (not sample ones starting with 'l1'-'l6')
+                var sampleIds = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'];
+                var userListings = SAMPLE_LISTINGS.filter(function (l) { return !sampleIds.includes(l.id); });
+                localStorage.setItem('shadowotc_listings', JSON.stringify(userListings));
+            } catch (e) { console.log('Could not save listings:', e); }
+        }
+
         // ═══════════════════════════════════════════════════════════
         // INIT
         // ═══════════════════════════════════════════════════════════
         updIP();
+        loadSavedListings();
         renderMkt();
         loadData();
         switchChat('l1', document.querySelector('.cdt.active'));

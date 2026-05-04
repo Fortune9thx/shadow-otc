@@ -3984,6 +3984,12 @@
             escrow: 'e.g. Hold 1 ETH until both parties confirm the off-chain agreement is settled.',
             conditional: 'e.g. Release payment when ETH price exceeds $4,000. Proof: oracle price feed.',
         };
+        const CAT_ICONS = {
+            whitelist: '🎫', airdrop: '🪂', premarket: '🚀', nft: '🖼️',
+            freelance: '💻', social: '📣', content: '✍️', allocation: '🪙',
+            marketing: '📢', bounty: '🐛', escrow: '🔐', conditional: '⚡'
+        };
+
         const SAMPLE_LISTINGS = [
             { id: 'l1', cat: 'whitelist', title: '2× NFT Whitelist Spots — Ritual Genesis Drop', desc: 'Two guaranteed WL spots for the official Ritual Chain Genesis NFT collection. Mint date Jan 30.', price: 0.8, seller: '0x7f3a…b291', sellerDeals: 14, sellerScore: 98, expires: Date.now() + 86400000 * 2, allowOffers: true },
             { id: 'l2', cat: 'airdrop', title: '500 SHADOW Token Airdrop Allocation', desc: 'Selling my full airdrop allocation of 500 SHADOW tokens from Season 1. Tokens unlock Feb 15.', price: 0.5, seller: '0x2c9d…f441', sellerDeals: 7, sellerScore: 91, expires: Date.now() + 86400000 * 1, allowOffers: true },
@@ -4492,6 +4498,7 @@
             whitelist: 2, airdrop: 2, allocation: 1, premarket: 1,
             marketing: 0, bounty: 0, escrow: 3, conditional: 0
         };
+
 
         const CATEGORY_MAP = { social: 0, content: 1, freelance: 2, nft: 3, whitelist: 4, airdrop: 5, allocation: 6, premarket: 7, marketing: 8, bounty: 9, escrow: 10, conditional: 11 };
         const COLLATERAL_RATES = { social: 0.3, content: 0.3, freelance: 1.0, nft: 1.0, whitelist: 1.0, airdrop: 1.0, allocation: 2.0, premarket: 2.0, marketing: 0.3, bounty: 0, escrow: 0, conditional: 0 };

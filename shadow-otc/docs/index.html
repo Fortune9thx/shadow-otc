@@ -4464,8 +4464,9 @@
 
         // ── CONTRACT CONFIG ────────────────────────────────────────
         const CONTRACT_V2 = '0xe48aB58BEA9AD3d4c94A3d09c5Fd98320151bF80';
-        const CONTRACT_ABI = [
-            'function createDeal(address seller, uint8 category, string calldata intentUrl) external payable returns (uint256)',
+        // Real contract ABIs from ShadowOTCV2.sol
+        const CONTRACT_ABI_V1 = [
+            'function createDeal(uint8 category, string calldata intent, string calldata conditionUrl, string calldata conditionParams, uint256 deadlineHours, uint256 commitFeePercent, uint8 collateral, uint8 verificationMethod) external payable returns (uint256)',
             'function acceptDeal(uint256 dealId) external payable',
             'function submitProof(uint256 dealId, string calldata proofUrl) external',
             'function verifyAndRelease(uint256 dealId) external',
@@ -4476,7 +4477,21 @@
             'event DealCreated(uint256 indexed dealId, address indexed buyer, uint8 category, uint256 amount)',
         ];
 
-        const CAT_ICONS = { whitelist: '🎫', airdrop: '🪂', premarket: '🚀', nft: '🖼️', freelance: '💻', social: '📣', content: '✍️', allocation: '🪙', marketing: '📢', bounty: '🐛', escrow: '🔐', conditional: '⚡' };
+        const CONTRACT_ABI = CONTRACT_ABI_V1;
+
+        // Collateral enum: 0=None, 1=Partial(30%), 2=Full(100%), 3=Double(200%)
+        const COLLATERAL_ENUM = {
+            social: 1, content: 1, freelance: 2, nft: 2,
+            whitelist: 2, airdrop: 2, allocation: 3, premarket: 3,
+            marketing: 1, bounty: 0, escrow: 0, conditional: 0
+        };
+
+        // VerificationMethod enum: 0=HttpFetch, 1=OnChain, 2=HttpAndOnChain, 3=Manual
+        const VERIFICATION_ENUM = {
+            social: 0, content: 0, freelance: 0, nft: 1,
+            whitelist: 2, airdrop: 2, allocation: 1, premarket: 1,
+            marketing: 0, bounty: 0, escrow: 3, conditional: 0
+        };
 
         const CATEGORY_MAP = { social: 0, content: 1, freelance: 2, nft: 3, whitelist: 4, airdrop: 5, allocation: 6, premarket: 7, marketing: 8, bounty: 9, escrow: 10, conditional: 11 };
         const COLLATERAL_RATES = { social: 0.3, content: 0.3, freelance: 1.0, nft: 1.0, whitelist: 1.0, airdrop: 1.0, allocation: 2.0, premarket: 2.0, marketing: 0.3, bounty: 0, escrow: 0, conditional: 0 };
@@ -4487,8 +4502,9 @@
             const provider = new ethers.BrowserProvider(window.ethereum);
             return provider.getSigner();
         }
-        async function getContract() {
+        async function getContract(version) {
             const signer = await getSigner();
+            if (version === 1) return new ethers.Contract('0x28FB5835ec256d0019121F03c0cae75C2dDB3656', CONTRACT_ABI_V1, signer);
             return new ethers.Contract(CONTRACT_V2, CONTRACT_ABI, signer);
         }
 
@@ -4528,15 +4544,18 @@
         async function createDealOnChain(type, amount, intent, listingRef) {
             if (!walletAddress) { await connectWallet(); return; }
             const catId = CATEGORY_MAP[type] ?? 0;
-            const collateralRate = COLLATERAL_RATES[type] ?? 0;
             const amountEth = parseFloat(amount);
-            const collateral = amountEth * collateralRate;
 
+            const collateralLabels = ['None', 'Partial (30%)', 'Full (100%)', 'Double (200%)'];
+            const verifyLabels = ['HTTP Fetch', 'On-Chain', 'HTTP + On-Chain', 'Manual'];
             const confirmBox = `<div class="deal-confirm-box">
     <h4>Deal Summary</h4>
     <div class="deal-confirm-row"><span>Type</span><span>${CATS[type] || type}</span></div>
     <div class="deal-confirm-row"><span>Amount</span><span>${amountEth} RITUAL</span></div>
-    <div class="deal-confirm-row"><span>Seller Collateral Required</span><span>${collateral > 0 ? collateral + ' RITUAL' : 'None'}</span></div>
+    <div class="deal-confirm-row"><span>Collateral</span><span>${collateralLabels[COLLATERAL_ENUM[type] || 0]}</span></div>
+    <div class="deal-confirm-row"><span>Verification</span><span>${verifyLabels[VERIFICATION_ENUM[type] || 0]}</span></div>
+    <div class="deal-confirm-row"><span>Deadline</span><span>72 hours</span></div>
+    <div class="deal-confirm-row"><span>Platform Fee</span><span>5%</span></div>
     <div class="deal-confirm-row"><span>Network</span><span>Ritual Testnet</span></div>
     <div class="deal-confirm-row total"><span>You lock</span><span>${amountEth} RITUAL</span></div>
   </div>`;
@@ -4549,9 +4568,27 @@
 
             setTxStep(0, 'active', 'Waiting for MetaMask approval…');
             try {
-                const contract = await getContract();
+                const signer = await getSigner();
                 const value = ethers.parseEther(amountEth.toString());
-                const tx = await contract.createDeal('0x0000000000000000000000000000000000000000', catId, intent || 'Shadow OTC Deal', { value });
+                const contract = new ethers.Contract(CONTRACT_V2, CONTRACT_ABI, signer);
+
+                // Real params from ShadowOTCV2.sol createDeal()
+                const collateralEnum = COLLATERAL_ENUM[type] ?? 0;
+                const verificationEnum = VERIFICATION_ENUM[type] ?? 0;
+                const deadlineHours = 72;        // 3 day deadline
+                const commitFeePercent = 5;      // 5% platform fee
+
+                const tx = await contract.createDeal(
+                    catId,                          // DealCategory enum
+                    intent || 'Shadow OTC Deal',    // intent string
+                    '',                             // conditionUrl (empty for now)
+                    '',                             // conditionParams (empty)
+                    deadlineHours,                  // deadlineHours
+                    commitFeePercent,               // commitFeePercent
+                    collateralEnum,                 // CollateralRequirement enum
+                    verificationEnum,               // VerificationMethod enum
+                    { value }
+                );
                 setTxStep(0, 'done', 'Approved ✓');
                 setTxStep(1, 'active', 'Transaction sent — waiting for confirmation…', tx.hash);
                 const receipt = await tx.wait();
@@ -4559,7 +4596,7 @@
                 setTxStep(2, 'done', 'Deal is live on-chain ✓');
                 let dealId = '—';
                 try {
-                    const iface = new ethers.Interface(CONTRACT_ABI);
+                    const iface = new ethers.Interface(CONTRACT_ABI_V1);
                     for (const log of receipt.logs) { try { const p = iface.parseLog(log); if (p && p.name === 'DealCreated') { dealId = p.args[0].toString(); break; } } catch (e) { } }
                 } catch (e) { }
                 showTxFinal(`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:14px">
@@ -4592,8 +4629,21 @@
                 loadData();
             } catch (err) {
                 const msg = err.reason || err.message || 'Transaction failed';
-                setTxStep(0, 'pending', msg.includes('user rejected') ? 'Cancelled — you rejected the transaction' : msg.slice(0, 80));
-                toast('Failed', msg.includes('user rejected') ? 'Transaction cancelled' : msg.slice(0, 60), 'error');
+                const isCancel = msg.includes('user rejected') || msg.includes('User denied');
+                const isGas = msg.includes('estimateGas') || msg.includes('missing revert');
+                let userMsg = isCancel ? 'You cancelled the transaction'
+                    : isGas ? 'Contract call failed — check you have enough RITUAL and are on Ritual Testnet (Chain 1979)'
+                        : msg.slice(0, 80);
+                setTxStep(0, 'pending', userMsg);
+                if (isGas) {
+                    showTxFinal('<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:14px">'
+                        + '<div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ Transaction Failed</div>'
+                        + '<div style="font-size:12px;color:#9f1239;line-height:1.6;margin-bottom:10px">'
+                        + 'Make sure you are connected to <strong>Ritual Testnet (Chain ID 1979)</strong> and have testnet RITUAL tokens.</div>'
+                        + '<button onclick="testContractConnection()" style="padding:8px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;color:#dc2626;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer">Test Contract Connection</button>'
+                        + '</div>');
+                }
+                toast('Failed', userMsg.slice(0, 60), 'error');
             }
         }
 
@@ -4606,9 +4656,16 @@
             ]);
             setTxStep(0, 'active', 'Waiting for MetaMask…');
             try {
-                const contract = await getContract();
+                const signer = await getSigner();
                 const value = collateralAmount > 0 ? ethers.parseEther(collateralAmount.toString()) : 0n;
-                const tx = await contract.acceptDeal(dealId, { value });
+                let tx;
+                try {
+                    const c1 = new ethers.Contract('0x28FB5835ec256d0019121F03c0cae75C2dDB3656', CONTRACT_ABI_V1, signer);
+                    tx = await c1.acceptDeal(dealId, { value });
+                } catch (e) {
+                    const c2 = new ethers.Contract(CONTRACT_V2, CONTRACT_ABI, signer);
+                    tx = await c2.acceptDeal(dealId, { value });
+                }
                 setTxStep(0, 'done', 'Approved ✓');
                 setTxStep(1, 'active', 'Submitted…', tx.hash);
                 await tx.wait();
@@ -4657,8 +4714,15 @@
             ]);
             setTxStep(0, 'active', 'Waiting for MetaMask…');
             try {
-                const contract = await getContract();
-                const tx = await contract.submitProof(dealId, url);
+                const signer = await getSigner();
+                let tx;
+                try {
+                    const c1 = new ethers.Contract('0x28FB5835ec256d0019121F03c0cae75C2dDB3656', CONTRACT_ABI_V1, signer);
+                    tx = await c1.submitProof(dealId, url);
+                } catch (e) {
+                    const c2 = new ethers.Contract(CONTRACT_V2, CONTRACT_ABI, signer);
+                    tx = await c2.submitProof(dealId, url);
+                }
                 setTxStep(0, 'done', 'Approved ✓');
                 setTxStep(1, 'active', 'Submitted…', tx.hash);
                 await tx.wait();
@@ -4733,6 +4797,30 @@
             } else {
                 // Normal chain deal
                 showDealModal(typeof id === 'string' ? parseInt(id) : id);
+            }
+        }
+
+        // ── CONTRACT DIAGNOSTICS ──────────────────────────────────
+        async function testContractConnection() {
+            try {
+                const provider = new ethers.BrowserProvider(window.ethereum);
+                const network = await provider.getNetwork();
+                console.log('Network:', network.chainId.toString());
+
+                // Test V1 read
+                const v1 = new ethers.Contract(
+                    '0x28FB5835ec256d0019121F03c0cae75C2dDB3656',
+                    ['function dealCount() external view returns (uint256)'],
+                    provider
+                );
+                const count1 = await v1.dealCount();
+                console.log('V1 dealCount:', count1.toString());
+                toast('Contract OK', 'V1 has ' + count1 + ' deals · Chain ID: ' + network.chainId);
+                return true;
+            } catch (e) {
+                console.error('Contract test failed:', e);
+                toast('Contract error', e.message.slice(0, 80), 'error');
+                return false;
             }
         }
         // ── INIT ──────────────────────────────────────────────────

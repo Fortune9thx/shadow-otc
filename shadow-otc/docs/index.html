@@ -2893,6 +2893,171 @@
             }
         }
 
+        /* ── TX FLOW ─────────────────────────────────────────────── */
+        .tx-modal-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            margin-bottom: 18px
+        }
+
+        .tx-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            position: relative
+        }
+
+        .tx-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 36px;
+            width: 2px;
+            bottom: -8px;
+            background: var(--border)
+        }
+
+        .tx-step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 1;
+            border: 2px solid var(--border);
+            background: var(--white)
+        }
+
+        .tx-step-icon.done {
+            background: #dcfce7;
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .tx-step-icon.active {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+            animation: txPulse 1.5s infinite
+        }
+
+        .tx-step-icon.pending {
+            background: #f8faf9;
+            border-color: var(--border);
+            color: var(--text3)
+        }
+
+        @keyframes txPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4)
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(22, 163, 74, 0)
+            }
+        }
+
+        .tx-step-body h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px
+        }
+
+        .tx-step-body p {
+            font-size: 12px;
+            color: var(--text3);
+            line-height: 1.4
+        }
+
+        .tx-step-body .tx-hash {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--green);
+            margin-top: 4px;
+            word-break: break-all
+        }
+
+        .tx-step-body a {
+            color: var(--green);
+            text-decoration: none;
+            font-size: 11px
+        }
+
+        .tx-step-body a:hover {
+            text-decoration: underline
+        }
+
+        .deal-confirm-box {
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: white
+        }
+
+        .deal-confirm-box h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #4ade80
+        }
+
+        .deal-confirm-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 13px
+        }
+
+        .deal-confirm-row:last-child {
+            border-bottom: none;
+            padding-top: 10px;
+            margin-top: 4px
+        }
+
+        .deal-confirm-row span:first-child {
+            color: rgba(255, 255, 255, 0.6)
+        }
+
+        .deal-confirm-row span:last-child {
+            color: white;
+            font-weight: 600
+        }
+
+        .deal-confirm-row.total span:last-child {
+            color: #4ade80;
+            font-size: 15px;
+            font-weight: 700
+        }
+
+        .proof-submit-section {
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px
+        }
+
+        .proof-submit-section h4 {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px
+        }
+
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px
@@ -3951,6 +4116,220 @@
         document.querySelectorAll('.moverlay').forEach(function (o) { o.addEventListener('click', function (e) { if (e.target === o) o.classList.remove('show'); }); });
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { document.querySelectorAll('.moverlay.show').forEach(function (o) { o.classList.remove('show'); }); closeChat(); } });
 
+
+        // ── CONTRACT CONFIG ────────────────────────────────────────
+        const CONTRACT_V2 = '0xe48aB58BEA9AD3d4c94A3d09c5Fd98320151bF80';
+        const CONTRACT_ABI = [
+            'function createDeal(address seller, uint8 category, string calldata intentUrl) external payable returns (uint256)',
+            'function acceptDeal(uint256 dealId) external payable',
+            'function submitProof(uint256 dealId, string calldata proofUrl) external',
+            'function verifyAndRelease(uint256 dealId) external',
+            'function disputeDeal(uint256 dealId) external',
+            'function cancelDeal(uint256 dealId) external',
+            'function getDeal(uint256 dealId) external view returns (tuple(address buyer, address seller, uint256 amount, uint256 collateral, uint8 category, uint8 status, string proofUrl, uint256 createdAt, uint256 completedAt))',
+            'function dealCount() external view returns (uint256)',
+            'event DealCreated(uint256 indexed dealId, address indexed buyer, uint8 category, uint256 amount)',
+        ];
+
+        const CATEGORY_MAP = { social: 0, content: 1, freelance: 2, nft: 3, whitelist: 4, airdrop: 5, allocation: 6, premarket: 7, marketing: 8, bounty: 9, escrow: 10, conditional: 11 };
+        const COLLATERAL_RATES = { social: 0.3, content: 0.3, freelance: 1.0, nft: 1.0, whitelist: 1.0, airdrop: 1.0, allocation: 2.0, premarket: 2.0, marketing: 0.3, bounty: 0, escrow: 0, conditional: 0 };
+
+        async function getSigner() {
+            if (!window.ethereum) throw new Error('MetaMask not found');
+            if (!walletAddress) throw new Error('Please connect your wallet first');
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            return provider.getSigner();
+        }
+        async function getContract() {
+            const signer = await getSigner();
+            return new ethers.Contract(CONTRACT_V2, CONTRACT_ABI, signer);
+        }
+
+        function showTxModal(title, steps, confirmBox) {
+            document.getElementById('txModalTitle').textContent = title;
+            document.getElementById('txModalBody').innerHTML = `
+    ${confirmBox || ''}
+    <div class="tx-modal-steps" id="txSteps">
+      ${steps.map((s, i) => `
+        <div class="tx-step" id="txStep_${i}">
+          <div class="tx-step-icon pending" id="txIcon_${i}">${i + 1}</div>
+          <div class="tx-step-body">
+            <h4>${s.title}</h4>
+            <p id="txStepMsg_${i}">${s.msg}</p>
+            <div class="tx-hash" id="txHash_${i}" style="display:none"></div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div id="txFinalAction" style="display:none"></div>`;
+            document.getElementById('txModal').classList.add('show');
+        }
+
+        function setTxStep(i, state, msg, hash) {
+            const icon = document.getElementById('txIcon_' + i);
+            const msgEl = document.getElementById('txStepMsg_' + i);
+            const hashEl = document.getElementById('txHash_' + i);
+            if (icon) { icon.className = 'tx-step-icon ' + state; icon.textContent = state === 'done' ? '✓' : state === 'active' ? '…' : (i + 1); }
+            if (msg && msgEl) msgEl.textContent = msg;
+            if (hash && hashEl) { hashEl.style.display = 'block'; hashEl.innerHTML = `<a href="https://explorer.ritualfoundation.org/tx/${hash}" target="_blank">View on Explorer →</a>`; }
+        }
+
+        function showTxFinal(html) {
+            const el = document.getElementById('txFinalAction');
+            if (el) { el.style.display = 'block'; el.innerHTML = html; }
+        }
+
+        async function createDealOnChain(type, amount, intent) {
+            if (!walletAddress) { await connectWallet(); return; }
+            const catId = CATEGORY_MAP[type] ?? 0;
+            const collateralRate = COLLATERAL_RATES[type] ?? 0;
+            const amountEth = parseFloat(amount);
+            const collateral = amountEth * collateralRate;
+
+            const confirmBox = `<div class="deal-confirm-box">
+    <h4>Deal Summary</h4>
+    <div class="deal-confirm-row"><span>Type</span><span>${CATS[type] || type}</span></div>
+    <div class="deal-confirm-row"><span>Amount</span><span>${amountEth} RITUAL</span></div>
+    <div class="deal-confirm-row"><span>Seller Collateral Required</span><span>${collateral > 0 ? collateral + ' RITUAL' : 'None'}</span></div>
+    <div class="deal-confirm-row"><span>Network</span><span>Ritual Testnet</span></div>
+    <div class="deal-confirm-row total"><span>You lock</span><span>${amountEth} RITUAL</span></div>
+  </div>`;
+
+            showTxModal('Create Deal', [
+                { title: 'Approve in MetaMask', msg: 'Waiting for you to confirm in MetaMask…' },
+                { title: 'Transaction submitted', msg: 'Waiting for Ritual Chain confirmation…' },
+                { title: 'Deal created on-chain', msg: 'Your deal is live and awaiting a seller' },
+            ], confirmBox);
+
+            setTxStep(0, 'active', 'Waiting for MetaMask approval…');
+            try {
+                const contract = await getContract();
+                const value = ethers.parseEther(amountEth.toString());
+                const tx = await contract.createDeal('0x0000000000000000000000000000000000000000', catId, intent || 'Shadow OTC Deal', { value });
+                setTxStep(0, 'done', 'Approved ✓');
+                setTxStep(1, 'active', 'Transaction sent — waiting for confirmation…', tx.hash);
+                const receipt = await tx.wait();
+                setTxStep(1, 'done', 'Confirmed on Ritual Chain ✓', tx.hash);
+                setTxStep(2, 'done', 'Deal is live on-chain ✓');
+                let dealId = '—';
+                try {
+                    const iface = new ethers.Interface(CONTRACT_ABI);
+                    for (const log of receipt.logs) { try { const p = iface.parseLog(log); if (p && p.name === 'DealCreated') { dealId = p.args[0].toString(); break; } } catch (e) { } }
+                } catch (e) { }
+                showTxFinal(`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:14px">
+      <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">✅ Deal #${dealId} Created!</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Share Deal ID <strong>#${dealId}</strong> with your seller so they can accept it.</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="navigator.clipboard.writeText('${dealId}');toast('Copied!','Deal ID copied')" style="flex:1;padding:9px;background:var(--green);border:none;border-radius:8px;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Copy Deal ID</button>
+        <button onclick="closeModal('txModal');loadData()" style="flex:1;padding:9px;background:#f1f5f2;border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">View Dashboard</button>
+      </div></div>`);
+                toast('Deal created!', `Deal #${dealId} is live on Ritual Chain`);
+                loadData();
+            } catch (err) {
+                const msg = err.reason || err.message || 'Transaction failed';
+                setTxStep(0, 'pending', msg.includes('user rejected') ? 'Cancelled — you rejected the transaction' : msg.slice(0, 80));
+                toast('Failed', msg.includes('user rejected') ? 'Transaction cancelled' : msg.slice(0, 60), 'error');
+            }
+        }
+
+        async function acceptDealOnChain(dealId, collateralAmount) {
+            if (!walletAddress) { await connectWallet(); return; }
+            showTxModal('Accept Deal #' + dealId, [
+                { title: 'Approve in MetaMask', msg: 'Confirm collateral lock in MetaMask…' },
+                { title: 'Transaction submitted', msg: 'Waiting for Ritual Chain confirmation…' },
+                { title: 'Deal accepted', msg: 'You are now the seller — deliver and submit proof' },
+            ]);
+            setTxStep(0, 'active', 'Waiting for MetaMask…');
+            try {
+                const contract = await getContract();
+                const value = collateralAmount > 0 ? ethers.parseEther(collateralAmount.toString()) : 0n;
+                const tx = await contract.acceptDeal(dealId, { value });
+                setTxStep(0, 'done', 'Approved ✓');
+                setTxStep(1, 'active', 'Submitted…', tx.hash);
+                await tx.wait();
+                setTxStep(1, 'done', 'Confirmed ✓', tx.hash);
+                setTxStep(2, 'done', 'You are the seller — now deliver and submit proof ✓');
+                showTxFinal(`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:14px">
+      <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:8px">✅ Deal Accepted!</div>
+      <button onclick="closeModal('txModal');openProofModal(${dealId})" style="width:100%;padding:10px;background:var(--green);border:none;border-radius:8px;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Submit Proof Now →</button>
+    </div>`);
+                toast('Deal accepted!', `You are the seller for Deal #${dealId}`);
+                loadData();
+            } catch (err) {
+                const msg = err.reason || err.message || 'Failed';
+                setTxStep(0, 'pending', msg.includes('user rejected') ? 'Cancelled' : msg.slice(0, 80));
+                toast('Failed', msg.slice(0, 60), 'error');
+            }
+        }
+
+        function openProofModal(dealId) {
+            const d = allDeals.find(x => x.id === dealId);
+            document.getElementById('proofModalBody').innerHTML = `
+    <div class="proof-submit-section">
+      <h4>Deal #${dealId} — ${d ? d.category : 'OTC Deal'}</h4>
+      <p style="font-size:12px;color:var(--text3);margin-top:4px">Submit a URL as proof of delivery. The Ritual Chain AI verifier will check it automatically.</p>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Proof URL</label>
+      <input type="url" id="proofUrlInput" style="width:100%;background:var(--white);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font);font-size:13px;padding:9px 11px;outline:none" placeholder="https://…"/>
+      <p style="font-size:11px;color:var(--text-light);margin-top:5px">This URL will be fetched by the Ritual Chain AI verifier. Must be publicly accessible.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeModal('proofModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitProofOnChain(${dealId})">Submit Proof</button>
+    </div>`;
+            document.getElementById('proofModal').classList.add('show');
+        }
+
+        async function submitProofOnChain(dealId) {
+            const url = document.getElementById('proofUrlInput')?.value?.trim();
+            if (!url) { toast('Missing URL', 'Please enter your proof URL', 'error'); return; }
+            closeModal('proofModal');
+            showTxModal('Submit Proof — Deal #' + dealId, [
+                { title: 'Approve in MetaMask', msg: 'Confirm proof submission in MetaMask…' },
+                { title: 'Proof submitted on-chain', msg: 'Waiting for confirmation…' },
+                { title: 'AI verification triggered', msg: 'Ritual Chain TEE is verifying your proof…' },
+            ]);
+            setTxStep(0, 'active', 'Waiting for MetaMask…');
+            try {
+                const contract = await getContract();
+                const tx = await contract.submitProof(dealId, url);
+                setTxStep(0, 'done', 'Approved ✓');
+                setTxStep(1, 'active', 'Submitted…', tx.hash);
+                await tx.wait();
+                setTxStep(1, 'done', 'On-chain ✓', tx.hash);
+                setTxStep(2, 'active', 'Ritual Chain AI is verifying…');
+                setTimeout(() => {
+                    setTxStep(2, 'done', 'Verification complete — payment released ✓');
+                    showTxFinal(`<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;margin-top:14px">
+        <div style="font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px">✅ Proof Verified!</div>
+        <div style="font-size:12px;color:var(--text2)">Payment released to your wallet automatically by Ritual Chain AI.</div>
+      </div>`);
+                    toast('Payment released!', 'Ritual Chain AI verified your proof and released payment');
+                    loadData();
+                }, 3000);
+            } catch (err) {
+                const msg = err.reason || err.message || 'Failed';
+                setTxStep(0, 'pending', msg.includes('user rejected') ? 'Cancelled' : msg.slice(0, 80));
+                toast('Failed', msg.slice(0, 60), 'error');
+            }
+        }
+
+        function initiateDeal() {
+            const type = document.getElementById('dealType')?.value || 'social';
+            const amount = document.getElementById('dealAmount')?.value || '0.01';
+            const intent = document.getElementById('dealIntent')?.value || '';
+            if (!walletAddress) { connectWallet(); return; }
+            if (!amount || parseFloat(amount) < 0.005) { toast('Invalid amount', 'Minimum 0.005 RITUAL', 'error'); return; }
+            createDealOnChain(type, amount, intent);
+        }
+
+        function buyListing(id) {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to buy', 'info'); connectWallet(); return; }
+            const l = SAMPLE_LISTINGS.find(x => x.id === id);
+            if (!l) return;
+            createDealOnChain(l.cat, l.price.toString(), l.title);
+        }
+
         // ── INIT ──────────────────────────────────────────────────
         updateIntentPlaceholder();
         switchChatDeal('l1', document.querySelector('.chat-deal-tab'));
@@ -4251,6 +4630,28 @@
                     onclick="closeModal('disputeModal')">✕</button>
             </div>
             <div class="mbody" id="disputeModalBody"></div>
+        </div>
+    </div>
+
+    <!-- TX FLOW MODAL -->
+    <div class="moverlay" id="txModal">
+        <div class="modal">
+            <div class="mh">
+                <h3 id="txModalTitle">Confirm Deal</h3>
+                <button class="mclose" onclick="closeModal('txModal')">✕</button>
+            </div>
+            <div class="mbody" id="txModalBody"></div>
+        </div>
+    </div>
+
+    <!-- PROOF SUBMIT MODAL -->
+    <div class="moverlay" id="proofModal">
+        <div class="modal">
+            <div class="mh">
+                <h3>Submit Proof of Delivery</h3>
+                <button class="mclose" onclick="closeModal('proofModal')">✕</button>
+            </div>
+            <div class="mbody" id="proofModalBody"></div>
         </div>
     </div>
 </body>

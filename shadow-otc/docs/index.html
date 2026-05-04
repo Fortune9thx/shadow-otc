@@ -2304,7 +2304,7 @@
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--r);
-            padding: 17px 19px;
+            padding: 14px 16px;
             box-shadow: var(--sh);
             position: relative;
             overflow: hidden
@@ -2330,10 +2330,10 @@
         }
 
         .sval {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: 700;
             color: var(--green);
-            margin-bottom: 3px;
+            margin-bottom: 2px;
             position: relative;
             z-index: 1
         }
@@ -2494,7 +2494,7 @@
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--r2);
-            padding: 16px;
+            padding: 13px 14px;
             box-shadow: var(--sh);
             transition: all .2s
         }
@@ -2899,6 +2899,117 @@
             }
         }
 
+        /* ── MOBILE BOTTOM NAV ─────────────────────────────── */
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        .mob-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 58px;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            z-index: 300;
+            padding: 0 4px;
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, .07)
+        }
+
+        .mob-nav-items {
+            display: flex;
+            align-items: stretch;
+            height: 100%
+        }
+
+        .mob-ni {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--t3);
+            font-family: var(--f);
+            font-size: 10px;
+            font-weight: 500;
+            transition: color .15s;
+            padding: 0;
+            border-radius: 10px
+        }
+
+        .mob-ni svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            flex-shrink: 0
+        }
+
+        .mob-ni.active {
+            color: var(--green)
+        }
+
+        .mob-ni.active svg {
+            stroke: var(--green)
+        }
+
+        .mob-ni.post-btn {
+            color: var(--white);
+            background: var(--green);
+            border-radius: 14px;
+            margin: 8px 4px;
+            padding: 0 6px
+        }
+
+        .mob-ni.post-btn svg {
+            stroke: var(--white)
+        }
+
+        @media(max-width:640px) {
+            .mob-nav {
+                display: flex
+            }
+
+            body {
+                padding-bottom: 58px
+            }
+
+            .nav {
+                display: none !important
+            }
+
+            .cpill {
+                display: none
+            }
+
+            .logo-text span {
+                display: none
+            }
+
+            .wbtntxt {
+                display: none
+            }
+
+            .wbtn {
+                padding: 8px 10px
+            }
+        }
+
         ::-webkit-scrollbar {
             width: 4px;
             height: 4px
@@ -3028,6 +3139,49 @@
             </div>
         </div>
     </header>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="mob-nav">
+        <div class="mob-nav-items">
+            <button class="mob-ni active" id="mni-overview" onclick="showPage('overview')">
+                <svg viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+                Home
+            </button>
+            <button class="mob-ni" id="mni-market" onclick="showPage('market')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <path d="M16 10a4 4 0 01-8 0" />
+                </svg>
+                Market
+            </button>
+            <button class="mob-ni post-btn" onclick="openPostListing()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                Post
+            </button>
+            <button class="mob-ni" id="mni-deals" onclick="showPage('deals')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                Deals
+            </button>
+            <button class="mob-ni" onclick="toggleWallet()">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span id="mobWalletLbl">Account</span>
+            </button>
+        </div>
+    </nav>
 
     <!-- OVERVIEW PAGE -->
     <div class="page active" id="page-overview">
@@ -3526,119 +3680,77 @@
 
     <!-- PROJECTS PAGE -->
     <div class="page" id="page-projects">
-        <div class="phero2">
-            <div class="hbadge" style="margin-bottom:11px">Verified Collections</div>
-            <h1>Project Registry</h1>
-            <p>Verified projects with on-chain deal history. Every listing from these teams is authenticated — no fake
-                spots, no rug pulls.</p>
+        <div class="phero2" style="text-align:center;padding:44px 32px">
+            <div style="font-size:48px;margin-bottom:16px">🏗️</div>
+            <h1 style="font-size:28px;margin-bottom:10px">Project Registry</h1>
+            <p style="max-width:500px;margin:0 auto 24px">Get your project verified on Shadow OTC. Verified projects get
+                a badge on all listings, boosting buyer trust and deal volume.</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px">
+                <div
+                    style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 20px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:#4ade80">✅</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:3px">Verified Badge</div>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 20px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:#4ade80">🔒</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:3px">TEE Verified</div>
+                </div>
+                <div
+                    style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:14px 20px;text-align:center">
+                    <div style="font-size:22px;font-weight:700;color:#4ade80">📈</div>
+                    <div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:3px">More Buyers</div>
+                </div>
+            </div>
             <button class="ibtn"
-                style="width:auto;padding:9px 20px;border-radius:9px;font-size:13px;display:inline-flex"
-                onclick="toast('Coming soon','Project registration opening soon','info')">+ Register Your
-                Project</button>
+                style="width:auto;padding:12px 28px;border-radius:11px;font-size:14px;display:inline-flex;margin:0 auto"
+                onclick="openMo('regMo')">Register Your Project →</button>
         </div>
-        <div class="pgridp">
-            <div class="projc"
-                onclick="toast('Ritual Genesis','Official Ritual Chain genesis collection — 1000 NFTs','info')">
-                <div class="projbanner" style="background:linear-gradient(135deg,#0d3320,#1a5c38)">
-                    <div class="projlogo">⚡</div>
-                    <div class="projvbadge">✅ Verified</div>
-                </div>
-                <div class="projbody">
-                    <div class="projname">Ritual Genesis</div>
-                    <div class="projdesc">Official Ritual Chain genesis NFT collection. 1,000 unique pieces. Mint date
-                        Q1 2025.</div>
-                    <div class="projstats">
-                        <div>
-                            <div class="projstat-v">24</div>
-                            <div class="projstat-l">OTC Deals</div>
+
+        <!-- Empty state with animation -->
+        <div id="projectsGrid" style="padding:40px 24px;text-align:center">
+            <div style="max-width:420px;margin:0 auto">
+                <div style="font-size:56px;margin-bottom:16px;animation:float 3s ease-in-out infinite">🌟</div>
+                <h3 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px">Be the First Verified
+                    Project</h3>
+                <p style="font-size:14px;color:var(--t3);line-height:1.7;margin-bottom:20px">Shadow OTC is live on
+                    Ritual Testnet. Register now to secure your verified badge and be listed first when the community
+                    arrives.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px">
+                    <div
+                        style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;box-shadow:var(--sh)">
+                        <div style="font-size:18px;margin-bottom:6px">🎫</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px">NFT Collections
                         </div>
-                        <div>
-                            <div class="projstat-v">0%</div>
-                            <div class="projstat-l">Disputes</div>
+                        <div style="font-size:11px;color:var(--t3)">WL spots, mints, OTC sales</div>
+                    </div>
+                    <div
+                        style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;box-shadow:var(--sh)">
+                        <div style="font-size:18px;margin-bottom:6px">🪙</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px">Token Projects
                         </div>
-                        <div>
-                            <div class="projstat-v">0.8</div>
-                            <div class="projstat-l">Avg Price</div>
+                        <div style="font-size:11px;color:var(--t3)">Allocations, pre-market, airdrops</div>
+                    </div>
+                    <div
+                        style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;box-shadow:var(--sh)">
+                        <div style="font-size:18px;margin-bottom:6px">🚀</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px">DeFi Protocols
                         </div>
+                        <div style="font-size:11px;color:var(--t3)">Seed rounds, partnerships</div>
+                    </div>
+                    <div
+                        style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:left;box-shadow:var(--sh)">
+                        <div style="font-size:18px;margin-bottom:6px">💻</div>
+                        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px">Dev Services
+                        </div>
+                        <div style="font-size:11px;color:var(--t3)">Smart contracts, audits, builds</div>
                     </div>
                 </div>
-            </div>
-            <div class="projc" onclick="toast('SHADOW Token','Native token of the Shadow OTC protocol','info')">
-                <div class="projbanner" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">
-                    <div class="projlogo">🌑</div>
-                    <div class="projvbadge">✅ Verified</div>
-                </div>
-                <div class="projbody">
-                    <div class="projname">SHADOW Token</div>
-                    <div class="projdesc">Native protocol token. Season 1 airdrop live. Vesting 12 months post-TGE.
-                    </div>
-                    <div class="projstats">
-                        <div>
-                            <div class="projstat-v">18</div>
-                            <div class="projstat-l">OTC Deals</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">0%</div>
-                            <div class="projstat-l">Disputes</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">0.5</div>
-                            <div class="projstat-l">Avg Price</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="projc" onclick="toast('DeepSea Protocol','Cross-chain liquidity on Ritual','info')">
-                <div class="projbanner" style="background:linear-gradient(135deg,#0c1445,#1a237e)">
-                    <div class="projlogo">🌊</div>
-                    <div class="projvbadge">✅ Verified</div>
-                </div>
-                <div class="projbody">
-                    <div class="projname">DeepSea Protocol</div>
-                    <div class="projdesc">Cross-chain liquidity. WL open for early supporters. Audit completed.</div>
-                    <div class="projstats">
-                        <div>
-                            <div class="projstat-v">9</div>
-                            <div class="projstat-l">OTC Deals</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">0%</div>
-                            <div class="projstat-l">Disputes</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">0.3</div>
-                            <div class="projstat-l">Avg Price</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="projc" onclick="toast('RitualAI','AI inference marketplace on Ritual Chain','info')">
-                <div class="projbanner" style="background:linear-gradient(135deg,#2d1654,#4a1080)">
-                    <div class="projlogo">🤖</div>
-                    <div class="projvbadge" style="background:#7c3aed">🔵 Applying</div>
-                </div>
-                <div class="projbody">
-                    <div class="projname">RitualAI</div>
-                    <div class="projdesc">AI inference marketplace on Ritual Chain. Seed round closing Jan 2025.</div>
-                    <div class="projstats">
-                        <div>
-                            <div class="projstat-v">4</div>
-                            <div class="projstat-l">OTC Deals</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">0%</div>
-                            <div class="projstat-l">Disputes</div>
-                        </div>
-                        <div>
-                            <div class="projstat-v">1.2</div>
-                            <div class="projstat-l">Avg Price</div>
-                        </div>
-                    </div>
-                </div>
+                <button class="ibtn" style="width:100%;padding:13px;border-radius:10px"
+                    onclick="openMo('regMo')">Register Your Project →</button>
             </div>
         </div>
     </div>
-
     <!-- CHAT DRAWER -->
     <div class="chat-back" id="chatBack" onclick="closeChat()"></div>
     <div class="chat-drawer" id="chatDrawer">
@@ -3833,14 +3945,8 @@
             conditional: [{ id: 'pf1', label: 'Trigger Condition', ph: 'e.g. ETH price > $4000' }, { id: 'pf2', label: 'Oracle / Data Source', ph: 'https://…' }],
         };
 
-        const SAMPLE_LISTINGS = [
-            { id: 'l1', cat: 'whitelist', title: '2× NFT Whitelist Spots — Ritual Genesis Drop', desc: 'Two guaranteed WL spots for the official Ritual Chain Genesis NFT collection. Mint date Jan 30. Floor expected 2+ ETH.', price: 0.8, seller: '0x7f3a…b291', sellerDeals: 14, sellerScore: 98, expires: Date.now() + 86400000 * 2, allowOffers: true },
-            { id: 'l2', cat: 'airdrop', title: '500 SHADOW Token Airdrop Allocation', desc: 'Selling my full airdrop allocation of 500 SHADOW tokens. Tokens unlock Feb 15. Will transfer via claim contract.', price: 0.5, seller: '0x2c9d…f441', sellerDeals: 7, sellerScore: 91, expires: Date.now() + 86400000, allowOffers: true },
-            { id: 'l3', cat: 'premarket', title: '10,000 RITUAL Tokens — Pre-TGE Price', desc: 'Selling 10,000 RITUAL at $0.06 pre-TGE. Signed agreement + token lock proof provided.', price: 1.2, seller: '0x9a1e…c883', sellerDeals: 22, sellerScore: 99, expires: Date.now() + 86400000 * 3, allowOffers: false },
-            { id: 'l4', cat: 'freelance', title: 'Full-Stack dApp Dev — Solidity + React', desc: 'Building smart contracts + frontend for your Web3 project. 5 years exp, 3 deployed protocols. Delivery 2 weeks.', price: 2.0, seller: '0x4d7b…a112', sellerDeals: 31, sellerScore: 97, expires: Date.now() + 86400000 * 7, allowOffers: true },
-            { id: 'l5', cat: 'social', title: 'Twitter Thread — 50K+ reach guaranteed', desc: 'High-quality thread about your project to my 52K crypto followers. Includes 3 follow-up tweets.', price: 0.15, seller: '0x8e2f…d334', sellerDeals: 45, sellerScore: 94, expires: Date.now() + 86400000 * 2, allowOffers: true },
-            { id: 'l6', cat: 'allocation', title: 'Seed Round Allocation — 5,000 USDC equivalent', desc: 'Transferring my seed round allocation at 30% discount. KYC completed. Vesting: 6mo cliff, 18mo linear.', price: 0.9, seller: '0x1b5c…e667', sellerDeals: 9, sellerScore: 88, expires: Date.now() + 86400000 * 4, allowOffers: true },
-        ];
+        // No fake listings — only real user-posted listings loaded from localStorage
+        const SAMPLE_LISTINGS = [];
 
         // ═══════════════════════════════════════════════════════════
         // STATE
@@ -3881,6 +3987,10 @@
             document.querySelectorAll('.nt:not(.accent)').forEach(function (t) { t.classList.remove('active'); });
             var tab = document.getElementById('nt-' + id);
             if (tab) tab.classList.add('active');
+            // update mobile bottom nav
+            document.querySelectorAll('.mob-ni').forEach(function (t) { t.classList.remove('active'); });
+            var mobTab = document.getElementById('mni-' + id);
+            if (mobTab) mobTab.classList.add('active');
             if (id === 'deals') renderMyDeals();
             if (id === 'market') renderMkt();
             if (id === 'profile') renderProfile();
@@ -3928,6 +4038,8 @@
             document.getElementById('wdsub').textContent = 'Ritual Testnet · Connected';
             document.getElementById('wconnbtn').style.display = 'none';
             document.getElementById('woutbtn').style.display = '';
+            var ml = document.getElementById('mobWalletLbl');
+            if (ml) ml.textContent = s.slice(0, 8);
         }
 
         function signOut() {
@@ -4131,7 +4243,12 @@
             var filtered = mktFilter === 'all' ? SAMPLE_LISTINGS : SAMPLE_LISTINGS.filter(function (l) { return l.cat === mktFilter; });
             var c = document.getElementById('mktContainer');
             if (!filtered.length) {
-                c.innerHTML = '<div class="empty-mkt"><div class="ei">🔍</div><h3>No listings here yet</h3><p>Be the first to post in this category.</p><button class="ibtn" style="width:auto;padding:9px 20px;border-radius:9px;font-size:13px;display:inline-flex" onclick="openPostListing()">+ Post Listing</button></div>';
+                c.innerHTML = '<div class="empty-mkt">' +
+                    '<div class="ei">🏪</div>' +
+                    '<h3>' + (mktFilter === 'all' ? 'No listings yet' : 'No ' + (CATS[mktFilter] || mktFilter) + ' listings yet') + '</h3>' +
+                    '<p>Be the first to post a listing on Shadow OTC. All listings are peer-to-peer and AI-verified on Ritual Chain.</p>' +
+                    '<button class="ibtn" style="width:auto;padding:10px 22px;border-radius:9px;font-size:13px;display:inline-flex" onclick="openPostListing()">+ Post Your First Listing</button>' +
+                    '</div>';
                 return;
             }
             if (view === 'grid') {
@@ -4655,7 +4772,13 @@
         // ═══════════════════════════════════════════════════════════
         // MODAL UTILS
         // ═══════════════════════════════════════════════════════════
-        function openMo(id) { document.getElementById(id).classList.add('open'); }
+        function openMo(id) {
+            document.getElementById(id).classList.add('open');
+            if (id === 'regMo') {
+                var wf = document.getElementById('regWallet');
+                if (wf && wallet) wf.value = wallet;
+            }
+        }
         function closeMo(id) { document.getElementById(id).classList.remove('open'); }
         document.querySelectorAll('.mo').forEach(function (o) {
             o.addEventListener('click', function (e) { if (e.target === o) o.classList.remove('open'); });
@@ -4682,13 +4805,20 @@
 
         function saveListings() {
             try {
-                // Only save user-posted listings (not sample ones starting with 'l1'-'l6')
-                var sampleIds = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'];
-                var userListings = SAMPLE_LISTINGS.filter(function (l) { return !sampleIds.includes(l.id); });
-                localStorage.setItem('shadowotc_listings', JSON.stringify(userListings));
+                localStorage.setItem('shadowotc_listings', JSON.stringify(SAMPLE_LISTINGS));
             } catch (e) { console.log('Could not save listings:', e); }
         }
 
+
+        function submitProjectReg() {
+            var name = document.getElementById('regName').value.trim();
+            var desc = document.getElementById('regDesc').value.trim();
+            var url = document.getElementById('regUrl').value.trim();
+            if (!name) { toast('Missing name', 'Enter your project name', 'error'); return; }
+            if (!desc) { toast('Missing description', 'Describe your project', 'error'); return; }
+            closeMo('regMo');
+            toast('Registration submitted! 🎉', 'We will review and verify your project within 24 hours. Check back soon.');
+        }
         // ═══════════════════════════════════════════════════════════
         // INIT
         // ═══════════════════════════════════════════════════════════
@@ -4698,6 +4828,51 @@
         loadData();
         switchChat('l1', document.querySelector('.cdt.active'));
     </script>
+
+    <!-- PROJECT REGISTRATION MODAL -->
+    <div class="mo" id="regMo">
+        <div class="modal lg">
+            <div class="mh">
+                <h3>Register Your Project</h3><button class="mcl" onclick="closeMo('regMo')">✕</button>
+            </div>
+            <div class="mb">
+                <div
+                    style="background:linear-gradient(135deg,#0d3320,#1a5c38);border-radius:11px;padding:14px;margin-bottom:16px;color:#fff;font-size:13px;line-height:1.6">
+                    <strong style="color:#4ade80">What you get:</strong> A verified ✅ badge on all your listings,
+                    priority placement in the marketplace, and trust signals that increase buyer confidence.
+                </div>
+                <div class="frow">
+                    <div class="fg"><label class="fl">Project Name</label><input type="text" class="fin" id="regName"
+                            placeholder="e.g. Ritual Genesis" /></div>
+                    <div class="fg"><label class="fl">Category</label>
+                        <select class="fs" id="regCat">
+                            <option value="nft">NFT Collection</option>
+                            <option value="token">Token Project</option>
+                            <option value="defi">DeFi Protocol</option>
+                            <option value="infra">Infrastructure</option>
+                            <option value="gaming">Gaming</option>
+                            <option value="dev">Dev Services</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="fg"><label class="fl">Project Description</label><textarea class="fta" id="regDesc"
+                        placeholder="Describe your project — what it does, who it's for, current status."></textarea>
+                </div>
+                <div class="frow">
+                    <div class="fg"><label class="fl">Website / Twitter</label><input type="url" class="fin" id="regUrl"
+                            placeholder="https://…" /></div>
+                    <div class="fg"><label class="fl">Contract Address</label><input type="text" class="fin"
+                            id="regContract" placeholder="0x… (optional)" /></div>
+                </div>
+                <div class="fg"><label class="fl">Your Wallet</label><input type="text" class="fin" id="regWallet"
+                        placeholder="Your 0x… wallet address" readonly /></div>
+                <div class="macts">
+                    <button class="mbtn2" onclick="closeMo('regMo')">Cancel</button>
+                    <button class="mbtn" onclick="submitProjectReg()">Submit Registration</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

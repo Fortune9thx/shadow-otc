@@ -44,16 +44,16 @@
 
         /* TOPBAR */
         .tb {
-            height: 60px;
+            height: 56px;
             display: flex;
             align-items: center;
-            padding: 0 18px;
+            padding: 0 16px;
             background: var(--white);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 200;
-            box-shadow: var(--sh)
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .06)
         }
 
         .logo {
@@ -458,7 +458,7 @@
         /* PAGES */
         .page {
             display: none;
-            padding: 22px;
+            padding: 18px 20px;
             max-width: 1340px;
             margin: 0 auto
         }
@@ -469,79 +469,91 @@
 
         /* HERO */
         .hero {
-            background: linear-gradient(135deg, #0d3320 0%, #1a5c38 45%, #0d3320 100%);
+            background: linear-gradient(135deg, #0a2a18 0%, #1a5c38 50%, #0a2a18 100%);
             border-radius: var(--r2);
-            padding: 34px 38px;
+            padding: 28px 32px;
             position: relative;
             overflow: hidden;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             box-shadow: var(--sh2)
         }
 
         .hero::before {
             content: '';
             position: absolute;
-            top: -70px;
-            right: -50px;
-            width: 240px;
-            height: 240px;
-            background: radial-gradient(circle, rgba(34, 197, 94, .15) 0%, transparent 70%);
+            top: -60px;
+            right: -40px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(34, 197, 94, .12) 0%, transparent 70%);
+            pointer-events: none
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 30%;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(74, 222, 128, .08) 0%, transparent 70%);
             pointer-events: none
         }
 
         .hbadge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            background: rgba(255, 255, 255, .1);
-            border: 1px solid rgba(255, 255, 255, .2);
-            color: rgba(255, 255, 255, .9);
-            font-size: 11px;
-            font-weight: 600;
+            gap: 5px;
+            background: rgba(74, 222, 128, .12);
+            border: 1px solid rgba(74, 222, 128, .25);
+            color: #4ade80;
+            font-size: 10px;
+            font-weight: 700;
             letter-spacing: 1.5px;
-            padding: 4px 12px;
+            padding: 3px 10px;
             border-radius: 20px;
-            margin-bottom: 13px;
+            margin-bottom: 10px;
             text-transform: uppercase
         }
 
         .hbadge::before {
             content: '';
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: #4ade80;
             animation: pulse 2s infinite
         }
 
         .hero h1 {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 700;
-            line-height: 1.25;
-            margin-bottom: 9px;
-            color: #fff
+            line-height: 1.3;
+            margin-bottom: 6px;
+            color: #fff;
+            max-width: 480px
         }
 
         .hero p {
-            color: rgba(255, 255, 255, .7);
-            font-size: 14px;
-            line-height: 1.7;
-            max-width: 500px;
-            margin-bottom: 18px
+            color: rgba(255, 255, 255, .6);
+            font-size: 13px;
+            line-height: 1.6;
+            max-width: 440px;
+            margin-bottom: 14px
         }
 
         .htags {
             display: flex;
             flex-wrap: wrap;
-            gap: 7px
+            gap: 5px
         }
 
         .htag {
-            background: rgba(255, 255, 255, .1);
-            border: 1px solid rgba(255, 255, 255, .18);
-            color: rgba(255, 255, 255, .85);
-            font-size: 11px;
-            padding: 4px 11px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .13);
+            color: rgba(255, 255, 255, .75);
+            font-size: 10px;
+            padding: 3px 9px;
             border-radius: 20px
         }
 
@@ -549,15 +561,15 @@
         .stats {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 13px;
-            margin-bottom: 20px
+            gap: 10px;
+            margin-bottom: 18px
         }
 
         .sc {
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--r);
-            padding: 17px 19px;
+            padding: 13px 15px;
             transition: all .2s;
             box-shadow: var(--sh);
             position: relative;
@@ -595,28 +607,28 @@
         }
 
         .sicon {
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #0d3320, #1a5c38);
-            border-radius: 8px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 13px;
+            margin-bottom: 10px;
             position: relative;
             z-index: 1
         }
 
         .sicon svg {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             stroke: #4ade80;
             fill: none;
             stroke-width: 2
         }
 
         .sval {
-            font-size: 25px;
+            font-size: 22px;
             font-weight: 700;
             color: var(--green);
             line-height: 1;
@@ -625,17 +637,18 @@
         }
 
         .slabel {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--t3);
-            margin-top: 4px;
+            margin-top: 3px;
             position: relative;
-            z-index: 1
+            z-index: 1;
+            letter-spacing: .2px
         }
 
         /* TWO COL */
         .twocol {
             display: flex;
-            gap: 18px;
+            gap: 14px;
             align-items: flex-start
         }
 
@@ -644,15 +657,15 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 16px
+            gap: 13px
         }
 
         .cside {
-            width: 288px;
+            width: 276px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 13px
+            gap: 11px
         }
 
         /* CARD */
@@ -665,7 +678,7 @@
         }
 
         .ch {
-            padding: 12px 16px;
+            padding: 11px 15px;
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
@@ -679,13 +692,13 @@
         }
 
         .ch p {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--t3);
             margin-top: 1px
         }
 
         .cb {
-            padding: 14px 16px
+            padding: 13px 15px
         }
 
         .live {
@@ -711,13 +724,13 @@
         .mktb {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 8px;
+            margin-bottom: 14px;
             flex-wrap: wrap
         }
 
         .mktb h2 {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 700;
             flex: 1
         }
@@ -793,18 +806,18 @@
             border-radius: var(--r2);
             overflow: hidden;
             box-shadow: var(--sh);
-            transition: all .2s;
+            transition: all .22s;
             cursor: pointer
         }
 
         .lcard:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--sh2);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
             border-color: var(--border-d)
         }
 
         .lbanner {
-            height: 88px;
+            height: 76px;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -840,7 +853,7 @@
         }
 
         .ltop {
-            padding: 13px 14px 10px
+            padding: 11px 13px 9px
         }
 
         .lcat {
@@ -850,19 +863,19 @@
             color: var(--green-d);
             font-size: 10px;
             font-weight: 700;
-            padding: 2px 8px;
+            padding: 2px 7px;
             border-radius: 20px;
             text-transform: uppercase;
             letter-spacing: .5px;
-            margin-bottom: 8px
+            margin-bottom: 7px
         }
 
         .ltitle {
             font-size: 13px;
             font-weight: 600;
             color: var(--text);
-            line-height: 1.4;
-            margin-bottom: 5px
+            line-height: 1.35;
+            margin-bottom: 4px
         }
 
         .ldesc {
@@ -906,7 +919,7 @@
         }
 
         .lbottom {
-            padding: 10px 14px;
+            padding: 9px 13px;
             background: #fafcfb;
             border-top: 1px solid var(--border);
             display: flex;
@@ -915,13 +928,13 @@
         }
 
         .lprice {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 800;
             color: var(--green)
         }
 
         .lprice span {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 500;
             color: var(--t3);
             margin-left: 2px
@@ -930,7 +943,7 @@
         .lmeta {
             font-size: 10px;
             color: var(--t4);
-            margin-top: 2px
+            margin-top: 1px
         }
 
         .lacts {
@@ -1103,11 +1116,11 @@
         }
 
         .dtable th {
-            padding: 10px 14px;
+            padding: 8px 13px;
             text-align: left;
             font-size: 10px;
             color: var(--t3);
-            letter-spacing: 1.2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
             border-bottom: 1px solid var(--border);
             font-weight: 600;
@@ -1116,7 +1129,7 @@
         }
 
         .dtable td {
-            padding: 11px 14px;
+            padding: 10px 13px;
             border-bottom: 1px solid var(--border);
             color: var(--t2)
         }
@@ -1195,15 +1208,15 @@
 
         /* FEED */
         .feed {
-            padding: 6px;
-            max-height: 180px;
+            padding: 4px;
+            max-height: 160px;
             overflow-y: auto
         }
 
         .fi {
             display: flex;
-            gap: 9px;
-            padding: 7px 9px;
+            gap: 8px;
+            padding: 6px 8px;
             border-radius: 7px;
             margin-bottom: 1px
         }
@@ -1246,7 +1259,7 @@
 
         /* FORM */
         .fg {
-            margin-bottom: 12px
+            margin-bottom: 11px
         }
 
         .fl {
@@ -1254,7 +1267,7 @@
             font-size: 10px;
             color: var(--t3);
             font-weight: 600;
-            letter-spacing: .8px;
+            letter-spacing: .7px;
             text-transform: uppercase;
             margin-bottom: 4px
         }
@@ -1269,7 +1282,7 @@
             color: var(--text);
             font-family: var(--f);
             font-size: 13px;
-            padding: 9px 11px;
+            padding: 8px 10px;
             outline: none;
             transition: border-color .2s;
             appearance: none
@@ -2050,12 +2063,12 @@
         .phero {
             background: linear-gradient(135deg, #0d3320, #1a5c38);
             border-radius: var(--r2);
-            padding: 24px 28px;
-            margin-bottom: 18px;
+            padding: 18px 22px;
+            margin-bottom: 14px;
             box-shadow: var(--sh2);
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
             position: relative;
             overflow: hidden
         }
@@ -2072,15 +2085,15 @@
         }
 
         .pav {
-            width: 64px;
-            height: 64px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             background: linear-gradient(135deg, #0a2410, #1a5c38);
-            border: 3px solid rgba(74, 222, 128, .35);
+            border: 2px solid rgba(74, 222, 128, .35);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 800;
             color: #4ade80;
             flex-shrink: 0;
@@ -2144,17 +2157,17 @@
 
         .pscore {
             text-align: center;
-            padding: 14px 20px;
+            padding: 10px 16px;
             background: rgba(255, 255, 255, .07);
             border: 1px solid rgba(255, 255, 255, .12);
-            border-radius: 11px;
+            border-radius: 10px;
             flex-shrink: 0;
             position: relative;
             z-index: 1
         }
 
         .pscoren {
-            font-size: 32px;
+            font-size: 26px;
             font-weight: 800;
             color: #4ade80;
             line-height: 1
@@ -2175,29 +2188,29 @@
         .pgrid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 18px
+            gap: 9px;
+            margin-bottom: 14px
         }
 
         .pstat {
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--r);
-            padding: 14px;
+            padding: 11px 10px;
             text-align: center;
             box-shadow: var(--sh)
         }
 
         .pstatv {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--green)
         }
 
         .pstatl {
-            font-size: 11px;
+            font-size: 10px;
             color: var(--t3);
-            margin-top: 3px
+            margin-top: 2px
         }
 
         .rbar-w {
@@ -2918,7 +2931,7 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 58px;
+            height: 54px;
             background: var(--white);
             border-top: 1px solid var(--border);
             z-index: 300;
@@ -2986,7 +2999,7 @@
             }
 
             body {
-                padding-bottom: 58px
+                padding-bottom: 54px
             }
 
             .nav {
@@ -3186,13 +3199,16 @@
     <!-- OVERVIEW PAGE -->
     <div class="page active" id="page-overview">
         <div class="hero">
-            <div class="hbadge">Powered by Ritual Chain EVM++</div>
-            <h1>The OTC marketplace where AI closes the deal.<br />No middlemen. No trust required.</h1>
-            <p>Post what you have. Browse what's available. Negotiate on-chain. AI agents on Ritual Chain verify every
-                delivery and release payment automatically.</p>
-            <div class="htags"><span class="htag">🔒 TEE Verified</span><span class="htag">🌐 Native HTTP
-                    Fetch</span><span class="htag">⚡ Auto Execute</span><span class="htag">🤝 On-chain
-                    Negotiation</span><span class="htag">✓ Chain 1979</span></div>
+            <div class="hbadge">Ritual Chain · Chain ID 1979</div>
+            <h1>Peer-to-peer OTC deals,<br />verified by AI on-chain.</h1>
+            <p>No middlemen. No trust required. Post, negotiate and settle deals — AI agents on Ritual Chain handle the
+                rest.</p>
+            <div class="htags">
+                <span class="htag">🔒 TEE Verified</span>
+                <span class="htag">🌐 HTTP Fetch</span>
+                <span class="htag">⚡ Auto Execute</span>
+                <span class="htag">🤝 On-chain Negotiation</span>
+            </div>
         </div>
         <div class="stats">
             <div class="sc">

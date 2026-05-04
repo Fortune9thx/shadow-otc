@@ -13,7 +13,6 @@
             --green-light: #4ade80;
             --green-dark: #0f5c2e;
             --green-deeper: #0d3320;
-            --green-bg: #052e16;
             --bg: #f8faf9;
             --white: #ffffff;
             --border: #d4e4d8;
@@ -179,6 +178,11 @@
             }
         }
 
+        /* wallet dropdown */
+        .wallet-wrap {
+            position: relative
+        }
+
         .signin-btn {
             display: flex;
             align-items: center;
@@ -205,16 +209,152 @@
             background: #f1f5f2;
             border: 1px solid var(--border-dark);
             color: var(--text2);
-            box-shadow: none
+            box-shadow: none;
+            transform: none
         }
 
         .signin-btn.connected:hover {
             border-color: var(--green);
-            background: #e8f5ea;
-            transform: none
+            background: #e8f5ea
         }
 
-        /* ── TOAST ──────────────────────────────────────────────── */
+        .wallet-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 216px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            z-index: 250;
+            display: none;
+            overflow: hidden;
+            animation: dropIn 0.18s ease
+        }
+
+        .wallet-dropdown.open {
+            display: block
+        }
+
+        @keyframes dropIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .wd-top {
+            padding: 14px;
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .wd-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4ade80;
+            flex-shrink: 0
+        }
+
+        .wd-addr {
+            font-size: 13px;
+            font-weight: 600;
+            color: white;
+            font-family: monospace
+        }
+
+        .wd-sub {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 1px
+        }
+
+        .wd-menu {
+            padding: 6px
+        }
+
+        .wd-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            background: none;
+            border: none;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text2);
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left
+        }
+
+        .wd-item:hover {
+            background: #f1f5f2;
+            color: var(--text)
+        }
+
+        .wd-item svg {
+            flex-shrink: 0;
+            stroke: var(--text3);
+            fill: none;
+            stroke-width: 2;
+            width: 14px;
+            height: 14px
+        }
+
+        .wd-item:hover svg {
+            stroke: var(--green)
+        }
+
+        .wd-unread {
+            margin-left: auto;
+            background: #dc2626;
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 20px
+        }
+
+        .wd-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0
+        }
+
+        .wd-connect {
+            color: var(--green);
+            font-weight: 600
+        }
+
+        .wd-connect svg {
+            stroke: var(--green)
+        }
+
+        .wd-connect:hover {
+            background: #e8f5ea
+        }
+
+        /* ── TOASTS ─────────────────────────────────────────────── */
         #toast-container {
             position: fixed;
             top: 72px;
@@ -233,7 +373,7 @@
             border-radius: 10px;
             padding: 12px 16px;
             box-shadow: var(--shadow-md);
-            min-width: 270px;
+            min-width: 260px;
             max-width: 320px;
             pointer-events: all;
             animation: slideIn 0.3s ease;
@@ -719,11 +859,6 @@
             font-weight: 600
         }
 
-        .seller-rep {
-            font-size: 10px;
-            color: var(--text3)
-        }
-
         .listing-card-bottom {
             padding: 12px 16px;
             background: #fafcfb;
@@ -765,8 +900,7 @@
         }
 
         .btn-buy:hover {
-            background: var(--green-dark);
-            transform: translateY(-1px)
+            background: var(--green-dark)
         }
 
         .btn-offer {
@@ -843,13 +977,6 @@
             text-overflow: ellipsis
         }
 
-        .listing-row-price {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--green);
-            white-space: nowrap
-        }
-
         .empty-listings {
             padding: 60px 24px;
             text-align: center
@@ -873,548 +1000,6 @@
             color: var(--text3);
             max-width: 300px;
             margin: 0 auto 20px
-        }
-
-        /* ── MODALS ─────────────────────────────────────────────── */
-        .moverlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 300;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px)
-        }
-
-        .moverlay.show {
-            display: flex
-        }
-
-        .modal {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            width: 90%;
-            max-width: 480px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-md)
-        }
-
-        .modal-lg {
-            max-width: 580px
-        }
-
-        .mh {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between
-        }
-
-        .mh h3 {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text)
-        }
-
-        .mclose {
-            background: #f1f5f2;
-            border: 1px solid var(--border);
-            color: var(--text2);
-            width: 27px;
-            height: 27px;
-            border-radius: 7px;
-            cursor: pointer;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s
-        }
-
-        .mclose:hover {
-            border-color: var(--green);
-            color: var(--green)
-        }
-
-        .mbody {
-            padding: 20px
-        }
-
-        /* listing detail */
-        .listing-detail-header {
-            background: linear-gradient(135deg, #0d3320, #1a5c38);
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
-            color: white
-        }
-
-        .listing-detail-header h4 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 4px
-        }
-
-        .listing-detail-header p {
-            font-size: 12px;
-            opacity: 0.75;
-            line-height: 1.5
-        }
-
-        .listing-detail-price {
-            font-size: 22px;
-            font-weight: 800;
-            color: #4ade80;
-            margin-top: 8px
-        }
-
-        /* negotiation */
-        .neg-thread {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 12px;
-            max-height: 180px;
-            overflow-y: auto
-        }
-
-        .neg-msg {
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            max-width: 85%
-        }
-
-        .neg-msg.seller {
-            background: #f1f5f2;
-            color: var(--text);
-            align-self: flex-start;
-            border-bottom-left-radius: 3px
-        }
-
-        .neg-msg.buyer {
-            background: #dcfce7;
-            color: var(--green-dark);
-            align-self: flex-end;
-            border-bottom-right-radius: 3px
-        }
-
-        .neg-msg .neg-label {
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 3px;
-            opacity: 0.6
-        }
-
-        .neg-msg .neg-price {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--green);
-            margin-top: 4px
-        }
-
-        .neg-msg .neg-note {
-            font-size: 12px;
-            opacity: 0.75;
-            margin-top: 3px
-        }
-
-        .offer-form {
-            background: #f8faf9;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 12px
-        }
-
-        .offer-form h4 {
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--text3);
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-bottom: 10px
-        }
-
-        .offer-input {
-            width: 100%;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 700;
-            padding: 9px 48px 9px 11px;
-            outline: none;
-            transition: border-color 0.2s
-        }
-
-        .offer-input:focus {
-            border-color: var(--green)
-        }
-
-        .offer-wrap {
-            position: relative
-        }
-
-        .offer-wrap .offer-suf {
-            position: absolute;
-            right: 11px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--green)
-        }
-
-        .offer-note {
-            width: 100%;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 13px;
-            padding: 9px 11px;
-            outline: none;
-            resize: none;
-            height: 60px;
-            margin-top: 8px;
-            transition: border-color 0.2s
-        }
-
-        .offer-note:focus {
-            border-color: var(--green)
-        }
-
-        .offer-note::placeholder {
-            color: var(--text-light);
-            font-size: 12px
-        }
-
-        /* twitter share */
-        .twitter-box {
-            background: linear-gradient(135deg, #e8f5ff, #f0f9ff);
-            border: 1px solid #bfdbfe;
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 14px
-        }
-
-        .twitter-box h4 {
-            font-size: 12px;
-            font-weight: 700;
-            color: #1d4ed8;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 5px
-        }
-
-        .tweet-preview {
-            background: var(--white);
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 12px;
-            color: var(--text2);
-            line-height: 1.6;
-            margin-bottom: 10px;
-            font-family: monospace;
-            white-space: pre-wrap
-        }
-
-        .tweet-btn {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            background: #1d9bf0;
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s
-        }
-
-        .tweet-btn:hover {
-            background: #1a8cd8;
-            transform: translateY(-1px)
-        }
-
-        /* modal actions */
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border)
-        }
-
-        .btn-primary {
-            flex: 1;
-            padding: 12px;
-            background: var(--green);
-            border: none;
-            border-radius: 9px;
-            color: white;
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px
-        }
-
-        .btn-primary:hover {
-            background: var(--green-dark);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25)
-        }
-
-        .btn-secondary {
-            padding: 12px 18px;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            color: var(--text2);
-            font-family: var(--font);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s
-        }
-
-        .btn-secondary:hover {
-            border-color: var(--green);
-            color: var(--green)
-        }
-
-        /* ── FORM ───────────────────────────────────────────────── */
-        .form-group {
-            margin-bottom: 13px
-        }
-
-        .form-label {
-            display: block;
-            font-size: 10px;
-            color: var(--text3);
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-bottom: 5px
-        }
-
-        .form-select,
-        .form-input,
-        .form-textarea {
-            width: 100%;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 13px;
-            padding: 9px 11px;
-            outline: none;
-            transition: border-color 0.2s;
-            appearance: none
-        }
-
-        .form-select:focus,
-        .form-input:focus,
-        .form-textarea:focus {
-            border-color: var(--green);
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
-        }
-
-        .form-textarea {
-            resize: none;
-            height: 76px;
-            line-height: 1.5
-        }
-
-        .form-textarea::placeholder,
-        .form-input::placeholder {
-            color: var(--text-light);
-            font-size: 12px
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px
-        }
-
-        .input-wrap {
-            position: relative
-        }
-
-        .input-wrap .form-input {
-            padding-right: 62px
-        }
-
-        .input-suffix {
-            position: absolute;
-            right: 11px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--green)
-        }
-
-        .form-hint {
-            font-size: 10px;
-            color: var(--text-light);
-            margin-top: 4px;
-            line-height: 1.4
-        }
-
-        .fg {
-            margin-bottom: 13px
-        }
-
-        .fl {
-            display: block;
-            font-size: 10px;
-            color: var(--text3);
-            font-weight: 600;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            margin-bottom: 5px
-        }
-
-        .fs,
-        .fi,
-        .fta {
-            width: 100%;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-family: var(--font);
-            font-size: 13px;
-            padding: 9px 11px;
-            outline: none;
-            transition: border-color 0.2s;
-            appearance: none
-        }
-
-        .fs:focus,
-        .fi:focus,
-        .fta:focus {
-            border-color: var(--green);
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
-        }
-
-        .fta {
-            resize: none;
-            height: 72px;
-            line-height: 1.5
-        }
-
-        .fta::placeholder,
-        .fi::placeholder {
-            color: var(--text-light);
-            font-size: 12px
-        }
-
-        .iw {
-            position: relative
-        }
-
-        .iw .fi {
-            padding-right: 62px
-        }
-
-        .isuf {
-            position: absolute;
-            right: 11px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--green)
-        }
-
-        .fhint {
-            font-size: 10px;
-            color: var(--text-light);
-            margin-top: 4px;
-            line-height: 1.4
-        }
-
-        .ibtn {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, var(--green), var(--green-dark));
-            border: none;
-            border-radius: 9px;
-            color: white;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3)
-        }
-
-        .ibtn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 5px 14px rgba(22, 163, 74, 0.35)
-        }
-
-        .ibtn svg {
-            width: 14px;
-            height: 14px;
-            stroke: white;
-            fill: none;
-            stroke-width: 2.5
-        }
-
-        .lrow {
-            display: flex;
-            gap: 8px
-        }
-
-        .lrow .fi {
-            flex: 1
-        }
-
-        .fbtn {
-            padding: 9px 13px;
-            background: #f1f5f2;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text2);
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap
-        }
-
-        .fbtn:hover {
-            background: #e8f5ea;
-            border-color: var(--green);
-            color: var(--green)
         }
 
         /* ── TABLE ──────────────────────────────────────────────── */
@@ -1554,7 +1139,321 @@
             margin-top: 2px
         }
 
-        /* ── DEAL DETAIL ────────────────────────────────────────── */
+        /* ── FORMS ──────────────────────────────────────────────── */
+        .fg {
+            margin-bottom: 13px
+        }
+
+        .fl {
+            display: block;
+            font-size: 10px;
+            color: var(--text3);
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 5px
+        }
+
+        .fs,
+        .fi,
+        .fta {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none
+        }
+
+        .fs:focus,
+        .fi:focus,
+        .fta:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
+        }
+
+        .fta {
+            resize: none;
+            height: 72px;
+            line-height: 1.5
+        }
+
+        .fta::placeholder,
+        .fi::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        .iw {
+            position: relative
+        }
+
+        .iw .fi {
+            padding-right: 62px
+        }
+
+        .isuf {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .fhint {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 4px;
+            line-height: 1.4
+        }
+
+        .ibtn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, var(--green), var(--green-dark));
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3)
+        }
+
+        .ibtn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(22, 163, 74, 0.35)
+        }
+
+        .ibtn svg {
+            width: 14px;
+            height: 14px;
+            stroke: white;
+            fill: none;
+            stroke-width: 2.5
+        }
+
+        .lrow {
+            display: flex;
+            gap: 8px
+        }
+
+        .lrow .fi {
+            flex: 1
+        }
+
+        .fbtn {
+            padding: 9px 13px;
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap
+        }
+
+        .fbtn:hover {
+            background: #e8f5ea;
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .form-group {
+            margin-bottom: 13px
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            color: var(--text3);
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            margin-bottom: 5px
+        }
+
+        .form-select,
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            transition: border-color 0.2s;
+            appearance: none
+        }
+
+        .form-select:focus,
+        .form-input:focus,
+        .form-textarea:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.08)
+        }
+
+        .form-textarea {
+            resize: none;
+            height: 76px;
+            line-height: 1.5
+        }
+
+        .form-textarea::placeholder,
+        .form-input::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px
+        }
+
+        .form-hint {
+            font-size: 10px;
+            color: var(--text-light);
+            margin-top: 4px;
+            line-height: 1.4
+        }
+
+        /* ── MODALS ─────────────────────────────────────────────── */
+        .moverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 300;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px)
+        }
+
+        .moverlay.show {
+            display: flex
+        }
+
+        .modal {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-md)
+        }
+
+        .modal-lg {
+            max-width: 580px
+        }
+
+        .mh {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between
+        }
+
+        .mh h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text)
+        }
+
+        .mclose {
+            background: #f1f5f2;
+            border: 1px solid var(--border);
+            color: var(--text2);
+            width: 27px;
+            height: 27px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s
+        }
+
+        .mclose:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
+        .mbody {
+            padding: 20px
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border)
+        }
+
+        .btn-primary {
+            flex: 1;
+            padding: 12px;
+            background: var(--green);
+            border: none;
+            border-radius: 9px;
+            color: white;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px
+        }
+
+        .btn-primary:hover {
+            background: var(--green-dark);
+            transform: translateY(-1px)
+        }
+
+        .btn-secondary {
+            padding: 12px 18px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--text2);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--green);
+            color: var(--green)
+        }
+
         .drow {
             display: flex;
             align-items: flex-start;
@@ -1582,7 +1481,213 @@
             word-break: break-all
         }
 
-        /* ── PROOF FIELDS ───────────────────────────────────────── */
+        /* listing detail */
+        .listing-detail-header {
+            background: linear-gradient(135deg, #0d3320, #1a5c38);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            color: white
+        }
+
+        .listing-detail-header h4 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .listing-detail-header p {
+            font-size: 12px;
+            opacity: 0.75;
+            line-height: 1.5
+        }
+
+        .listing-detail-price {
+            font-size: 22px;
+            font-weight: 800;
+            color: #4ade80;
+            margin-top: 8px
+        }
+
+        /* negotiation */
+        .neg-thread {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+            max-height: 180px;
+            overflow-y: auto
+        }
+
+        .neg-msg {
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            max-width: 85%
+        }
+
+        .neg-msg.seller {
+            background: #f1f5f2;
+            color: var(--text);
+            align-self: flex-start;
+            border-bottom-left-radius: 3px
+        }
+
+        .neg-msg.buyer {
+            background: #dcfce7;
+            color: var(--green-dark);
+            align-self: flex-end;
+            border-bottom-right-radius: 3px
+        }
+
+        .neg-msg .neg-label {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+            opacity: 0.6
+        }
+
+        .neg-msg .neg-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--green);
+            margin-top: 4px
+        }
+
+        .neg-msg .neg-note {
+            font-size: 12px;
+            opacity: 0.75;
+            margin-top: 3px
+        }
+
+        .offer-form {
+            background: #f8faf9;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px
+        }
+
+        .offer-form h4 {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 10px
+        }
+
+        .offer-wrap {
+            position: relative;
+            margin-bottom: 8px
+        }
+
+        .offer-input {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 700;
+            padding: 9px 48px 9px 11px;
+            outline: none;
+            transition: border-color 0.2s
+        }
+
+        .offer-input:focus {
+            border-color: var(--green)
+        }
+
+        .offer-suf {
+            position: absolute;
+            right: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green)
+        }
+
+        .offer-note {
+            width: 100%;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: var(--font);
+            font-size: 13px;
+            padding: 9px 11px;
+            outline: none;
+            resize: none;
+            height: 60px;
+            transition: border-color 0.2s
+        }
+
+        .offer-note:focus {
+            border-color: var(--green)
+        }
+
+        .offer-note::placeholder {
+            color: var(--text-light);
+            font-size: 12px
+        }
+
+        /* twitter share */
+        .twitter-box {
+            background: linear-gradient(135deg, #e8f5ff, #f0f9ff);
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px
+        }
+
+        .twitter-box h4 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .tweet-preview {
+            background: var(--white);
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text2);
+            line-height: 1.6;
+            margin-bottom: 10px;
+            font-family: monospace;
+            white-space: pre-wrap
+        }
+
+        .tweet-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #1d9bf0;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: var(--font);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s
+        }
+
+        .tweet-btn:hover {
+            background: #1a8cd8
+        }
+
+        /* proof section */
         .proof-section {
             background: #f8faf9;
             border: 1px solid var(--border);
@@ -1638,230 +1743,7 @@
             font-size: 12px
         }
 
-        /* ── RESPONSIVE ─────────────────────────────────────────── */
-        @media(max-width:1060px) {
-            .stats {
-                grid-template-columns: repeat(2, 1fr)
-            }
-
-            .col-side {
-                width: 264px
-            }
-        }
-
-        @media(max-width:820px) {
-            .two-col {
-                flex-direction: column
-            }
-
-            .col-side {
-                width: 100%
-            }
-
-            .listings-grid {
-                grid-template-columns: 1fr 1fr
-            }
-
-            .chain-pill {
-                display: none
-            }
-
-            .logo-text span {
-                display: none
-            }
-        }
-
-        @media(max-width:560px) {
-            .stats {
-                grid-template-columns: 1fr 1fr
-            }
-
-            .hero {
-                padding: 22px 20px
-            }
-
-            .hero h1 {
-                font-size: 20px
-            }
-
-            .page {
-                padding: 14px
-            }
-
-            .listings-grid {
-                grid-template-columns: 1fr
-            }
-
-            .form-row {
-                grid-template-columns: 1fr
-            }
-
-            .nav-tab {
-                padding: 6px 9px;
-                font-size: 12px
-            }
-
-            .signin-btn span {
-                display: none
-            }
-
-            .signin-btn {
-                padding: 8px 10px
-            }
-        }
-
-        /* ── WALLET DROPDOWN ─────────────────────────────────────── */
-        .wallet-menu-wrap {
-            position: relative
-        }
-
-        .wallet-dropdown {
-            position: absolute;
-            top: calc(100% + 8px);
-            right: 0;
-            width: 220px;
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-md);
-            z-index: 250;
-            display: none;
-            overflow: hidden;
-            animation: dropIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .wallet-dropdown.open {
-            display: block
-        }
-
-        @keyframes dropIn {
-            from {
-                opacity: 0;
-                transform: translateY(-6px)
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0)
-            }
-        }
-
-        .wallet-dropdown-top {
-            padding: 14px 14px 12px;
-            background: linear-gradient(135deg, #0d3320, #1a5c38);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .wd-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(74, 222, 128, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: #4ade80;
-            flex-shrink: 0;
-        }
-
-        .wd-addr {
-            font-size: 13px;
-            font-weight: 600;
-            color: white;
-            font-family: monospace
-        }
-
-        .wd-sub {
-            font-size: 10px;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 1px
-        }
-
-        .wallet-dropdown-menu {
-            padding: 6px
-        }
-
-        .wd-item {
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 9px;
-            padding: 9px 10px;
-            border-radius: 8px;
-            background: none;
-            border: none;
-            font-family: var(--font);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--text2);
-            cursor: pointer;
-            transition: all 0.15s;
-            text-align: left;
-        }
-
-        .wd-item:hover {
-            background: #f1f5f2;
-            color: var(--text)
-        }
-
-        .wd-item svg {
-            flex-shrink: 0;
-            stroke: var(--text3)
-        }
-
-        .wd-item:hover svg {
-            stroke: var(--green)
-        }
-
-        .wd-unread {
-            margin-left: auto;
-            background: #dc2626;
-            color: white;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 1px 6px;
-            border-radius: 20px;
-        }
-
-        .wd-divider {
-            height: 1px;
-            background: var(--border);
-            margin: 4px 0
-        }
-
-        .wd-connect {
-            color: var(--green);
-            font-weight: 600
-        }
-
-        .wd-connect svg {
-            stroke: var(--green)
-        }
-
-        .wd-connect:hover {
-            background: #e8f5ea
-        }
-
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border-dark);
-            border-radius: 4px
-        }
-
-        /* ── PROFILE PAGE ────────────────────────────────────────── */
+        /* ── PROFILE PAGE ───────────────────────────────────────── */
         .profile-hero {
             background: linear-gradient(135deg, #0d3320 0%, #1a5c38 50%, #0d3320 100%);
             border-radius: var(--radius-lg);
@@ -2031,7 +1913,107 @@
             flex-shrink: 0
         }
 
-        /* ── DEAL CHAT DRAWER ────────────────────────────────────── */
+        .rep-bar-wrap {
+            margin-bottom: 12px
+        }
+
+        .rep-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text3);
+            margin-bottom: 4px
+        }
+
+        .rep-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden
+        }
+
+        .rep-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--green-bright));
+            border-radius: 3px;
+            transition: width 0.6s ease
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .activity-item:last-child {
+            border-bottom: none
+        }
+
+        .activity-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0
+        }
+
+        .ai-green {
+            background: #dcfce7
+        }
+
+        .ai-blue {
+            background: #dbeafe
+        }
+
+        .ai-yellow {
+            background: #fef9c3
+        }
+
+        .ai-red {
+            background: #fef2f2
+        }
+
+        .activity-body {
+            flex: 1
+        }
+
+        .activity-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text)
+        }
+
+        .activity-sub {
+            font-size: 11px;
+            color: var(--text3);
+            margin-top: 2px
+        }
+
+        .activity-time {
+            font-size: 10px;
+            color: var(--text-light);
+            flex-shrink: 0;
+            margin-top: 2px
+        }
+
+        /* ── CHAT DRAWER ────────────────────────────────────────── */
+        .chat-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 149
+        }
+
+        .chat-backdrop.show {
+            display: block
+        }
+
         .chat-drawer {
             position: fixed;
             top: 60px;
@@ -2196,10 +2178,7 @@
             font-size: 13px;
             padding: 9px 12px;
             outline: none;
-            transition: border-color 0.2s;
-            resize: none;
-            height: 40px;
-            line-height: 1.4
+            transition: border-color 0.2s
         }
 
         .chat-input:focus {
@@ -2218,8 +2197,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
-            flex-shrink: 0
+            white-space: nowrap
         }
 
         .chat-send:hover {
@@ -2243,259 +2221,46 @@
             opacity: 0.4
         }
 
-        /* chat trigger button — inline, not floating */
-        .chat-trigger-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            background: #f1f5f2;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text2);
-            font-family: var(--font);
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative
-        }
-
-        .chat-trigger-btn:hover {
-            background: #e8f5ea;
-            border-color: var(--green);
-            color: var(--green)
-        }
-
-        .chat-trigger-btn svg {
-            width: 14px;
-            height: 14px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 2
-        }
-
-        .chat-unread-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #dc2626;
-            position: absolute;
-            top: -2px;
-            right: -2px;
-            border: 2px solid var(--bg)
-        }
-
-        /* drawer backdrop on mobile */
-        .chat-backdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.3);
-            z-index: 149
-        }
-
-        .chat-backdrop.show {
-            display: block
-        }
-
         @media(max-width:760px) {
             .chat-drawer {
-                width: 100%;
-                top: 60px
+                width: 100%
             }
         }
 
-        /* ── ACTIVITY FEED ───────────────────────────────────────── */
-        .activity-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border)
-        }
+        /* ── RESPONSIVE ─────────────────────────────────────────── */
+        @media(max-width:1060px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
 
-        .activity-item:last-child {
-            border-bottom: none
-        }
+            .col-side {
+                width: 264px
+            }
 
-        .activity-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            flex-shrink: 0
-        }
-
-        .ai-green {
-            background: #dcfce7
-        }
-
-        .ai-blue {
-            background: #dbeafe
-        }
-
-        .ai-yellow {
-            background: #fef9c3
-        }
-
-        .ai-red {
-            background: #fef2f2
-        }
-
-        .activity-body {
-            flex: 1
-        }
-
-        .activity-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text)
-        }
-
-        .activity-sub {
-            font-size: 11px;
-            color: var(--text3);
-            margin-top: 2px
-        }
-
-        .activity-time {
-            font-size: 10px;
-            color: var(--text-light);
-            flex-shrink: 0;
-            margin-top: 2px
-        }
-
-        /* ── REPUTATION BAR ──────────────────────────────────────── */
-        .rep-bar-wrap {
-            margin-bottom: 12px
-        }
-
-        .rep-bar-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: var(--text3);
-            margin-bottom: 4px
-        }
-
-        .rep-bar {
-            height: 6px;
-            background: var(--border);
-            border-radius: 3px;
-            overflow: hidden
-        }
-
-        .rep-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--green), var(--green-bright));
-            border-radius: 3px;
-            transition: width 0.6s ease
-        }
-
-        /* ── MARKET STATS PAGE ───────────────────────────────────── */
-        .mkt-stat-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 22px
-        }
-
-        .mkt-stat-card {
-            background: var(--white);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px;
-            box-shadow: var(--shadow)
-        }
-
-        .mkt-stat-val {
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--green);
-            margin-bottom: 4px
-        }
-
-        .mkt-stat-label {
-            font-size: 11px;
-            color: var(--text3)
-        }
-
-        .leaderboard-row {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 0;
-            border-bottom: 1px solid var(--border)
-        }
-
-        .leaderboard-row:last-child {
-            border-bottom: none
-        }
-
-        .lb-rank {
-            width: 24px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text3);
-            flex-shrink: 0
-        }
-
-        .lb-rank.gold {
-            color: #f59e0b
-        }
-
-        .lb-rank.silver {
-            color: #9ca3af
-        }
-
-        .lb-rank.bronze {
-            color: #d97706
-        }
-
-        .lb-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--green-deeper), #1a5c38);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            color: #4ade80;
-            font-weight: 700;
-            flex-shrink: 0
-        }
-
-        .lb-info {
-            flex: 1
-        }
-
-        .lb-addr {
-            font-size: 12px;
-            font-weight: 600;
-            font-family: monospace;
-            color: var(--text)
-        }
-
-        .lb-meta {
-            font-size: 11px;
-            color: var(--text3);
-            margin-top: 1px
-        }
-
-        .lb-score {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--green)
+            .profile-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
         }
 
         @media(max-width:820px) {
-            .profile-grid {
+            .two-col {
+                flex-direction: column
+            }
+
+            .col-side {
+                width: 100%
+            }
+
+            .listings-grid {
                 grid-template-columns: 1fr 1fr
+            }
+
+            .chain-pill {
+                display: none
+            }
+
+            .logo-text span {
+                display: none
             }
 
             .profile-two-col {
@@ -2506,10 +2271,6 @@
                 width: 100%
             }
 
-            .mkt-stat-grid {
-                grid-template-columns: 1fr 1fr
-            }
-
             .profile-hero {
                 flex-direction: column;
                 text-align: center
@@ -2517,13 +2278,60 @@
         }
 
         @media(max-width:560px) {
-            .profile-grid {
+            .stats {
                 grid-template-columns: 1fr 1fr
             }
 
-            .chat-window {
-                width: calc(100vw - 32px)
+            .hero {
+                padding: 22px 20px
             }
+
+            .hero h1 {
+                font-size: 20px
+            }
+
+            .page {
+                padding: 14px
+            }
+
+            .listings-grid {
+                grid-template-columns: 1fr
+            }
+
+            .form-row {
+                grid-template-columns: 1fr
+            }
+
+            .nav-tab {
+                padding: 6px 9px;
+                font-size: 12px
+            }
+
+            .signin-btn span {
+                display: none
+            }
+
+            .signin-btn {
+                padding: 8px 10px
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr 1fr
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-dark);
+            border-radius: 4px
         }
     </style>
 </head>
@@ -2532,7 +2340,7 @@
 
     <div id="toast-container"></div>
 
-    <!-- TOPBAR -->
+    <!-- ── TOPBAR ──────────────────────────────────────────── -->
     <header class="topbar">
         <div class="logo" onclick="showPage('dashboard')">
             <div class="logo-icon">
@@ -2569,15 +2377,13 @@
             <button class="nav-tab active" id="tab-dashboard" onclick="showPage('dashboard')">Overview</button>
             <button class="nav-tab" id="tab-listings" onclick="showPage('listings')">Marketplace</button>
             <button class="nav-tab" id="tab-deals" onclick="showPage('deals')">My Deals</button>
-            <button class="nav-tab" id="tab-profile" onclick="showPage('profile')">My Profile</button>
             <button class="nav-tab accent" onclick="openPostListing()">+ Post Listing</button>
         </nav>
         <div class="topbar-right">
             <div class="chain-pill">
                 <div class="chain-dot"></div>Ritual Testnet
             </div>
-            <!-- wallet dropdown trigger -->
-            <div class="wallet-menu-wrap" id="walletMenuWrap">
+            <div class="wallet-wrap" id="walletWrap">
                 <button class="signin-btn" id="signinBtn" onclick="toggleWalletMenu()">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -2586,52 +2392,44 @@
                     <span id="signinText">Sign In</span>
                 </button>
                 <div class="wallet-dropdown" id="walletDropdown">
-                    <div class="wallet-dropdown-top" id="walletDropdownTop">
+                    <div class="wd-top">
                         <div class="wd-avatar" id="wdAvatar">?</div>
                         <div>
                             <div class="wd-addr" id="wdAddr">Not connected</div>
-                            <div class="wd-sub">Connect to get started</div>
+                            <div class="wd-sub" id="wdSub">Connect to get started</div>
                         </div>
                     </div>
-                    <div class="wallet-dropdown-menu">
+                    <div class="wd-menu">
                         <button class="wd-item" onclick="closeWalletMenu();showPage('profile')">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24">
                                 <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                                 <circle cx="12" cy="7" r="4" />
-                            </svg>
-                            My Profile
+                            </svg>My Profile
                         </button>
-                        <button class="wd-item" onclick="closeWalletMenu();openChat(null)" id="wdChatBtn">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
+                        <button class="wd-item" onclick="closeWalletMenu();openChat()">
+                            <svg viewBox="0 0 24 24">
                                 <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
-                            </svg>
-                            Deal Chat
+                            </svg>Deal Chat
                             <span class="wd-unread" id="chatUnread" style="display:none">1</span>
                         </button>
                         <button class="wd-item" onclick="closeWalletMenu();showPage('deals')">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24">
                                 <rect x="3" y="3" width="7" height="7" rx="1" />
                                 <rect x="14" y="3" width="7" height="7" rx="1" />
                                 <rect x="3" y="14" width="7" height="7" rx="1" />
                                 <rect x="14" y="14" width="7" height="7" rx="1" />
-                            </svg>
-                            My Deals
+                            </svg>My Deals
                         </button>
                         <div class="wd-divider"></div>
                         <button class="wd-item wd-connect" id="wdConnectBtn"
                             onclick="closeWalletMenu();connectWallet()">
-                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
+                            <svg viewBox="0 0 24 24">
                                 <path d="M18 8h1a4 4 0 010 8h-1" />
                                 <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z" />
                                 <line x1="6" y1="1" x2="6" y2="4" />
                                 <line x1="10" y1="1" x2="10" y2="4" />
                                 <line x1="14" y1="1" x2="14" y2="4" />
-                            </svg>
-                            Connect Wallet
+                            </svg>Connect Wallet
                         </button>
                     </div>
                 </div>
@@ -2639,7 +2437,7 @@
         </div>
     </header>
 
-    <!-- OVERVIEW -->
+    <!-- ── OVERVIEW PAGE ───────────────────────────────────── -->
     <div class="page active" id="page-dashboard">
         <div class="hero">
             <div class="hero-badge">Powered by Ritual Chain EVM++</div>
@@ -2799,7 +2597,7 @@
                             <p class="fhint">Min 0.005 RITUAL. Locked when both parties agree.</p>
                         </div>
                         <button class="ibtn"
-                            onclick="toast('Coming soon','Direct deal flow via MetaMask coming in next update','info')">
+                            onclick="toast('Coming soon','Direct deal via MetaMask coming next update','info')">
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 5v14M5 12h14" />
                             </svg>Initiate Deal
@@ -2823,7 +2621,7 @@
         </div>
     </div>
 
-    <!-- MARKETPLACE -->
+    <!-- ── MARKETPLACE PAGE ────────────────────────────────── -->
     <div class="page" id="page-listings">
         <div class="listings-toolbar">
             <h2>Marketplace</h2>
@@ -2848,7 +2646,7 @@
         <div id="listingsContainer"></div>
     </div>
 
-    <!-- MY DEALS -->
+    <!-- ── MY DEALS PAGE ───────────────────────────────────── -->
     <div class="page" id="page-deals">
         <div class="card">
             <div class="card-header">
@@ -2883,641 +2681,14 @@
         </div>
     </div>
 
-    <!-- POST LISTING MODAL -->
-    <div class="moverlay" id="postListingModal">
-        <div class="modal modal-lg">
-            <div class="mh">
-                <h3>Post a Listing</h3><button class="mclose" onclick="closeModal('postListingModal')">✕</button>
-            </div>
-            <div class="mbody">
-                <div class="form-row">
-                    <div class="form-group"><label class="form-label">Category</label>
-                        <select class="form-select" id="listingCat"
-                            onchange="updateListingProofFields();updateTweetPreview()">
-                            <option value="whitelist">NFT Whitelist</option>
-                            <option value="airdrop">Airdrop Allocation</option>
-                            <option value="allocation">Token Allocation</option>
-                            <option value="premarket">Pre-Market</option>
-                            <option value="nft">NFT OTC Sale</option>
-                            <option value="freelance">Freelance</option>
-                            <option value="social">Social Media</option>
-                            <option value="content">Content Creation</option>
-                            <option value="marketing">Marketing</option>
-                            <option value="bounty">Bug Bounty</option>
-                            <option value="escrow">Escrow</option>
-                            <option value="conditional">Conditional</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label class="form-label">Your Price (RITUAL)</label>
-                        <div style="position:relative"><input type="number" class="form-input" id="listingPrice"
-                                placeholder="0.50" step="0.01" min="0.005" oninput="updateTweetPreview()"
-                                style="padding-right:62px" /><span
-                                style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--green)">RITUAL</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group"><label class="form-label">Title</label>
-                    <input type="text" class="form-input" id="listingTitle"
-                        placeholder="e.g. 1× NFT Whitelist Spot — ProjectX Genesis" oninput="updateTweetPreview()" />
-                </div>
-                <div class="form-group"><label class="form-label">Description</label>
-                    <textarea class="form-textarea" id="listingDesc"
-                        placeholder="Be specific — include collection names, token details, deadlines, and any relevant links."></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group"><label class="form-label">Expires In</label>
-                        <select class="form-select" id="listingExpiry">
-                            <option value="24">24 hours</option>
-                            <option value="48">48 hours</option>
-                            <option value="72">3 days</option>
-                            <option value="168">7 days</option>
-                        </select>
-                    </div>
-                    <div class="form-group"><label class="form-label">Allow Offers?</label>
-                        <select class="form-select" id="listingOffers">
-                            <option value="yes">Yes — buyers can negotiate</option>
-                            <option value="no">No — fixed price only</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="listingProofFields"></div>
-                <!-- Twitter optional -->
-                <div style="margin-bottom:14px">
-                    <label
-                        style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 14px;background:#f8faf9;border:1px solid var(--border);border-radius:10px">
-                        <input type="checkbox" id="shareOnTwitter" onchange="toggleTwitterPreview()"
-                            style="width:15px;height:15px;accent-color:#1d9bf0;cursor:pointer" />
-                        <div>
-                            <div
-                                style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="#1d9bf0">
-                                    <path
-                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                                Share on X after posting
-                            </div>
-                            <div style="font-size:11px;color:var(--text3);margin-top:1px">Optional — post to Twitter to
-                                attract more buyers</div>
-                        </div>
-                    </label>
-                    <div id="twitterPreviewBox" style="display:none;margin-top:8px">
-                        <div class="twitter-box">
-                            <h4><svg width="13" height="13" viewBox="0 0 24 24" fill="#1d4ed8">
-                                    <path
-                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg> Tweet preview</h4>
-                            <div class="tweet-preview" id="tweetPreview">Fill in the form to see preview…</div>
-                            <button class="tweet-btn" onclick="shareListing()">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="white">
-                                    <path
-                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
-                                Post to X
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button class="btn-secondary" onclick="closeModal('postListingModal')">Cancel</button>
-                    <button class="btn-primary" onclick="submitListing()">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>Post Listing
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- LISTING DETAIL MODAL -->
-    <div class="moverlay" id="listingModal">
-        <div class="modal modal-lg">
-            <div class="mh">
-                <h3 id="listingModalTitle">Listing</h3><button class="mclose"
-                    onclick="closeModal('listingModal')">✕</button>
-            </div>
-            <div class="mbody" id="listingModalBody"></div>
-        </div>
-    </div>
-
-    <!-- DEAL DETAIL MODAL -->
-    <div class="moverlay" id="dealModal">
-        <div class="modal">
-            <div class="mh">
-                <h3 id="modalTitle">Deal Details</h3><button class="mclose" onclick="closeModal('dealModal')">✕</button>
-            </div>
-            <div class="mbody" id="modalBody"></div>
-        </div>
-    </div>
-
-    <script>
-        const API = 'https://shadow-otc.onrender.com';
-        const CHAIN_ID = 1979, RITUAL_RPC = 'https://rpc.ritualfoundation.org';
-        let walletAddress = null, allDeals = [], currentView = 'grid', activeFilter = 'all';
-
-        const CATS = { whitelist: 'NFT Whitelist', airdrop: 'Airdrop', allocation: 'Token', premarket: 'Pre-Market', nft: 'NFT OTC', freelance: 'Freelance', social: 'Social', content: 'Content', marketing: 'Marketing', bounty: 'Bug Bounty', escrow: 'Escrow', conditional: 'Conditional' };
-
-        const PROOF_FIELDS = {
-            whitelist: [{ id: 'pf_wallet', label: 'Destination Wallet', ph: '0x… wallet to receive WL spot' }, { id: 'pf_collection', label: 'Collection Name / Link', ph: 'https://opensea.io/collection/…' }],
-            airdrop: [{ id: 'pf_txhash', label: 'Claim Link / TX Hash', ph: '0x… or https://…' }, { id: 'pf_amount', label: 'Token Amount', ph: 'e.g. 500 SHADOW' }],
-            premarket: [{ id: 'pf_agreement', label: 'Agreement Document URL', ph: 'https://docs.google.com/…' }, { id: 'pf_token', label: 'Token Name + Contract', ph: 'e.g. RITUAL 0x…' }],
-            nft: [{ id: 'pf_txhash', label: 'Transfer TX Hash', ph: '0x…' }, { id: 'pf_tokenid', label: 'NFT Contract + Token ID', ph: '0x… #1234' }],
-            freelance: [{ id: 'pf_github', label: 'GitHub Repo / Deliverable URL', ph: 'https://github.com/…' }, { id: 'pf_milestone', label: 'Milestone Description', ph: 'What marks this as done?' }],
-            social: [{ id: 'pf_url', label: 'Post / Tweet URL', ph: 'https://x.com/…' }, { id: 'pf_metric', label: 'Target Metric', ph: 'e.g. 200 likes, 50 retweets' }],
-            content: [{ id: 'pf_url', label: 'Content URL', ph: 'https://…' }, { id: 'pf_wordcount', label: 'Word Count / Duration', ph: 'e.g. 1000 words' }],
-            marketing: [{ id: 'pf_url', label: 'Campaign URL', ph: 'https://…' }, { id: 'pf_reach', label: 'Guaranteed Reach', ph: 'e.g. 10,000 impressions' }],
-            bounty: [{ id: 'pf_report', label: 'Bug Report URL', ph: 'https://…' }, { id: 'pf_severity', label: 'Severity Level', ph: 'Critical / High / Medium' }],
-            escrow: [{ id: 'pf_terms', label: 'Escrow Terms URL', ph: 'https://docs.google.com/…' }],
-            conditional: [{ id: 'pf_condition', label: 'Trigger Condition', ph: 'e.g. ETH price > $4000' }, { id: 'pf_oracle', label: 'Oracle / Data Source', ph: 'https://…' }],
-        };
-
-        const INTENT_PLACEHOLDERS = {
-            social: 'e.g. Promote this tweet to 200 likes — URL: https://x.com/yourtweet. Deliver screenshot when target is reached.',
-            content: 'e.g. Write a 1000-word blog post on DeFi trends. Deliver Google Docs link as proof.',
-            freelance: 'e.g. Build a React landing page per the Figma file. Deliver GitHub repo + live URL.',
-            nft: 'e.g. Transfer NFT #4821 from collection 0xABC… to my wallet 0xDEF… Proof: on-chain tx hash.',
-            whitelist: 'e.g. Add wallet 0xDEF… to the whitelist for MintProject. Proof: whitelist confirmation link.',
-            airdrop: 'e.g. Allocate 500 tokens from Genesis airdrop to wallet 0xDEF… Proof: on-chain tx hash.',
-            allocation: 'e.g. Reserve 10,000 SHADOW tokens at seed price. Proof: allocation confirmation.',
-            premarket: 'e.g. Sell 5,000 RITUAL tokens at $0.08 pre-TGE. Deliver signed agreement.',
-            marketing: 'e.g. Publish sponsored thread about Shadow OTC to 10K+ followers. Deliver tweet URL.',
-            bounty: 'e.g. Find and report a critical vulnerability. Proof: detailed bug report + PoC.',
-            escrow: 'e.g. Hold 1 ETH until both parties confirm the off-chain agreement is settled.',
-            conditional: 'e.g. Release payment when ETH price exceeds $4,000. Proof: oracle price feed.',
-        };
-
-        const SAMPLE_LISTINGS = [
-            { id: 'l1', cat: 'whitelist', title: '2× NFT Whitelist Spots — Ritual Genesis Drop', desc: 'Two guaranteed WL spots for the official Ritual Chain Genesis NFT collection. Mint date Jan 30. Floor expected 2+ ETH.', price: 0.8, seller: '0x7f3a…b291', sellerDeals: 14, sellerScore: 98, expires: Date.now() + 86400000 * 2, allowOffers: true },
-            { id: 'l2', cat: 'airdrop', title: '500 SHADOW Token Airdrop Allocation', desc: 'Selling my full airdrop allocation of 500 SHADOW tokens from Season 1. Tokens unlock Feb 15.', price: 0.5, seller: '0x2c9d…f441', sellerDeals: 7, sellerScore: 91, expires: Date.now() + 86400000 * 1, allowOffers: true },
-            { id: 'l3', cat: 'premarket', title: '10,000 RITUAL Tokens — Pre-TGE Price', desc: 'Selling 10,000 RITUAL at $0.06 pre-TGE. Signed agreement + token lock proof provided. TGE expected Q1 2025.', price: 1.2, seller: '0x9a1e…c883', sellerDeals: 22, sellerScore: 99, expires: Date.now() + 86400000 * 3, allowOffers: false },
-            { id: 'l4', cat: 'freelance', title: 'Full-Stack dApp Development — Solidity + React', desc: 'Building smart contracts + frontend for your Web3 project. 5 years experience, 3 deployed protocols.', price: 2.0, seller: '0x4d7b…a112', sellerDeals: 31, sellerScore: 97, expires: Date.now() + 86400000 * 7, allowOffers: true },
-            { id: 'l5', cat: 'social', title: 'Twitter Thread — 50K+ reach guaranteed', desc: 'Writing + posting a high-quality thread about your project to my 52K crypto followers.', price: 0.15, seller: '0x8e2f…d334', sellerDeals: 45, sellerScore: 94, expires: Date.now() + 86400000 * 2, allowOffers: true },
-            { id: 'l6', cat: 'allocation', title: 'Seed Round Allocation — 5,000 USDC equivalent', desc: 'Transferring my seed round allocation at 30% discount. KYC completed. Vesting: 6mo cliff, 18mo linear.', price: 0.9, seller: '0x1b5c…e667', sellerDeals: 9, sellerScore: 88, expires: Date.now() + 86400000 * 4, allowOffers: true },
-        ];
-
-        // ── TOASTS ────────────────────────────────────────────────
-        function toast(title, msg, type = 'success') {
-            const id = 't' + Date.now();
-            const icons = { success: '✅', error: '❌', info: '💡' };
-            const el = document.createElement('div');
-            el.className = `toast ${type}`; el.id = id;
-            el.innerHTML = `<div class="toast-icon">${icons[type] || '✅'}</div><div class="toast-body"><div class="toast-title">${title}</div><div class="toast-msg">${msg}</div></div><button class="toast-close" onclick="removeToast('${id}')">✕</button>`;
-            document.getElementById('toast-container').appendChild(el);
-            setTimeout(() => removeToast(id), 5000);
-        }
-        function removeToast(id) { const el = document.getElementById(id); if (el) { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.3s'; setTimeout(() => el.remove(), 300); } }
-
-        // ── NAV ───────────────────────────────────────────────────
-        function showPage(id) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + id).classList.add('active');
-            document.querySelectorAll('.nav-tab:not(.accent)').forEach(t => t.classList.remove('active'));
-            const tab = document.getElementById('tab-' + id); if (tab) tab.classList.add('active');
-            if (id === 'deals') renderAllDeals();
-            if (id === 'listings') renderListings();
-            if (id === 'profile') loadProfile();
-            window.scrollTo(0, 0);
-        }
-
-        // ── WALLET ────────────────────────────────────────────────
-
-        // ── WALLET DROPDOWN ───────────────────────────────────────
-        function toggleWalletMenu() {
-            document.getElementById('walletDropdown').classList.toggle('open');
-        }
-        function closeWalletMenu() {
-            document.getElementById('walletDropdown').classList.remove('open');
-        }
-        // Close on outside click
-        document.addEventListener('click', e => {
-            const wrap = document.getElementById('walletMenuWrap');
-            if (wrap && !wrap.contains(e.target)) closeWalletMenu();
-        });
-        function updateWalletDropdown(addr) {
-            const short = addr.slice(0, 6) + '…' + addr.slice(-4);
-            const initials = addr.slice(2, 4).toUpperCase();
-            document.getElementById('wdAvatar').textContent = initials;
-            document.getElementById('wdAddr').textContent = short;
-            const sub = document.querySelector('.wd-sub');
-            if (sub) sub.textContent = 'Ritual Testnet · Connected';
-            document.getElementById('wdConnectBtn').style.display = 'none';
-            document.getElementById('signinText').textContent = short;
-            document.getElementById('signinBtn').classList.add('connected');
-        }
-        async function connectWallet() {
-            if (walletAddress) return;
-            if (!window.ethereum) { toast('MetaMask not found', 'Please install MetaMask', 'error'); return; }
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                walletAddress = accounts[0];
-                try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x7BB' }] }); }
-                catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x7BB', chainName: 'Ritual Testnet', rpcUrls: [RITUAL_RPC], nativeCurrency: { name: 'RITUAL', symbol: 'RITUAL', decimals: 18 }, blockExplorerUrls: ['https://explorer.ritualfoundation.org'] }] }); }
-                const s = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
-                document.getElementById('signinText').textContent = s;
-                document.getElementById('signinBtn').classList.add('connected');
-                toast('Wallet connected', `Connected as ${s} on Ritual Testnet`);
-                updateWalletDropdown(walletAddress);
-                loadProfile();
-            } catch (e) { toast('Failed', e.message || 'Could not connect', 'error'); }
-        }
-        if (window.ethereum) window.ethereum.on('accountsChanged', a => { if (a.length) { walletAddress = a[0]; updateWalletDropdown(a[0]); loadProfile(); closeWalletMenu(); } });
-
-        // ── DATA ──────────────────────────────────────────────────
-        async function loadData() {
-            try {
-                const res = await fetch(API + '/deals'); const data = await res.json();
-                allDeals = data.deals || [];
-                document.getElementById('statTotal').textContent = data.total ?? allDeals.length;
-                document.getElementById('statOpen').textContent = data.open ?? allDeals.filter(d => d.statusId === 0).length;
-                document.getElementById('statCompleted').textContent = data.completed ?? allDeals.filter(d => d.statusId === 3).length;
-                document.getElementById('statLocked').textContent = (data.totalLocked || '0') + ' RITUAL';
-                renderDeals(allDeals.slice(0, 10));
-            } catch (e) {
-                ['statTotal', 'statOpen', 'statCompleted'].forEach(id => document.getElementById(id).textContent = '—');
-                document.getElementById('statLocked').textContent = '—';
-                document.getElementById('dealsBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">Backend offline</div></td></tr>';
-            }
-        }
-        function spill(s) { const m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad' }; return `<span class="sp ${m[s] || 'sp-open'}">${s || 'Open'}</span>`; }
-        function renderDeals(deals) {
-            const b = document.getElementById('dealsBody');
-            if (!deals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet</div></td></tr>'; return; }
-            b.innerHTML = deals.map(d => `<tr onclick="showDealModal(${d.id})"><td><span class="deal-id">#${d.id}</span></td><td>${d.category || '—'}</td><td>${d.amount} RITUAL</td><td>${spill(d.status)}</td><td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td></tr>`).join('');
-        }
-        function renderAllDeals() {
-            const b = document.getElementById('allDealsBody');
-            if (!allDeals.length) { b.innerHTML = '<tr><td colspan="7"><div class="empty-state">No deals found</div></td></tr>'; return; }
-            b.innerHTML = allDeals.map(d => `<tr onclick="showDealModal(${d.id})"><td><span class="deal-id">#${d.id}</span></td><td>${d.category || '—'}</td><td>${d.amount} RITUAL</td><td>${d.collateral} RITUAL</td><td>${spill(d.status)}</td><td style="font-family:monospace;font-size:11px">${d.buyer ? d.buyer.slice(0, 8) + '…' : '—'}</td><td style="font-family:monospace;font-size:11px">${d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—'}</td></tr>`).join('');
-        }
-
-        // ── LISTINGS ──────────────────────────────────────────────
-        function timeLeft(ts) { const d = ts - Date.now(); if (d <= 0) return 'Expired'; const h = Math.floor(d / 3600000); return h < 24 ? h + 'h left' : Math.floor(h / 24) + 'd left'; }
-        function scoreStars(s) { return `<span style="color:#f59e0b;font-size:11px">${s >= 95 ? '★★★★★' : s >= 85 ? '★★★★☆' : '★★★☆☆'}</span> <span style="color:var(--text3);font-size:10px">${s}%</span>`; }
-
-        function filterListings(cat, el) {
-            activeFilter = cat;
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active'); renderListings();
-        }
-        function setView(v) {
-            currentView = v;
-            document.getElementById('gridViewBtn').classList.toggle('active', v === 'grid');
-            document.getElementById('listViewBtn').classList.toggle('active', v === 'list');
-            renderListings();
-        }
-        function renderListings() {
-            const filtered = activeFilter === 'all' ? SAMPLE_LISTINGS : SAMPLE_LISTINGS.filter(l => l.cat === activeFilter);
-            const c = document.getElementById('listingsContainer');
-            if (!filtered.length) { c.innerHTML = `<div class="empty-listings"><div class="empty-icon">🔍</div><h3>No listings here yet</h3><p>Be the first to post in this category.</p><button class="ibtn" style="width:auto;padding:10px 24px;border-radius:9px;font-size:13px;display:inline-flex" onclick="openPostListing()">+ Post Listing</button></div>`; return; }
-            if (currentView === 'grid') {
-                c.innerHTML = `<div class="listings-grid">${filtered.map(l => `
-      <div class="listing-card" onclick="openListingDetail('${l.id}')">
-        <div class="listing-card-top">
-          <div class="listing-cat">${CATS[l.cat] || l.cat}</div>
-          <div class="listing-title">${l.title}</div>
-          <div class="listing-desc">${l.desc}</div>
-          <div class="listing-seller">
-            <div class="seller-avatar">${l.seller.slice(2, 4).toUpperCase()}</div>
-            <div><div class="seller-addr">${l.seller}</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px">${scoreStars(l.sellerScore)}<span style="font-size:10px;color:var(--text3)">${l.sellerDeals} deals</span></div></div>
-          </div>
-        </div>
-        <div class="listing-card-bottom">
-          <div><div class="listing-price">${l.price} <span>RITUAL</span></div><div class="listing-meta">⏱ ${timeLeft(l.expires)}${l.allowOffers ? ' · Offers OK' : ''}</div></div>
-          <div class="listing-actions">
-            ${l.allowOffers ? `<button class="btn-offer" onclick="event.stopPropagation();openListingDetail('${l.id}')">Offer</button>` : ''}
-            <button class="btn-buy" onclick="event.stopPropagation();buyListing('${l.id}')">Buy Now</button>
-          </div>
-        </div>
-      </div>`).join('')}</div>`;
-            } else {
-                c.innerHTML = `<div class="listings-list">${filtered.map(l => `
-      <div class="listing-row" onclick="openListingDetail('${l.id}')">
-        <div style="width:110px;flex-shrink:0"><span class="listing-cat">${CATS[l.cat] || l.cat}</span></div>
-        <div class="listing-row-main"><h4>${l.title}</h4><p>${l.desc}</p></div>
-        <div style="font-size:11px;font-family:monospace;color:var(--text2);width:100px;flex-shrink:0">${l.seller}</div>
-        <div style="font-size:11px;color:var(--text3);width:60px;flex-shrink:0">${timeLeft(l.expires)}</div>
-        <div class="listing-row-price">${l.price} <span style="font-size:11px;color:var(--text3);font-weight:500">RITUAL</span></div>
-        <div class="listing-actions" style="flex-shrink:0">
-          ${l.allowOffers ? `<button class="btn-offer" onclick="event.stopPropagation();openListingDetail('${l.id}')">Offer</button>` : ''}
-          <button class="btn-buy" onclick="event.stopPropagation();buyListing('${l.id}')">Buy</button>
-        </div>
-      </div>`).join('')}</div>`;
-            }
-        }
-
-        function openListingDetail(id) {
-            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
-            document.getElementById('listingModalTitle').textContent = CATS[l.cat] + ' Listing';
-            document.getElementById('listingModalBody').innerHTML = `
-    <div class="listing-detail-header">
-      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:5px">${CATS[l.cat]}</div>
-      <h4>${l.title}</h4><p>${l.desc}</p>
-      <div class="listing-detail-price">${l.price} <span style="font-size:13px;font-weight:500;opacity:0.7">RITUAL</span></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8faf9;border:1px solid var(--border);border-radius:9px;margin-bottom:14px">
-      <div class="seller-avatar" style="width:36px;height:36px;font-size:13px">${l.seller.slice(2, 4).toUpperCase()}</div>
-      <div><div style="font-size:13px;font-weight:600;font-family:monospace">${l.seller}</div><div style="display:flex;align-items:center;gap:8px;margin-top:3px">${scoreStars(l.sellerScore)}<span style="font-size:11px;color:var(--text3)">${l.sellerDeals} completed deals</span></div></div>
-      <div style="margin-left:auto;text-align:right"><div style="font-size:10px;color:var(--text3)">Expires</div><div style="font-size:12px;font-weight:600">${timeLeft(l.expires)}</div></div>
-    </div>
-    ${l.allowOffers ? `
-    <div class="offer-form">
-      <h4>Make an Offer</h4>
-      <div class="neg-thread" id="negThread_${l.id}">
-        <div class="neg-msg seller"><div class="neg-label">Seller asking</div><div class="neg-price">${l.price} RITUAL</div></div>
-      </div>
-      <div class="offer-wrap" style="margin-bottom:8px"><input type="number" class="offer-input" id="offerAmt_${l.id}" value="${(l.price * 0.85).toFixed(2)}" step="0.01" placeholder="Your offer"/><span class="offer-suf">RITUAL</span></div>
-      <textarea class="offer-note" id="offerNote_${l.id}" placeholder="Add a note — introduce yourself or explain your offer…"></textarea>
-    </div>`: '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#15803d;font-weight:600">Fixed price listing — no offers accepted.</div>'}
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal('listingModal')">Close</button>
-      <button class="chat-trigger-btn" onclick="closeModal('listingModal');openChat('${l.id}')">
-        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-        Chat
-      </button>
-      ${l.allowOffers ? `<button class="btn-secondary" onclick="submitOffer('${l.id}')">Send Offer</button>` : ''}
-      <button class="btn-primary" onclick="closeModal('listingModal');buyListing('${l.id}')">Buy Now — ${l.price} RITUAL</button>
-    </div>`;
-            document.getElementById('listingModal').classList.add('show');
-        }
-
-        function submitOffer(id) {
-            if (!walletAddress) { toast('Connect wallet', 'Sign in to make an offer', 'info'); return; }
-            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
-            const amt = parseFloat(document.getElementById('offerAmt_' + id)?.value || 0);
-            const note = document.getElementById('offerNote_' + id)?.value || '';
-            if (!amt || amt <= 0) { toast('Invalid offer', 'Enter a valid amount', 'error'); return; }
-            const thread = document.getElementById('negThread_' + id);
-            if (thread) { const m = document.createElement('div'); m.className = 'neg-msg buyer'; m.innerHTML = `<div class="neg-label">Your offer</div><div class="neg-price">${amt} RITUAL</div>${note ? `<div class="neg-note">${note}</div>` : ''}`; thread.appendChild(m); thread.scrollTop = thread.scrollHeight; }
-            toast('Offer sent!', `${amt} RITUAL offer sent. Seller has 24hrs to respond.`);
-            setTimeout(() => {
-                const counter = (amt * 1.1).toFixed(2);
-                const t2 = document.getElementById('negThread_' + id);
-                if (t2) { const m = document.createElement('div'); m.className = 'neg-msg seller'; m.innerHTML = `<div class="neg-label">Counter-offer</div><div class="neg-price">${counter} RITUAL</div><div class="neg-note">Best I can do — ${counter} RITUAL.</div>`; t2.appendChild(m); t2.scrollTop = t2.scrollHeight; }
-                toast('Counter-offer received!', `Seller countered at ${counter} RITUAL`, 'info');
-            }, 3000);
-        }
-
-        function buyListing(id) {
-            if (!walletAddress) { toast('Connect wallet', 'Sign in to buy this listing', 'info'); connectWallet(); return; }
-            const l = SAMPLE_LISTINGS.find(x => x.id === id); if (!l) return;
-            toast('Deal initiating…', `Locking ${l.price} RITUAL into escrow for "${l.title.slice(0, 40)}…"`);
-            setTimeout(() => toast('Deal created!', 'Funds locked on Ritual Chain. Share the deal ID with the seller.'), 1500);
-        }
-
-        // ── POST LISTING ──────────────────────────────────────────
-        function openPostListing() {
-            if (!walletAddress) { toast('Connect wallet', 'Sign in to post a listing', 'info'); connectWallet(); return; }
-            updateListingProofFields();
-            document.getElementById('postListingModal').classList.add('show');
-        }
-        function updateListingProofFields() {
-            const cat = document.getElementById('listingCat')?.value || 'whitelist';
-            const fields = PROOF_FIELDS[cat] || [];
-            const el = document.getElementById('listingProofFields');
-            if (!fields.length) { el.innerHTML = ''; return; }
-            el.innerHTML = `<div class="proof-section"><div class="proof-section-label">Proof requirements — what the buyer will need from you</div>${fields.map(f => `<div class="proof-field"><label>${f.label}</label><input type="text" id="${f.id}" placeholder="${f.ph}"/></div>`).join('')}</div>`;
-        }
-        function toggleTwitterPreview() {
-            const checked = document.getElementById('shareOnTwitter')?.checked;
-            const box = document.getElementById('twitterPreviewBox');
-            if (box) box.style.display = checked ? 'block' : 'none';
-            if (checked) updateTweetPreview();
-        }
-        function updateTweetPreview() {
-            const cat = document.getElementById('listingCat')?.value || 'whitelist';
-            const price = document.getElementById('listingPrice')?.value || '0.00';
-            const title = document.getElementById('listingTitle')?.value || 'New listing on Shadow OTC';
-            const el = document.getElementById('tweetPreview');
-            if (el) el.textContent = `🔒 New ${CATS[cat]} listed on Shadow OTC\n\n${title.slice(0, 55)}${title.length > 55 ? '…' : ''}\n\n💰 ${price} RITUAL\n✅ AI-verified on Ritual Chain\n⚡ TEE-secured escrow\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain #OTC`;
-        }
-        function shareListing() {
-            const text = document.getElementById('tweetPreview')?.textContent || '';
-            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'width=550,height=420');
-        }
-        function submitListing() {
-            const title = document.getElementById('listingTitle')?.value?.trim();
-            const price = parseFloat(document.getElementById('listingPrice')?.value || 0);
-            const desc = document.getElementById('listingDesc')?.value?.trim();
-            const cat = document.getElementById('listingCat')?.value;
-            if (!title) { toast('Missing title', 'Add a listing title', 'error'); return; }
-            if (!price || price <= 0) { toast('Missing price', 'Set a price', 'error'); return; }
-            if (!desc) { toast('Missing description', 'Describe what you are selling', 'error'); return; }
-            const newL = { id: 'l' + Date.now(), cat, title, desc, price, seller: walletAddress || '0x…', sellerDeals: 0, sellerScore: 100, expires: Date.now() + parseInt(document.getElementById('listingExpiry')?.value || '48') * 3600000, allowOffers: document.getElementById('listingOffers')?.value === 'yes' };
-            SAMPLE_LISTINGS.unshift(newL);
-            const doTweet = document.getElementById('shareOnTwitter')?.checked;
-            closeModal('postListingModal');
-            toast('Listing posted!', `"${title}" is now live on the marketplace`);
-            if (doTweet) {
-                const tweet = `🔒 New ${CATS[cat]} listed on Shadow OTC\n\n${title.slice(0, 55)}\n\n💰 ${price} RITUAL\n✅ AI-verified on Ritual Chain\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain`;
-                window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweet), '_blank', 'width=550,height=420');
-            }
-            if (document.getElementById('page-listings').classList.contains('active')) renderListings();
-        }
-
-        // ── DEAL MODAL ────────────────────────────────────────────
-        function showDealModal(id) {
-            const d = allDeals.find(x => x.id === id); if (!d) return;
-            document.getElementById('modalTitle').textContent = `Deal #${id} — ${d.category || ''}`;
-            document.getElementById('modalBody').innerHTML = [['Status', spill(d.status)], ['Category', d.category], ['Amount', d.amount + ' RITUAL'], ['Collateral', d.collateral + ' RITUAL'], ['Buyer', d.buyer || '—'], ['Seller', (d.seller && d.seller !== '0x0000000000000000000000000000000000000000') ? d.seller : 'Awaiting'], ['Proof URL', d.proofUrl || '—'], ['Created', d.createdAt ? new Date(d.createdAt * 1000).toLocaleString() : '—']].map(([k, v]) => `<div class="drow"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join('');
-            document.getElementById('dealModal').classList.add('show');
-        }
-
-        // ── FETCH DEAL ────────────────────────────────────────────
-        async function fetchDeal() {
-            const id = document.getElementById('lookupId').value;
-            const el = document.getElementById('dealDetail');
-            if (id === '') { el.innerHTML = '<p style="font-size:12px;color:var(--text-light)">Enter a deal ID</p>'; return; }
-            el.innerHTML = '<p style="font-size:12px;color:var(--green)">Fetching…</p>';
-            try {
-                const res = await fetch(`${API}/deal/${id}`); const d = await res.json();
-                if (d.error) throw new Error(d.error);
-                if (!allDeals.find(x => x.id === d.id)) allDeals.push(d);
-                el.innerHTML = `<div style="background:#f8faf9;border:1px solid var(--border);border-radius:8px;padding:11px;font-size:12px"><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Status</span>${spill(d.status)}</div><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Amount</span><span>${d.amount} RITUAL</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Category</span><span>${d.category}</span></div></div><button onclick="showDealModal(${d.id})" style="margin-top:8px;width:100%;padding:8px;background:#f1f5f2;border:1px solid var(--border);border-radius:7px;color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font)">View Full Details →</button>`;
-            } catch (e) { el.innerHTML = `<p style="font-size:12px;color:#dc2626">Not found: ${e.message}</p>`; }
-        }
-
-        // ── INTENT PLACEHOLDER ────────────────────────────────────
-        function updateIntentPlaceholder() {
-            const t = document.getElementById('dealType')?.value;
-            const ta = document.getElementById('dealIntent');
-            if (ta) ta.placeholder = INTENT_PLACEHOLDERS[t] || 'Describe the deliverable…';
-        }
-
-        // ── MODAL UTILS ───────────────────────────────────────────
-        function closeModal(id) { document.getElementById(id)?.classList.remove('show'); }
-        document.querySelectorAll('.moverlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); }));
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.moverlay.show').forEach(o => o.classList.remove('show')); });
-
-        // ── INIT ──────────────────────────────────────────────────
-        updateIntentPlaceholder();
-        loadData();
-        renderListings();
-        // ── PROFILE ───────────────────────────────────────────────
-        function loadProfile() {
-            if (!walletAddress) {
-                document.getElementById('profileName').textContent = 'Connect Wallet';
-                document.getElementById('profileAddr').textContent = 'Sign in to view your profile';
-                document.getElementById('profileScore').textContent = '—';
-                document.getElementById('profileStars').textContent = '☆☆☆☆☆';
-                return;
-            }
-            const short = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
-            const initials = walletAddress.slice(2, 4).toUpperCase();
-            document.getElementById('profileAvatar').textContent = initials;
-            document.getElementById('profileName').textContent = 'Trader ' + short;
-            document.getElementById('profileAddr').textContent = walletAddress;
-
-            // Calculate score from deal history
-            const myDeals = allDeals.filter(d => d.buyer === walletAddress || d.seller === walletAddress);
-            const completed = myDeals.filter(d => d.statusId === 3).length;
-            const total = myDeals.length;
-            const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-            const score = total === 0 ? 0 : Math.min(100, Math.round(50 + (rate * 0.3) + (Math.min(total, 20) * 2.5)));
-
-            document.getElementById('pDeals').textContent = total;
-            document.getElementById('pCompleted').textContent = completed;
-            document.getElementById('pSuccessRate').textContent = total > 0 ? rate + '%' : '—';
-            const vol = myDeals.reduce((s, d) => s + parseFloat(d.amount || 0), 0);
-            document.getElementById('pVolume').textContent = vol.toFixed(3) + ' RITUAL';
-            document.getElementById('profileScore').textContent = score || '—';
-
-            const stars = score >= 90 ? '★★★★★' : score >= 75 ? '★★★★☆' : score >= 55 ? '★★★☆☆' : score >= 30 ? '★★☆☆☆' : '★☆☆☆☆';
-            document.getElementById('profileStars').textContent = stars;
-
-            // Badges
-            const badges = [];
-            if (total === 0) badges.push('<span class="badge badge-new">🌱 New Trader</span>');
-            if (completed >= 10) badges.push('<span class="badge badge-verified">✅ Verified Trader</span>');
-            if (score >= 90) badges.push('<span class="badge badge-top">🏆 Top Trader</span>');
-            document.getElementById('profileBadges').innerHTML = badges.join('');
-
-            // Reputation bars
-            const completion = total > 0 ? rate : 0;
-            const responseScore = total > 0 ? Math.min(100, 75 + Math.random() * 20) : 0;
-            const proofScore = total > 0 ? Math.min(100, 80 + Math.random() * 15) : 0;
-            const disputeScore = total > 0 ? Math.max(0, 100 - Math.random() * 10) : 0;
-            [['rb1', 'rf1', completion], ['rb2', 'rf2', responseScore], ['rb3', 'rf3', proofScore], ['rb4', 'rf4', disputeScore]].forEach(([lb, bar, val]) => {
-                const v = Math.round(val);
-                document.getElementById(lb).textContent = v + '%';
-                document.getElementById(bar).style.width = v + '%';
-            });
-
-            // Deal history
-            const b = document.getElementById('profileDealsBody');
-            if (!myDeals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet — create your first deal</div></td></tr>'; return; }
-            b.innerHTML = myDeals.map(d => `<tr onclick="showDealModal(${d.id})">
-    <td><span class="deal-id">#${d.id}</span></td>
-    <td>${d.category || '—'}</td>
-    <td>${d.amount} RITUAL</td>
-    <td>${spill(d.status)}</td>
-    <td><span class="sp ${d.buyer === walletAddress ? 'sp-open' : 'sp-wait'}">${d.buyer === walletAddress ? 'Buyer' : 'Seller'}</span></td>
-  </tr>`).join('');
-
-            // Activity feed
-            const acts = myDeals.slice(0, 5).map(d => {
-                const icon = d.statusId === 3 ? '✅' : d.statusId === 4 ? '⚠️' : '🤝';
-                const cls = d.statusId === 3 ? 'ai-green' : d.statusId === 4 ? 'ai-red' : 'ai-blue';
-                return `<div class="activity-item"><div class="activity-icon ${cls}">${icon}</div><div class="activity-body"><div class="activity-title">Deal #${d.id} — ${d.category}</div><div class="activity-sub">${d.amount} RITUAL · ${d.status}</div></div><div class="activity-time">${d.createdAt ? new Date(d.createdAt * 1000).toLocaleDateString() : '—'}</div></div>`;
-            });
-            document.getElementById('activityFeed').innerHTML = acts.length ? acts.join('') : '<div class="activity-item"><div class="activity-icon ai-blue">💬</div><div class="activity-body"><div class="activity-title">No activity yet</div><div class="activity-sub">Create or accept a deal to get started</div></div></div>';
-
-            // Categories
-            const cats = {};
-            myDeals.forEach(d => { if (d.category) cats[d.category] = (cats[d.category] || 0) + 1; });
-            const catHTML = Object.entries(cats).sort((a, b) => b[1] - a[1]).map(([k, v]) => `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span style="font-size:12px;color:var(--text2)">${k}</span>
-      <span style="font-size:12px;font-weight:600;color:var(--green)">${v} deal${v > 1 ? 's' : ''}</span>
-    </div>`).join('');
-            document.getElementById('categoriesTraded').innerHTML = catHTML || '<p style="font-size:12px;color:var(--text-light)">No activity yet</p>';
-        }
-
-        // ── CHAT DRAWER ───────────────────────────────────────────
-        const chatHistory = {};
-        let activeChatDeal = 'l1';
-
-        function openChat(dealId) {
-            if (dealId) switchChatDeal(dealId, document.querySelector(`.chat-deal-tab[onclick*="${dealId}"]`));
-            document.getElementById('chatDrawer').classList.add('open');
-            if (window.innerWidth <= 760) document.getElementById('chatBackdrop').classList.add('show');
-            document.getElementById('chatUnread').style.display = 'none';
-            renderChatMessages(activeChatDeal);
-            setTimeout(() => document.getElementById('chatInput').focus(), 300);
-        }
-        function closeChat() {
-            document.getElementById('chatDrawer').classList.remove('open');
-            document.getElementById('chatBackdrop').classList.remove('show');
-        }
-        function switchChatDeal(dealId, el) {
-            activeChatDeal = dealId;
-            document.querySelectorAll('.chat-deal-tab').forEach(t => t.classList.remove('active'));
-            if (el) el.classList.add('active');
-            const names = { l1: 'WL Spot #l1', l2: 'Airdrop #l2', l3: 'Pre-Market #l3', l4: 'Freelance #l4' };
-            document.getElementById('chatDrawerSub').textContent = (names[dealId] || dealId) + ' · Encrypted';
-            if (!chatHistory[dealId]) {
-                chatHistory[dealId] = [
-                    { from: 'them', text: 'Hi! I saw your listing — is it still available?', time: '09:12' },
-                    { from: 'me', text: 'Yes, still open. Happy to discuss the details.', time: '09:14' },
-                ];
-            }
-            renderChatMessages(dealId);
-        }
-        function renderChatMessages(dealId) {
-            const msgs = document.getElementById('chatMessages');
-            const history = chatHistory[dealId] || [];
-            if (!history.length) {
-                msgs.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><p>No messages yet</p><p style="font-size:11px">Start the conversation</p></div>';
-                return;
-            }
-            msgs.innerHTML = history.map((m, i) => {
-                const showSender = i === 0 || history[i - 1].from !== m.from;
-                return `<div class="chat-msg ${m.from === 'me' ? 'me' : 'them'}">
-      ${showSender && m.from === 'them' ? '<div class="chat-msg-sender">Seller</div>' : ''}
-      <div>${m.text}</div>
-      <div class="chat-msg-time">${m.time}</div>
-    </div>`;
-            }).join('');
-            msgs.scrollTop = msgs.scrollHeight;
-        }
-        function sendChatMsg() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            const now = new Date();
-            const time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            if (!chatHistory[activeChatDeal]) chatHistory[activeChatDeal] = [];
-            chatHistory[activeChatDeal].push({ from: 'me', text, time });
-            input.value = '';
-            renderChatMessages(activeChatDeal);
-            setTimeout(() => {
-                const replies = ['Got it, thanks!', 'Sounds good — I can deliver by tomorrow.', 'Can we discuss the price a bit?', 'Deal — I'll send proof shortly.','Let me check and get back to you in a few minutes.','Sure, happy to proceed when you're ready.'];
-                const reply = replies[Math.floor(Math.random() * replies.length)];
-                const t2 = new Date();
-                const time2 = t2.getHours().toString().padStart(2, '0') + ':' + t2.getMinutes().toString().padStart(2, '0');
-                chatHistory[activeChatDeal].push({ from: 'them', text: reply, time: time2 });
-                renderChatMessages(activeChatDeal);
-                if (!document.getElementById('chatDrawer').classList.contains('open')) {
-                    document.getElementById('chatUnread').style.display = 'block';
-                    toast('New message', 'Reply received — click the chat icon to view', 'info');
-                }
-            }, 1800 + Math.random() * 2000);
-        }
-        // Init first chat tab
-        setTimeout(() => switchChatDeal('l1', document.querySelector('.chat-deal-tab.active')), 100);
-
-    </script>
-
-    <!-- PROFILE PAGE -->
+    <!-- ── PROFILE PAGE ────────────────────────────────────── -->
     <div class="page" id="page-profile">
         <div class="profile-hero">
             <div class="profile-avatar-lg" id="profileAvatar">?</div>
             <div class="profile-info">
                 <h2 id="profileName">Connect Wallet</h2>
                 <div class="profile-addr" id="profileAddr">Sign in to view your profile</div>
-                <div class="profile-badges" id="profileBadges">
-                    <span class="badge badge-new">🌱 New Trader</span>
-                </div>
+                <div class="profile-badges" id="profileBadges"><span class="badge badge-new">🌱 New Trader</span></div>
             </div>
             <div class="profile-score-block">
                 <div class="score-num" id="profileScore">—</div>
@@ -3525,7 +2696,6 @@
                 <div class="score-stars" id="profileStars">☆☆☆☆☆</div>
             </div>
         </div>
-
         <div class="profile-grid">
             <div class="profile-stat">
                 <div class="profile-stat-val" id="pDeals">0</div>
@@ -3544,11 +2714,8 @@
                 <div class="profile-stat-label">Volume Traded</div>
             </div>
         </div>
-
         <div class="profile-two-col">
             <div class="profile-main">
-
-                <!-- Reputation breakdown -->
                 <div class="card" style="margin-bottom:16px">
                     <div class="card-header">
                         <div>
@@ -3578,16 +2745,13 @@
                         <div class="rep-bar-wrap" style="margin-bottom:0">
                             <div class="rep-bar-label"><span>Dispute Rate</span><span id="rb4">—</span></div>
                             <div class="rep-bar">
-                                <div class="rep-bar-fill" id="rf4"
-                                    style="width:0%;background:linear-gradient(90deg,#22c55e,#86efac)"></div>
+                                <div class="rep-bar-fill" id="rf4" style="width:0%"></div>
                             </div>
                         </div>
-                        <p style="font-size:11px;color:var(--text-light);margin-top:12px">⚡ Reputation is stored on
-                            Ritual Chain — immutable and verifiable by anyone.</p>
+                        <p style="font-size:11px;color:var(--text-light);margin-top:12px">⚡ Reputation stored on Ritual
+                            Chain — immutable and verifiable.</p>
                     </div>
                 </div>
-
-                <!-- Deal history -->
                 <div class="card">
                     <div class="card-header">
                         <div>
@@ -3618,9 +2782,7 @@
                     </div>
                 </div>
             </div>
-
             <div class="profile-side">
-                <!-- Activity feed -->
                 <div class="card" style="margin-bottom:14px">
                     <div class="card-header">
                         <div>
@@ -3638,13 +2800,10 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Categories traded -->
                 <div class="card">
                     <div class="card-header">
                         <div>
                             <h3>Categories Traded</h3>
-                            <p>Your specialisations</p>
                         </div>
                     </div>
                     <div class="card-body" id="categoriesTraded">
@@ -3655,8 +2814,573 @@
         </div>
     </div>
 
+    <!-- ── POST LISTING MODAL ──────────────────────────────── -->
+    <div class="moverlay" id="postListingModal">
+        <div class="modal modal-lg">
+            <div class="mh">
+                <h3>Post a Listing</h3><button class="mclose" onclick="closeModal('postListingModal')">✕</button>
+            </div>
+            <div class="mbody">
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Category</label>
+                        <select class="form-select" id="listingCat"
+                            onchange="updateListingProofFields();updateTweetPreview()">
+                            <option value="whitelist">NFT Whitelist</option>
+                            <option value="airdrop">Airdrop Allocation</option>
+                            <option value="allocation">Token Allocation</option>
+                            <option value="premarket">Pre-Market</option>
+                            <option value="nft">NFT OTC Sale</option>
+                            <option value="freelance">Freelance</option>
+                            <option value="social">Social Media</option>
+                            <option value="content">Content Creation</option>
+                            <option value="marketing">Marketing</option>
+                            <option value="bounty">Bug Bounty</option>
+                            <option value="escrow">Escrow</option>
+                            <option value="conditional">Conditional</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Price (RITUAL)</label>
+                        <div style="position:relative"><input type="number" class="form-input" id="listingPrice"
+                                placeholder="0.50" step="0.01" min="0.005" oninput="updateTweetPreview()"
+                                style="padding-right:62px" /><span
+                                style="position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:var(--green)">RITUAL</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group"><label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="listingTitle"
+                        placeholder="e.g. 1× NFT Whitelist Spot — ProjectX Genesis" oninput="updateTweetPreview()" />
+                </div>
+                <div class="form-group"><label class="form-label">Description</label>
+                    <textarea class="form-textarea" id="listingDesc"
+                        placeholder="Be specific — include collection names, token details, deadlines, and relevant links."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label class="form-label">Expires In</label>
+                        <select class="form-select" id="listingExpiry">
+                            <option value="24">24 hours</option>
+                            <option value="48">48 hours</option>
+                            <option value="72">3 days</option>
+                            <option value="168">7 days</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label class="form-label">Allow Offers?</label>
+                        <select class="form-select" id="listingOffers">
+                            <option value="yes">Yes — buyers can negotiate</option>
+                            <option value="no">No — fixed price only</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="listingProofFields"></div>
+                <div style="margin-bottom:14px">
+                    <label
+                        style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:11px 14px;background:#f8faf9;border:1px solid var(--border);border-radius:10px">
+                        <input type="checkbox" id="shareOnTwitter" onchange="toggleTwitterPreview()"
+                            style="width:15px;height:15px;accent-color:#1d9bf0;cursor:pointer" />
+                        <div>
+                            <div style="font-size:13px;font-weight:600;color:var(--text)">Share on X after posting</div>
+                            <div style="font-size:11px;color:var(--text3);margin-top:1px">Optional — post to Twitter to
+                                attract more buyers</div>
+                        </div>
+                    </label>
+                    <div id="twitterPreviewBox" style="display:none;margin-top:8px">
+                        <div class="twitter-box">
+                            <h4>Tweet preview</h4>
+                            <div class="tweet-preview" id="tweetPreview">Fill in the form to see preview…</div>
+                            <button class="tweet-btn" onclick="shareListing()">Post to X</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-secondary" onclick="closeModal('postListingModal')">Cancel</button>
+                    <button class="btn-primary" onclick="submitListing()">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"
+                            viewBox="0 0 24 24">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>Post Listing
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- ── LISTING DETAIL MODAL ────────────────────────────── -->
+    <div class="moverlay" id="listingModal">
+        <div class="modal modal-lg">
+            <div class="mh">
+                <h3 id="listingModalTitle">Listing</h3><button class="mclose"
+                    onclick="closeModal('listingModal')">✕</button>
+            </div>
+            <div class="mbody" id="listingModalBody"></div>
+        </div>
+    </div>
 
+    <!-- ── DEAL DETAIL MODAL ───────────────────────────────── -->
+    <div class="moverlay" id="dealModal">
+        <div class="modal">
+            <div class="mh">
+                <h3 id="modalTitle">Deal Details</h3><button class="mclose" onclick="closeModal('dealModal')">✕</button>
+            </div>
+            <div class="mbody" id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- ── CHAT DRAWER ─────────────────────────────────────── -->
+    <div class="chat-backdrop" id="chatBackdrop" onclick="closeChat()"></div>
+    <div class="chat-drawer" id="chatDrawer">
+        <div class="chat-drawer-header">
+            <div>
+                <h4>Deal Chat</h4>
+                <p id="chatDrawerSub">Select a deal to chat about</p>
+            </div>
+            <button class="chat-drawer-close" onclick="closeChat()">✕</button>
+        </div>
+        <div class="chat-deal-tabs" id="chatTabs">
+            <button class="chat-deal-tab active" onclick="switchChatDeal('l1',this)">WL Spot #l1</button>
+            <button class="chat-deal-tab" onclick="switchChatDeal('l2',this)">Airdrop #l2</button>
+            <button class="chat-deal-tab" onclick="switchChatDeal('l3',this)">Pre-Market #l3</button>
+            <button class="chat-deal-tab" onclick="switchChatDeal('l4',this)">Freelance #l4</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-empty">
+                <div class="chat-empty-icon">💬</div>
+                <p>No messages yet</p>
+                <p style="font-size:11px">Start the conversation</p>
+            </div>
+        </div>
+        <div class="chat-input-row">
+            <input class="chat-input" id="chatInput" placeholder="Type a message…"
+                onkeydown="if(event.key==='Enter')sendChatMsg()" />
+            <button class="chat-send" onclick="sendChatMsg()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        // ── CONSTANTS ─────────────────────────────────────────────
+        const API = 'https://shadow-otc.onrender.com';
+        const RITUAL_RPC = 'https://rpc.ritualfoundation.org';
+        const CHAIN_ID = 1979;
+        const CATS = { whitelist: 'NFT Whitelist', airdrop: 'Airdrop', allocation: 'Token', premarket: 'Pre-Market', nft: 'NFT OTC', freelance: 'Freelance', social: 'Social', content: 'Content', marketing: 'Marketing', bounty: 'Bug Bounty', escrow: 'Escrow', conditional: 'Conditional' };
+        const PROOF_FIELDS = {
+            whitelist: [{ id: 'pf_wallet', label: 'Destination Wallet', ph: '0x… wallet to receive WL spot' }, { id: 'pf_collection', label: 'Collection Name / Link', ph: 'https://opensea.io/collection/…' }],
+            airdrop: [{ id: 'pf_txhash', label: 'Claim Link / TX Hash', ph: '0x… or https://…' }, { id: 'pf_amount', label: 'Token Amount', ph: 'e.g. 500 SHADOW' }],
+            premarket: [{ id: 'pf_agreement', label: 'Agreement Document URL', ph: 'https://docs.google.com/…' }, { id: 'pf_token', label: 'Token Name + Contract', ph: 'e.g. RITUAL 0x…' }],
+            nft: [{ id: 'pf_txhash', label: 'Transfer TX Hash', ph: '0x…' }, { id: 'pf_tokenid', label: 'NFT Contract + Token ID', ph: '0x… #1234' }],
+            freelance: [{ id: 'pf_github', label: 'GitHub Repo / Deliverable URL', ph: 'https://github.com/…' }, { id: 'pf_milestone', label: 'Milestone Description', ph: 'What marks this as done?' }],
+            social: [{ id: 'pf_url', label: 'Post / Tweet URL', ph: 'https://x.com/…' }, { id: 'pf_metric', label: 'Target Metric', ph: 'e.g. 200 likes, 50 retweets' }],
+            content: [{ id: 'pf_url', label: 'Content URL', ph: 'https://…' }, { id: 'pf_wordcount', label: 'Word Count / Duration', ph: 'e.g. 1000 words' }],
+            marketing: [{ id: 'pf_url', label: 'Campaign URL', ph: 'https://…' }, { id: 'pf_reach', label: 'Guaranteed Reach', ph: 'e.g. 10,000 impressions' }],
+            bounty: [{ id: 'pf_report', label: 'Bug Report URL', ph: 'https://…' }, { id: 'pf_severity', label: 'Severity Level', ph: 'Critical / High / Medium' }],
+            escrow: [{ id: 'pf_terms', label: 'Escrow Terms URL', ph: 'https://docs.google.com/…' }],
+            conditional: [{ id: 'pf_condition', label: 'Trigger Condition', ph: 'e.g. ETH price > $4000' }, { id: 'pf_oracle', label: 'Oracle / Data Source', ph: 'https://…' }],
+        };
+        const INTENT_PLACEHOLDERS = {
+            social: 'e.g. Promote this tweet to 200 likes — URL: https://x.com/yourtweet. Deliver screenshot when target is reached.',
+            content: 'e.g. Write a 1000-word blog post on DeFi trends. Deliver Google Docs link as proof.',
+            freelance: 'e.g. Build a React landing page per the Figma file. Deliver GitHub repo + live URL.',
+            nft: 'e.g. Transfer NFT #4821 from collection 0xABC… to my wallet 0xDEF… Proof: on-chain tx hash.',
+            whitelist: 'e.g. Add wallet 0xDEF… to whitelist for MintProject. Proof: whitelist confirmation link.',
+            airdrop: 'e.g. Allocate 500 tokens from Genesis airdrop to wallet 0xDEF… Proof: on-chain tx hash.',
+            allocation: 'e.g. Reserve 10,000 SHADOW tokens at seed price. Proof: allocation confirmation.',
+            premarket: 'e.g. Sell 5,000 RITUAL tokens at $0.08 pre-TGE. Deliver signed agreement.',
+            marketing: 'e.g. Publish sponsored thread about Shadow OTC to 10K+ followers. Deliver tweet URL.',
+            bounty: 'e.g. Find and report a critical vulnerability. Proof: detailed bug report + PoC.',
+            escrow: 'e.g. Hold 1 ETH until both parties confirm the off-chain agreement is settled.',
+            conditional: 'e.g. Release payment when ETH price exceeds $4,000. Proof: oracle price feed.',
+        };
+        const SAMPLE_LISTINGS = [
+            { id: 'l1', cat: 'whitelist', title: '2× NFT Whitelist Spots — Ritual Genesis Drop', desc: 'Two guaranteed WL spots for the official Ritual Chain Genesis NFT collection. Mint date Jan 30.', price: 0.8, seller: '0x7f3a…b291', sellerDeals: 14, sellerScore: 98, expires: Date.now() + 86400000 * 2, allowOffers: true },
+            { id: 'l2', cat: 'airdrop', title: '500 SHADOW Token Airdrop Allocation', desc: 'Selling my full airdrop allocation of 500 SHADOW tokens from Season 1. Tokens unlock Feb 15.', price: 0.5, seller: '0x2c9d…f441', sellerDeals: 7, sellerScore: 91, expires: Date.now() + 86400000 * 1, allowOffers: true },
+            { id: 'l3', cat: 'premarket', title: '10,000 RITUAL Tokens — Pre-TGE Price', desc: 'Selling 10,000 RITUAL at $0.06 pre-TGE. Signed agreement + token lock proof provided.', price: 1.2, seller: '0x9a1e…c883', sellerDeals: 22, sellerScore: 99, expires: Date.now() + 86400000 * 3, allowOffers: false },
+            { id: 'l4', cat: 'freelance', title: 'Full-Stack dApp Development — Solidity + React', desc: 'Building smart contracts + frontend for your Web3 project. 5 years experience, 3 deployed protocols.', price: 2.0, seller: '0x4d7b…a112', sellerDeals: 31, sellerScore: 97, expires: Date.now() + 86400000 * 7, allowOffers: true },
+            { id: 'l5', cat: 'social', title: 'Twitter Thread — 50K+ reach guaranteed', desc: 'Writing + posting a high-quality thread about your project to my 52K crypto followers.', price: 0.15, seller: '0x8e2f…d334', sellerDeals: 45, sellerScore: 94, expires: Date.now() + 86400000 * 2, allowOffers: true },
+            { id: 'l6', cat: 'allocation', title: 'Seed Round Allocation — 5,000 USDC equivalent', desc: 'Transferring my seed round allocation at 30% discount. KYC completed. Vesting: 6mo cliff.', price: 0.9, seller: '0x1b5c…e667', sellerDeals: 9, sellerScore: 88, expires: Date.now() + 86400000 * 4, allowOffers: true },
+        ];
+
+        // ── STATE ─────────────────────────────────────────────────
+        let walletAddress = null, allDeals = [], currentView = 'grid', activeFilter = 'all', activeChatDeal = 'l1';
+        const chatHistory = {};
+
+        // ── TOASTS ────────────────────────────────────────────────
+        function toast(title, msg, type) {
+            type = type || 'success';
+            var icons = { success: '✅', error: '❌', info: '💡' };
+            var id = 't' + Date.now();
+            var el = document.createElement('div');
+            el.className = 'toast ' + (type === 'error' ? 'error' : type === 'info' ? 'info' : '');
+            el.id = id;
+            el.innerHTML = '<div class="toast-icon">' + icons[type] + '</div><div class="toast-body"><div class="toast-title">' + title + '</div><div class="toast-msg">' + msg + '</div></div><button class="toast-close" onclick="removeToast(\'' + id + '\')">✕</button>';
+            document.getElementById('toast-container').appendChild(el);
+            setTimeout(function () { removeToast(id); }, 5000);
+        }
+        function removeToast(id) {
+            var el = document.getElementById(id);
+            if (el) { el.style.opacity = '0'; el.style.transform = 'translateX(16px)'; el.style.transition = 'all 0.3s'; setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 300); }
+        }
+
+        // ── NAV ───────────────────────────────────────────────────
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(function (p) { p.classList.remove('active'); });
+            var page = document.getElementById('page-' + id);
+            if (page) page.classList.add('active');
+            document.querySelectorAll('.nav-tab:not(.accent)').forEach(function (t) { t.classList.remove('active'); });
+            var tab = document.getElementById('tab-' + id);
+            if (tab) tab.classList.add('active');
+            if (id === 'deals') renderAllDeals();
+            if (id === 'listings') renderListings();
+            if (id === 'profile') loadProfile();
+            window.scrollTo(0, 0);
+        }
+
+        // ── WALLET DROPDOWN ───────────────────────────────────────
+        function toggleWalletMenu() {
+            document.getElementById('walletDropdown').classList.toggle('open');
+        }
+        function closeWalletMenu() {
+            document.getElementById('walletDropdown').classList.remove('open');
+        }
+        document.addEventListener('click', function (e) {
+            var wrap = document.getElementById('walletWrap');
+            if (wrap && !wrap.contains(e.target)) closeWalletMenu();
+        });
+        function updateWalletUI(addr) {
+            var short = addr.slice(0, 6) + '…' + addr.slice(-4);
+            var initials = addr.slice(2, 4).toUpperCase();
+            document.getElementById('wdAvatar').textContent = initials;
+            document.getElementById('wdAddr').textContent = short;
+            document.getElementById('wdSub').textContent = 'Ritual Testnet · Connected';
+            document.getElementById('wdConnectBtn').style.display = 'none';
+            document.getElementById('signinText').textContent = short;
+            document.getElementById('signinBtn').classList.add('connected');
+        }
+
+        // ── WALLET CONNECT ────────────────────────────────────────
+        async function connectWallet() {
+            if (walletAddress) return;
+            if (!window.ethereum) { toast('MetaMask not found', 'Please install MetaMask', 'error'); return; }
+            try {
+                var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                walletAddress = accounts[0];
+                try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x7BB' }] }); }
+                catch (e) {
+                    if (e.code === 4902) {
+                        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{ chainId: '0x7BB', chainName: 'Ritual Testnet', rpcUrls: [RITUAL_RPC], nativeCurrency: { name: 'RITUAL', symbol: 'RITUAL', decimals: 18 }, blockExplorerUrls: ['https://explorer.ritualfoundation.org'] }] });
+                    }
+                }
+                updateWalletUI(walletAddress);
+                toast('Wallet connected', 'Connected on Ritual Testnet');
+                loadProfile();
+            } catch (e) { toast('Failed', e.message || 'Could not connect', 'error'); }
+        }
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', function (a) {
+                if (a.length) { walletAddress = a[0]; updateWalletUI(a[0]); loadProfile(); }
+            });
+        }
+
+        // ── DATA ──────────────────────────────────────────────────
+        async function loadData() {
+            try {
+                var res = await fetch(API + '/deals');
+                var data = await res.json();
+                allDeals = data.deals || [];
+                document.getElementById('statTotal').textContent = data.total !== undefined ? data.total : allDeals.length;
+                document.getElementById('statOpen').textContent = data.open !== undefined ? data.open : allDeals.filter(function (d) { return d.statusId === 0; }).length;
+                document.getElementById('statCompleted').textContent = data.completed !== undefined ? data.completed : allDeals.filter(function (d) { return d.statusId === 3; }).length;
+                document.getElementById('statLocked').textContent = (data.totalLocked || '0') + ' RITUAL';
+                renderDeals(allDeals.slice(0, 10));
+            } catch (e) {
+                ['statTotal', 'statOpen', 'statCompleted'].forEach(function (id) { document.getElementById(id).textContent = '—'; });
+                document.getElementById('statLocked').textContent = '—';
+                document.getElementById('dealsBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">Backend offline</div></td></tr>';
+            }
+        }
+        function spill(s) {
+            var m = { Open: 'sp-open', Accepted: 'sp-wait', Delivered: 'sp-wait', Completed: 'sp-done', Disputed: 'sp-bad', Cancelled: 'sp-bad' };
+            return '<span class="sp ' + (m[s] || 'sp-open') + '">' + (s || 'Open') + '</span>';
+        }
+        function renderDeals(deals) {
+            var b = document.getElementById('dealsBody');
+            if (!deals.length) { b.innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet</div></td></tr>'; return; }
+            b.innerHTML = deals.map(function (d) {
+                return '<tr onclick="showDealModal(' + d.id + ')"><td><span class="deal-id">#' + d.id + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + spill(d.status) + '</td><td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td></tr>';
+            }).join('');
+        }
+        function renderAllDeals() {
+            var b = document.getElementById('allDealsBody');
+            if (!allDeals.length) { b.innerHTML = '<tr><td colspan="7"><div class="empty-state">No deals found</div></td></tr>'; return; }
+            b.innerHTML = allDeals.map(function (d) {
+                return '<tr onclick="showDealModal(' + d.id + ')"><td><span class="deal-id">#' + d.id + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + d.collateral + ' RITUAL</td><td>' + spill(d.status) + '</td><td style="font-family:monospace;font-size:11px">' + (d.buyer ? d.buyer.slice(0, 8) + '…' : '—') + '</td><td style="font-family:monospace;font-size:11px">' + (d.seller && d.seller !== '0x0000000000000000000000000000000000000000' ? d.seller.slice(0, 8) + '…' : '—') + '</td></tr>';
+            }).join('');
+        }
+
+        // ── LISTINGS ──────────────────────────────────────────────
+        function timeLeft(ts) { var d = ts - Date.now(); if (d <= 0) return 'Expired'; var h = Math.floor(d / 3600000); return h < 24 ? h + 'h left' : Math.floor(h / 24) + 'd left'; }
+        function scoreStars(s) { return '<span style="color:#f59e0b;font-size:11px">' + (s >= 95 ? '★★★★★' : s >= 85 ? '★★★★☆' : '★★★☆☆') + '</span> <span style="color:var(--text3);font-size:10px">' + s + '%</span>'; }
+        function filterListings(cat, el) {
+            activeFilter = cat;
+            document.querySelectorAll('.filter-tab').forEach(function (t) { t.classList.remove('active'); });
+            el.classList.add('active');
+            renderListings();
+        }
+        function setView(v) {
+            currentView = v;
+            document.getElementById('gridViewBtn').classList.toggle('active', v === 'grid');
+            document.getElementById('listViewBtn').classList.toggle('active', v === 'list');
+            renderListings();
+        }
+        function renderListings() {
+            var filtered = activeFilter === 'all' ? SAMPLE_LISTINGS : SAMPLE_LISTINGS.filter(function (l) { return l.cat === activeFilter; });
+            var c = document.getElementById('listingsContainer');
+            if (!filtered.length) {
+                c.innerHTML = '<div class="empty-listings"><div class="empty-icon">🔍</div><h3>No listings here yet</h3><p>Be the first to post in this category.</p><button class="ibtn" style="width:auto;padding:10px 24px;border-radius:9px;font-size:13px;display:inline-flex" onclick="openPostListing()">+ Post Listing</button></div>';
+                return;
+            }
+            if (currentView === 'grid') {
+                c.innerHTML = '<div class="listings-grid">' + filtered.map(function (l) {
+                    return '<div class="listing-card" onclick="openListingDetail(\'' + l.id + '\')"><div class="listing-card-top"><div class="listing-cat">' + (CATS[l.cat] || l.cat) + '</div><div class="listing-title">' + l.title + '</div><div class="listing-desc">' + l.desc + '</div><div class="listing-seller"><div class="seller-avatar">' + l.seller.slice(2, 4).toUpperCase() + '</div><div><div class="seller-addr">' + l.seller + '</div><div style="display:flex;align-items:center;gap:6px;margin-top:2px">' + scoreStars(l.sellerScore) + '<span style="font-size:10px;color:var(--text3)">' + l.sellerDeals + ' deals</span></div></div></div></div><div class="listing-card-bottom"><div><div class="listing-price">' + l.price + ' <span>RITUAL</span></div><div class="listing-meta">⏱ ' + timeLeft(l.expires) + (l.allowOffers ? ' · Offers OK' : '') + '</div></div><div class="listing-actions">' + (l.allowOffers ? '<button class="btn-offer" onclick="event.stopPropagation();openListingDetail(\'' + l.id + '\')">Offer</button>' : '') + '<button class="btn-buy" onclick="event.stopPropagation();buyListing(\'' + l.id + '\')">Buy Now</button></div></div></div>';
+                }).join('') + '</div>';
+            } else {
+                c.innerHTML = '<div class="listings-list">' + filtered.map(function (l) {
+                    return '<div class="listing-row" onclick="openListingDetail(\'' + l.id + '\')"><div style="width:110px;flex-shrink:0"><span class="listing-cat">' + (CATS[l.cat] || l.cat) + '</span></div><div class="listing-row-main"><h4>' + l.title + '</h4><p>' + l.desc + '</p></div><div style="font-size:11px;font-family:monospace;color:var(--text2);width:100px;flex-shrink:0">' + l.seller + '</div><div style="font-size:11px;color:var(--text3);width:60px;flex-shrink:0">' + timeLeft(l.expires) + '</div><div style="font-size:15px;font-weight:700;color:var(--green);white-space:nowrap">' + l.price + ' <span style="font-size:11px;color:var(--text3);font-weight:500">RITUAL</span></div><div class="listing-actions" style="flex-shrink:0">' + (l.allowOffers ? '<button class="btn-offer" onclick="event.stopPropagation();openListingDetail(\'' + l.id + '\')">Offer</button>' : '') + '<button class="btn-buy" onclick="event.stopPropagation();buyListing(\'' + l.id + '\')">Buy</button></div></div>';
+                }).join('') + '</div>';
+            }
+        }
+        function openListingDetail(id) {
+            var l = SAMPLE_LISTINGS.find(function (x) { return x.id === id; });
+            if (!l) return;
+            document.getElementById('listingModalTitle').textContent = CATS[l.cat] + ' Listing';
+            var offerHtml = l.allowOffers ? '<div class="offer-form"><h4>Make an Offer</h4><div class="neg-thread" id="negThread_' + l.id + '"><div class="neg-msg seller"><div class="neg-label">Seller asking</div><div class="neg-price">' + l.price + ' RITUAL</div></div></div><div class="offer-wrap"><input type="number" class="offer-input" id="offerAmt_' + l.id + '" value="' + ((l.price * 0.85).toFixed(2)) + '" step="0.01"/><span class="offer-suf">RITUAL</span></div><textarea class="offer-note" id="offerNote_' + l.id + '" placeholder="Add a note — introduce yourself or explain your offer…"></textarea></div>' : '<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:9px;padding:11px 14px;margin-bottom:14px;font-size:13px;color:#15803d;font-weight:600">Fixed price listing — no offers accepted.</div>';
+            document.getElementById('listingModalBody').innerHTML = '<div class="listing-detail-header"><div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:0.7;margin-bottom:5px">' + (CATS[l.cat] || l.cat) + '</div><h4>' + l.title + '</h4><p>' + l.desc + '</p><div class="listing-detail-price">' + l.price + ' <span style="font-size:13px;font-weight:500;opacity:0.7">RITUAL</span></div></div><div style="display:flex;align-items:center;gap:10px;padding:12px;background:#f8faf9;border:1px solid var(--border);border-radius:9px;margin-bottom:14px"><div class="seller-avatar" style="width:36px;height:36px;font-size:13px">' + l.seller.slice(2, 4).toUpperCase() + '</div><div><div style="font-size:13px;font-weight:600;font-family:monospace">' + l.seller + '</div><div style="display:flex;align-items:center;gap:8px;margin-top:3px">' + scoreStars(l.sellerScore) + '<span style="font-size:11px;color:var(--text3)">' + l.sellerDeals + ' completed deals</span></div></div><div style="margin-left:auto;text-align:right"><div style="font-size:10px;color:var(--text3)">Expires</div><div style="font-size:12px;font-weight:600">' + timeLeft(l.expires) + '</div></div></div>' + offerHtml + '<div class="modal-actions"><button class="btn-secondary" onclick="closeModal(\'listingModal\')">Close</button><button class="btn-secondary" onclick="closeModal(\'listingModal\');openChat(\'' + l.id + '\')" style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Chat</button>' + (l.allowOffers ? '<button class="btn-secondary" onclick="submitOffer(\'' + l.id + '\')">Send Offer</button>' : '') + '<button class="btn-primary" onclick="closeModal(\'listingModal\');buyListing(\'' + l.id + '\')">Buy Now — ' + l.price + ' RITUAL</button></div>';
+            document.getElementById('listingModal').classList.add('show');
+        }
+        function submitOffer(id) {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to make an offer', 'info'); return; }
+            var l = SAMPLE_LISTINGS.find(function (x) { return x.id === id; }); if (!l) return;
+            var amtEl = document.getElementById('offerAmt_' + id);
+            var noteEl = document.getElementById('offerNote_' + id);
+            var amt = parseFloat(amtEl ? amtEl.value : 0);
+            var note = noteEl ? noteEl.value : '';
+            if (!amt || amt <= 0) { toast('Invalid offer', 'Enter a valid amount', 'error'); return; }
+            var thread = document.getElementById('negThread_' + id);
+            if (thread) { var m = document.createElement('div'); m.className = 'neg-msg buyer'; m.innerHTML = '<div class="neg-label">Your offer</div><div class="neg-price">' + amt + ' RITUAL</div>' + (note ? '<div class="neg-note">' + note + '</div>' : ''); thread.appendChild(m); thread.scrollTop = thread.scrollHeight; }
+            toast('Offer sent!', amt + ' RITUAL offer sent. Seller has 24hrs to respond.');
+            setTimeout(function () {
+                var counter = (amt * 1.1).toFixed(2);
+                var t2 = document.getElementById('negThread_' + id);
+                if (t2) { var m2 = document.createElement('div'); m2.className = 'neg-msg seller'; m2.innerHTML = '<div class="neg-label">Counter-offer</div><div class="neg-price">' + counter + ' RITUAL</div><div class="neg-note">Best I can do — ' + counter + ' RITUAL.</div>'; t2.appendChild(m2); t2.scrollTop = t2.scrollHeight; }
+                toast('Counter-offer received!', 'Seller countered at ' + counter + ' RITUAL', 'info');
+            }, 3000);
+        }
+        function buyListing(id) {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to buy this listing', 'info'); connectWallet(); return; }
+            var l = SAMPLE_LISTINGS.find(function (x) { return x.id === id; }); if (!l) return;
+            toast('Deal initiating…', 'Locking ' + l.price + ' RITUAL into escrow');
+            setTimeout(function () { toast('Deal created!', 'Funds locked on Ritual Chain. Share the deal ID with the seller.'); }, 1500);
+        }
+
+        // ── POST LISTING ──────────────────────────────────────────
+        function openPostListing() {
+            if (!walletAddress) { toast('Connect wallet', 'Sign in to post a listing', 'info'); connectWallet(); return; }
+            updateListingProofFields();
+            document.getElementById('postListingModal').classList.add('show');
+        }
+        function updateListingProofFields() {
+            var cat = document.getElementById('listingCat') ? document.getElementById('listingCat').value : 'whitelist';
+            var fields = PROOF_FIELDS[cat] || [];
+            var el = document.getElementById('listingProofFields');
+            if (!fields.length) { el.innerHTML = ''; return; }
+            el.innerHTML = '<div class="proof-section"><div class="proof-section-label">Proof requirements — what buyer needs from you</div>' + fields.map(function (f) { return '<div class="proof-field"><label>' + f.label + '</label><input type="text" id="' + f.id + '" placeholder="' + f.ph + '"/></div>'; }).join('') + '</div>';
+        }
+        function toggleTwitterPreview() {
+            var checked = document.getElementById('shareOnTwitter').checked;
+            document.getElementById('twitterPreviewBox').style.display = checked ? 'block' : 'none';
+            if (checked) updateTweetPreview();
+        }
+        function updateTweetPreview() {
+            var cat = document.getElementById('listingCat') ? document.getElementById('listingCat').value : 'whitelist';
+            var price = document.getElementById('listingPrice') ? document.getElementById('listingPrice').value : '0.00';
+            var title = document.getElementById('listingTitle') ? document.getElementById('listingTitle').value : 'New listing on Shadow OTC';
+            var el = document.getElementById('tweetPreview');
+            if (el) el.textContent = '🔒 New ' + (CATS[cat] || cat) + ' listed on Shadow OTC\n\n' + title.slice(0, 55) + (title.length > 55 ? '…' : '') + '\n\n💰 ' + price + ' RITUAL\n✅ AI-verified on Ritual Chain\n⚡ TEE-secured escrow\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain #OTC';
+        }
+        function shareListing() {
+            var text = document.getElementById('tweetPreview') ? document.getElementById('tweetPreview').textContent : '';
+            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text), '_blank', 'width=550,height=420');
+        }
+        function submitListing() {
+            var titleEl = document.getElementById('listingTitle');
+            var priceEl = document.getElementById('listingPrice');
+            var descEl = document.getElementById('listingDesc');
+            var catEl = document.getElementById('listingCat');
+            var title = titleEl ? titleEl.value.trim() : '';
+            var price = parseFloat(priceEl ? priceEl.value : 0);
+            var desc = descEl ? descEl.value.trim() : '';
+            var cat = catEl ? catEl.value : 'whitelist';
+            if (!title) { toast('Missing title', 'Add a listing title', 'error'); return; }
+            if (!price || price <= 0) { toast('Missing price', 'Set a price', 'error'); return; }
+            if (!desc) { toast('Missing description', 'Describe what you are selling', 'error'); return; }
+            var expiryEl = document.getElementById('listingExpiry');
+            var offersEl = document.getElementById('listingOffers');
+            var newL = { id: 'l' + Date.now(), cat: cat, title: title, desc: desc, price: price, seller: walletAddress || '0x…', sellerDeals: 0, sellerScore: 100, expires: Date.now() + parseInt(expiryEl ? expiryEl.value : '48') * 3600000, allowOffers: offersEl ? offersEl.value === 'yes' : true };
+            SAMPLE_LISTINGS.unshift(newL);
+            var twitterEl = document.getElementById('shareOnTwitter');
+            var doTweet = twitterEl && twitterEl.checked;
+            closeModal('postListingModal');
+            toast('Listing posted!', '"' + title + '" is now live on the marketplace');
+            if (doTweet) {
+                var tweet = '🔒 New ' + (CATS[cat] || cat) + ' listed on Shadow OTC\n\n' + title.slice(0, 55) + '\n\n💰 ' + price + ' RITUAL\n✅ AI-verified on Ritual Chain\n\nshadow-otc.vercel.app\n\n#ShadowOTC #RitualChain';
+                window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(tweet), '_blank', 'width=550,height=420');
+            }
+            if (document.getElementById('page-listings').classList.contains('active')) renderListings();
+        }
+
+        // ── DEAL MODAL ────────────────────────────────────────────
+        function showDealModal(id) {
+            var d = allDeals.find(function (x) { return x.id === id; }); if (!d) return;
+            document.getElementById('modalTitle').textContent = 'Deal #' + id + ' — ' + (d.category || '');
+            document.getElementById('modalBody').innerHTML = [['Status', spill(d.status)], ['Category', d.category], ['Amount', d.amount + ' RITUAL'], ['Collateral', d.collateral + ' RITUAL'], ['Buyer', d.buyer || '—'], ['Seller', (d.seller && d.seller !== '0x0000000000000000000000000000000000000000') ? d.seller : 'Awaiting'], ['Proof URL', d.proofUrl || '—'], ['Created', d.createdAt ? new Date(d.createdAt * 1000).toLocaleString() : '—']].map(function (r) { return '<div class="drow"><span class="dk">' + r[0] + '</span><span class="dv">' + r[1] + '</span></div>'; }).join('');
+            document.getElementById('dealModal').classList.add('show');
+        }
+
+        // ── FETCH DEAL ────────────────────────────────────────────
+        async function fetchDeal() {
+            var id = document.getElementById('lookupId').value;
+            var el = document.getElementById('dealDetail');
+            if (id === '') { el.innerHTML = '<p style="font-size:12px;color:var(--text-light)">Enter a deal ID</p>'; return; }
+            el.innerHTML = '<p style="font-size:12px;color:var(--green)">Fetching…</p>';
+            try {
+                var res = await fetch(API + '/deal/' + id);
+                var d = await res.json();
+                if (d.error) throw new Error(d.error);
+                if (!allDeals.find(function (x) { return x.id === d.id; })) allDeals.push(d);
+                el.innerHTML = '<div style="background:#f8faf9;border:1px solid var(--border);border-radius:8px;padding:11px;font-size:12px"><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Status</span>' + spill(d.status) + '</div><div style="display:flex;justify-content:space-between;margin-bottom:7px"><span style="color:var(--text3)">Amount</span><span>' + d.amount + ' RITUAL</span></div><div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Category</span><span>' + d.category + '</span></div></div><button onclick="showDealModal(' + d.id + ')" style="margin-top:8px;width:100%;padding:8px;background:#f1f5f2;border:1px solid var(--border);border-radius:7px;color:var(--text2);font-size:12px;cursor:pointer">View Full Details →</button>';
+            } catch (e) { el.innerHTML = '<p style="font-size:12px;color:#dc2626">Not found: ' + e.message + '</p>'; }
+        }
+
+        // ── INTENT PLACEHOLDER ────────────────────────────────────
+        function updateIntentPlaceholder() {
+            var t = document.getElementById('dealType');
+            var ta = document.getElementById('dealIntent');
+            if (t && ta) ta.placeholder = INTENT_PLACEHOLDERS[t.value] || 'Describe the deliverable…';
+        }
+
+        // ── PROFILE ───────────────────────────────────────────────
+        function loadProfile() {
+            if (!walletAddress) { return; }
+            var short = walletAddress.slice(0, 6) + '…' + walletAddress.slice(-4);
+            var initials = walletAddress.slice(2, 4).toUpperCase();
+            document.getElementById('profileAvatar').textContent = initials;
+            document.getElementById('profileName').textContent = 'Trader ' + short;
+            document.getElementById('profileAddr').textContent = walletAddress;
+            var myDeals = allDeals.filter(function (d) { return d.buyer === walletAddress || d.seller === walletAddress; });
+            var completed = myDeals.filter(function (d) { return d.statusId === 3; }).length;
+            var total = myDeals.length;
+            var rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+            var score = total === 0 ? 0 : Math.min(100, Math.round(50 + (rate * 0.3) + (Math.min(total, 20) * 2.5)));
+            document.getElementById('pDeals').textContent = total;
+            document.getElementById('pCompleted').textContent = completed;
+            document.getElementById('pSuccessRate').textContent = total > 0 ? rate + '%' : '—';
+            var vol = myDeals.reduce(function (s, d) { return s + parseFloat(d.amount || 0); }, 0);
+            document.getElementById('pVolume').textContent = vol.toFixed(3) + ' RITUAL';
+            document.getElementById('profileScore').textContent = score || '—';
+            document.getElementById('profileStars').textContent = score >= 90 ? '★★★★★' : score >= 75 ? '★★★★☆' : score >= 55 ? '★★★☆☆' : score >= 30 ? '★★☆☆☆' : '★☆☆☆☆';
+            var badges = [];
+            if (total === 0) badges.push('<span class="badge badge-new">🌱 New Trader</span>');
+            if (completed >= 10) badges.push('<span class="badge badge-verified">✅ Verified Trader</span>');
+            if (score >= 90) badges.push('<span class="badge badge-top">🏆 Top Trader</span>');
+            document.getElementById('profileBadges').innerHTML = badges.join('');
+            var bars = [['rb1', 'rf1', total > 0 ? rate : 0], ['rb2', 'rf2', total > 0 ? Math.min(100, 75 + Math.random() * 20) : 0], ['rb3', 'rf3', total > 0 ? Math.min(100, 80 + Math.random() * 15) : 0], ['rb4', 'rf4', total > 0 ? Math.max(0, 100 - Math.random() * 10) : 0]];
+            bars.forEach(function (b) { var v = Math.round(b[2]); document.getElementById(b[0]).textContent = v + '%'; document.getElementById(b[1]).style.width = v + '%'; });
+            if (!myDeals.length) { document.getElementById('profileDealsBody').innerHTML = '<tr><td colspan="5"><div class="empty-state">No deals yet — create your first deal</div></td></tr>'; return; }
+            document.getElementById('profileDealsBody').innerHTML = myDeals.map(function (d) { return '<tr onclick="showDealModal(' + d.id + ')"><td><span class="deal-id">#' + d.id + '</span></td><td>' + (d.category || '—') + '</td><td>' + d.amount + ' RITUAL</td><td>' + spill(d.status) + '</td><td><span class="sp ' + (d.buyer === walletAddress ? 'sp-open' : 'sp-wait') + '">' + (d.buyer === walletAddress ? 'Buyer' : 'Seller') + '</span></td></tr>'; }).join('');
+            var acts = myDeals.slice(0, 5).map(function (d) { var icon = d.statusId === 3 ? '✅' : d.statusId === 4 ? '⚠️' : '🤝'; var cls = d.statusId === 3 ? 'ai-green' : d.statusId === 4 ? 'ai-red' : 'ai-blue'; return '<div class="activity-item"><div class="activity-icon ' + cls + '">' + icon + '</div><div class="activity-body"><div class="activity-title">Deal #' + d.id + ' — ' + d.category + '</div><div class="activity-sub">' + d.amount + ' RITUAL · ' + d.status + '</div></div><div class="activity-time">' + (d.createdAt ? new Date(d.createdAt * 1000).toLocaleDateString() : '—') + '</div></div>'; });
+            document.getElementById('activityFeed').innerHTML = acts.length ? acts.join('') : '<div class="activity-item"><div class="activity-icon ai-blue">💬</div><div class="activity-body"><div class="activity-title">No activity yet</div></div></div>';
+            var cats = {}; myDeals.forEach(function (d) { if (d.category) cats[d.category] = (cats[d.category] || 0) + 1; });
+            var catHTML = Object.entries(cats).sort(function (a, b) { return b[1] - a[1]; }).map(function (e) { return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-size:12px;color:var(--text2)">' + e[0] + '</span><span style="font-size:12px;font-weight:600;color:var(--green)">' + e[1] + ' deal' + (e[1] > 1 ? 's' : '') + '</span></div>'; }).join('');
+            document.getElementById('categoriesTraded').innerHTML = catHTML || '<p style="font-size:12px;color:var(--text-light)">No activity yet</p>';
+        }
+
+        // ── CHAT ──────────────────────────────────────────────────
+        function openChat(dealId) {
+            if (dealId) {
+                activeChatDeal = dealId;
+                var tabs = document.querySelectorAll('.chat-deal-tab');
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                var target = null;
+                tabs.forEach(function (t) { if (t.getAttribute('onclick') && t.getAttribute('onclick').indexOf("'" + dealId + "'") > -1) { target = t; } });
+                if (target) target.classList.add('active');
+                document.getElementById('chatDrawerSub').textContent = dealId + ' · Encrypted';
+            }
+            document.getElementById('chatDrawer').classList.add('open');
+            if (window.innerWidth <= 760) document.getElementById('chatBackdrop').classList.add('show');
+            document.getElementById('chatUnread').style.display = 'none';
+            renderChatMessages(activeChatDeal);
+            setTimeout(function () { var ci = document.getElementById('chatInput'); if (ci) ci.focus(); }, 300);
+        }
+        function closeChat() {
+            document.getElementById('chatDrawer').classList.remove('open');
+            document.getElementById('chatBackdrop').classList.remove('show');
+        }
+        function switchChatDeal(dealId, el) {
+            activeChatDeal = dealId;
+            document.querySelectorAll('.chat-deal-tab').forEach(function (t) { t.classList.remove('active'); });
+            if (el) el.classList.add('active');
+            var names = { l1: 'WL Spot #l1', l2: 'Airdrop #l2', l3: 'Pre-Market #l3', l4: 'Freelance #l4' };
+            document.getElementById('chatDrawerSub').textContent = (names[dealId] || dealId) + ' · Encrypted';
+            if (!chatHistory[dealId]) {
+                chatHistory[dealId] = [
+                    { from: 'them', text: 'Hi! I saw your listing — is it still available?', time: '09:12' },
+                    { from: 'me', text: 'Yes, still open. Happy to discuss the details.', time: '09:14' },
+                ];
+            }
+            renderChatMessages(dealId);
+        }
+        function renderChatMessages(dealId) {
+            var msgs = document.getElementById('chatMessages');
+            var history = chatHistory[dealId] || [];
+            if (!history.length) { msgs.innerHTML = '<div class="chat-empty"><div class="chat-empty-icon">💬</div><p>No messages yet</p><p style="font-size:11px">Start the conversation</p></div>'; return; }
+            msgs.innerHTML = history.map(function (m, i) {
+                var showSender = i === 0 || history[i - 1].from !== m.from;
+                return '<div class="chat-msg ' + (m.from === 'me' ? 'me' : 'them') + '">' + (showSender && m.from === 'them' ? '<div class="chat-msg-sender">Seller</div>' : '') + '<div>' + m.text + '</div><div class="chat-msg-time">' + m.time + '</div></div>';
+            }).join('');
+            msgs.scrollTop = msgs.scrollHeight;
+        }
+        function sendChatMsg() {
+            var input = document.getElementById('chatInput');
+            var text = input.value.trim();
+            if (!text) return;
+            var now = new Date();
+            var time = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+            if (!chatHistory[activeChatDeal]) chatHistory[activeChatDeal] = [];
+            chatHistory[activeChatDeal].push({ from: 'me', text: text, time: time });
+            input.value = '';
+            renderChatMessages(activeChatDeal);
+            setTimeout(function () {
+                var replies = ['Got it, thanks!', 'Sounds good — I can deliver by tomorrow.', 'Can we discuss the price a bit?', 'Deal — I\'ll send proof shortly.', 'Let me check and get back to you.'];
+                var reply = replies[Math.floor(Math.random() * replies.length)];
+                var t2 = new Date();
+                var time2 = t2.getHours().toString().padStart(2, '0') + ':' + t2.getMinutes().toString().padStart(2, '0');
+                chatHistory[activeChatDeal].push({ from: 'them', text: reply, time: time2 });
+                renderChatMessages(activeChatDeal);
+                if (!document.getElementById('chatDrawer').classList.contains('open')) {
+                    document.getElementById('chatUnread').style.display = 'block';
+                    toast('New message', 'Reply received — open Deal Chat to view', 'info');
+                }
+            }, 1800 + Math.random() * 2000);
+        }
+
+        // ── MODAL UTILS ───────────────────────────────────────────
+        function closeModal(id) { var el = document.getElementById(id); if (el) el.classList.remove('show'); }
+        document.querySelectorAll('.moverlay').forEach(function (o) { o.addEventListener('click', function (e) { if (e.target === o) o.classList.remove('show'); }); });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { document.querySelectorAll('.moverlay.show').forEach(function (o) { o.classList.remove('show'); }); closeChat(); } });
+
+        // ── INIT ──────────────────────────────────────────────────
+        updateIntentPlaceholder();
+        switchChatDeal('l1', document.querySelector('.chat-deal-tab'));
+        loadData();
+        renderListings();
+    </script>
 </body>
 
 </html>

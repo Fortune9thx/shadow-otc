@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Shadow OTC animation system ───────────────────────── */
+
+/* Network node + live-dot breathing */
+@keyframes nodeBreath {
+  0%, 100% { opacity: 0.30; }
+  50%       { opacity: 0.75; }
+}
+
+/* Bridge-line dashes flowing (data in transit) */
+@keyframes dashFlow {
+  from { stroke-dashoffset: 60; }
+  to   { stroke-dashoffset: 0;  }
+}
+
+/* EKG heartbeat: path draws itself, holds, fades, repeats */
+@keyframes hbDraw {
+  0%   { stroke-dashoffset: 900; opacity: 0;   }
+  8%   { opacity: 1; }
+  65%  { stroke-dashoffset: 0;   opacity: 0.7; }
+  80%  { stroke-dashoffset: 0;   opacity: 0.7; }
+  100% { stroke-dashoffset: 0;   opacity: 0;   }
+}
+
+/* Scanning dot that travels with the EKG line */
+@keyframes hbDot {
+  0%   { cx: 0;   opacity: 0; }
+  8%   { opacity: 1; }
+  65%  { cx: 600; opacity: 1; }
+  100% { cx: 600; opacity: 0; }
+}
+
+body {
+  background:
+    radial-gradient(ellipse 90% 75% at -8% 0%,   rgba(11,107,75,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 75% 65% at 108% 100%, rgba(6,78,59,0.18)   0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 0%,   rgba(13,122,86,0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 55% at 0%   100%, rgba(11,107,75,0.09) 0%, transparent 50%),
+    radial-gradient(ellipse 35% 25% at 50%  50%,  rgba(11,107,75,0.04) 0%, transparent 70%),
+    linear-gradient(155deg, #DCE7E1 0%, #D3DDD7 40%, #CDD8D2 80%, #CAD5CF 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}

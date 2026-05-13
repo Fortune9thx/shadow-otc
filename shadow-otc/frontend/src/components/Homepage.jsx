@@ -75,64 +75,105 @@ function SkelRow() {
   );
 }
 
+/* ─── category accent config ─────────────────────────── */
+const CAT_CONFIG = {
+  premarket: { border: "#a78bfa", dot: "#a78bfa", bg: "rgba(167,139,250,0.08)", label: "Pre-Market" },
+  airdrop:   { border: "#60a5fa", dot: "#60a5fa", bg: "rgba(96,165,250,0.08)",  label: "Airdrop"    },
+  nft:       { border: "#f472b6", dot: "#f472b6", bg: "rgba(244,114,182,0.08)", label: "NFT"        },
+  bundle:    { border: "#94a3b8", dot: "#94a3b8", bg: "rgba(148,163,184,0.08)", label: "Bundle"     },
+};
+
 /* ─── market table row ───────────────────────────────── */
 function MarketRow({ deal, onView, onCopyLink, onShareX, isCopied }) {
-  const CAT_DOT = { premarket:"#a78bfa", airdrop:"#60a5fa", nft:"#818cf8", bundle:"#6b7280" };
+  const cat   = CAT_CONFIG[deal.category] || CAT_CONFIG.bundle;
   const TRUST = {
-    verified:    { text: "#064e3b",      bg: "#ecfdf5",   border: "#6ee7b7" },
-    "high-trust":{ text: "#111827", bg: "#111827", border: "#374151" },
-    new:         { text: "#6b7280", bg: T.panel,  border: T.border },
+    verified:    { text: "#064e3b", bg: "#ecfdf5",  border: "#6ee7b7" },
+    "high-trust":{ text: "#e2e8f0", bg: "#1e293b",  border: "#334155" },
+    new:         { text: "#6b7280", bg: T.panel,    border: T.border  },
   };
-  const dot   = CAT_DOT[deal.category]    || CAT_DOT.bundle;
-  const trust = TRUST[deal.sellerTrust]   || TRUST.new;
+  const trust = TRUST[deal.sellerTrust] || TRUST.new;
   const discount = deal.discount ?? (deal.marketPrice && deal.price
     ? Math.round(((deal.marketPrice - deal.price) / deal.marketPrice) * 100) : null);
 
   return (
-    <div className="group flex items-center gap-3 px-5 py-2.5 cursor-pointer transition-colors duration-100"
-      style={{ borderBottom: "1px solid rgba(11,107,75,0.18)" }}
+    <div className="group relative flex items-center gap-3 pr-5 py-3 cursor-pointer transition-colors duration-100"
+      style={{ borderBottom: "1px solid rgba(11,107,75,0.14)", paddingLeft: "16px" }}
       onClick={onView}
-      onMouseEnter={e => e.currentTarget.style.background = "rgba(11,107,75,0.05)"}
+      onMouseEnter={e => e.currentTarget.style.background = "rgba(11,107,75,0.04)"}
       onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-      <div className="flex-shrink-0 h-2 w-2 rounded-full" style={{ background: dot }} />
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold truncate" style={{ color: T.text }}>{deal.asset}</p>
-        <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-[10px] font-mono uppercase" style={{ color: T.textDim }}>
-            {deal.category}
+
+      {/* Category accent bar — left edge */}
+      <div className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full flex-shrink-0"
+        style={{ background: cat.border, opacity: 0.75 }} />
+
+      {/* Asset info */}
+      <div className="min-w-0 flex-1 pl-1">
+        <div className="flex items-center gap-2">
+          <p className="text-[14px] font-bold truncate" style={{ color: T.text }}>{deal.asset}</p>
+          {/* Category badge */}
+          <span className="hidden sm:inline-block flex-shrink-0 text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+            style={{ background: cat.bg, color: cat.dot, border: `1px solid ${cat.dot}22` }}>
+            {cat.label}
           </span>
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
           {deal.vesting && (
-            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>· {deal.vesting}</span>
+            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>
+              Vesting: {deal.vesting}
+            </span>
+          )}
+          {!deal.vesting && (
+            <span className="text-[10px] font-mono" style={{ color: T.textDim }}>
+              {deal.network || "Ritual Testnet"}
+            </span>
           )}
         </div>
       </div>
-      <div className="hidden sm:block w-28 text-right">
-        <p className="text-[12px]" style={{ color: T.textMid }}>{deal.quantity || "-"}</p>
+
+      {/* Quantity */}
+      <div className="hidden sm:block w-28 text-right flex-shrink-0">
+        <p className="text-[12px] font-mono" style={{ color: T.textMid }}>{deal.quantity || "—"}</p>
       </div>
-      <div className="hidden md:block w-14 text-right">
-        {discount > 0
-          ? <span className="text-[11px] font-mono" style={{ color: "#dc2626" }}>-{discount}%</span>
-          : <span className="text-[11px]" style={{ color: T.textDim }}>-</span>}
+
+      {/* Discount — with tooltip hint */}
+      <div className="hidden md:block w-20 text-right flex-shrink-0">
+        {discount > 0 ? (
+          <div className="flex flex-col items-end">
+            <span className="text-[12px] font-mono font-semibold" style={{ color: "#dc2626" }}>-{discount}%</span>
+            <span className="text-[9px]" style={{ color: T.textDim }}>vs market</span>
+          </div>
+        ) : (
+          <span className="text-[11px]" style={{ color: T.textDim }}>—</span>
+        )}
       </div>
+
+      {/* Price */}
       <div className="w-28 text-right flex-shrink-0">
-        <p className="text-[13px] font-mono font-bold" style={{ color: T.em }}>
-          {deal.price} <span className="text-[10px] font-normal" style={{ color: T.textDim }}>RITUAL</span>
+        <p className="text-[14px] font-mono font-bold" style={{ color: T.em }}>
+          {deal.price}
         </p>
+        <p className="text-[9px] font-mono" style={{ color: T.textDim }}>RITUAL</p>
       </div>
+
+      {/* Trust */}
       <div className="hidden lg:flex w-20 justify-end flex-shrink-0">
         <span className="text-[9px] font-mono px-2 py-0.5 rounded"
           style={{ background: trust.bg, border: `1px solid ${trust.border}`, color: trust.text }}>
           {(deal.sellerTrust || "NEW").toUpperCase().replace("-","_")}
         </span>
       </div>
+
+      {/* Side badge */}
       <div className="flex-shrink-0">
-        <span className="text-[10px] font-mono px-2 py-0.5 rounded"
+        <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg"
           style={deal.side === "sell"
-            ? { background: "#ecfdf5", border: `1px solid ${"#6ee7b7"}`, color: T.em }
+            ? { background: "#ecfdf5", border: "1px solid #6ee7b7", color: T.em }
             : { background: "#eff6ff", border: "1px solid #bfdbfe", color: "#1d4ed8" }}>
           {deal.side === "sell" ? "SELL" : "BUY"}
         </span>
       </div>
+
+      {/* Actions */}
       <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
         <button onClick={e => { e.stopPropagation(); onCopyLink(e); }}
           className="h-6 w-6 flex items-center justify-center rounded transition-all"
@@ -349,7 +390,7 @@ export default function Homepage({
   deals = [], settlements = [], requests = [],
   loading = false, wallet,
   onConnect, onDealClick, onCreateListing,
-  onJoinEarlyAccess, onDashboard, onStartOTCRoom,
+  onJoinEarlyAccess, onDashboard, onStartOTCRoom, onMarket,
 }) {
   const [query, setQuery]       = useState("");
   const [cat, setCat]           = useState("all");
@@ -412,7 +453,7 @@ export default function Homepage({
           {/* Nav */}
           <nav className="hidden items-center gap-0.5 md:flex">
             {[
-              { label: "Market",    fn: () => { const el = document.getElementById("listings-section"); if(el) el.scrollIntoView({behavior:"smooth"}); } },
+              { label: "Market",    fn: onMarket },
               { label: "My Deals",  fn: onDashboard },
               { label: "OTC Rooms", fn: onStartOTCRoom },
             ].map(item => (
@@ -603,7 +644,8 @@ export default function Homepage({
 
       {/* ── QUICK STATS ROW ──────────────────────────── */}
       <div className="mx-auto max-w-7xl px-5 mb-6">
-        <div className="flex items-center rounded-xl overflow-hidden"
+        {/* overflow-x-auto allows scrolling on narrow screens instead of squishing */}
+        <div className="overflow-x-auto rounded-xl"
           style={{
             background: "rgba(255,255,255,0.78)",
             backdropFilter: "blur(16px)",
@@ -611,25 +653,27 @@ export default function Homepage({
             border: "1px solid rgba(11,107,75,0.20)",
             boxShadow: "0 1px 0 rgba(255,255,255,0.90), 0 4px 16px rgba(0,0,0,0.07), inset 0 2px 0 rgba(11,107,75,0.16)",
           }}>
-          {STATS.map((s, i) => (
-            <div key={s.label}
-              className="flex-1 flex flex-col items-center py-4 px-4"
-              style={{ borderRight: i < STATS.length-1 ? "1px solid rgba(11,107,75,0.14)" : "none" }}>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[9px] font-mono uppercase tracking-[0.14em]" style={{ color: "#7B8A84", fontWeight: 700 }}>
-                  {s.label}
+          <div className="flex items-center" style={{ minWidth: 480 }}>
+            {STATS.map((s, i) => (
+              <div key={s.label}
+                className="flex-1 flex flex-col items-center py-4 px-4"
+                style={{ borderRight: i < STATS.length-1 ? "1px solid rgba(11,107,75,0.14)" : "none" }}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className="text-[9px] font-mono uppercase tracking-[0.14em]" style={{ color: "#7B8A84", fontWeight: 700 }}>
+                    {s.label}
+                  </span>
+                  {s.live && (
+                    <span className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }}/>
+                  )}
+                </div>
+                <span className="text-[17px] font-mono font-bold tabular-nums"
+                  style={{ color: s.value === "99.9%" || s.value === "1979" ? T.em : T.text, letterSpacing: "-0.01em" }}>
+                  {s.value}
                 </span>
-                {s.live && (
-                  <span className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                    style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }}/>
-                )}
               </div>
-              <span className="text-[17px] font-mono font-bold tabular-nums"
-                style={{ color: s.value === "99.9%" || s.value === "1979" ? T.em : T.text, letterSpacing: "-0.01em" }}>
-                {s.value}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -640,7 +684,7 @@ export default function Homepage({
         <div id="listings-section" className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2.5">
             <span className="text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: T.textSub }}>
-              {has ? `Market - ${shown.length} Listings` : "Market - Empty"}
+              {has ? `Market — ${shown.length} Listings` : "Market — Empty"}
             </span>
             {has && (
               <div className="flex items-center gap-1">
@@ -668,15 +712,14 @@ export default function Homepage({
         <div className="rounded-xl overflow-hidden mb-4"
           style={{ background: "linear-gradient(180deg, #ffffff 0%, #F6F8F7 100%)", border: "1px solid rgba(11,107,75,0.22)", boxShadow: "0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(11,107,75,0.06)" }}>
           {/* Table header */}
-          <div className="flex items-center gap-3 px-5 py-2.5"
+          <div className="flex items-center gap-3 pl-5 pr-5 py-2.5"
             style={{ borderBottom: "1px solid rgba(11,107,75,0.22)", background: "rgba(0,0,0,0.03)" }}>
-            <div className="w-3.5 flex-shrink-0" />
-            <span className="flex-1 text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Asset</span>
+            <span className="flex-1 text-[9px] font-semibold uppercase tracking-[0.14em] pl-1" style={{ color: T.textDim }}>Asset</span>
             <span className="hidden sm:block w-28 text-right text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Quantity</span>
-            <span className="hidden md:block w-14 text-right text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Discount</span>
+            <span className="hidden md:block w-20 text-right text-[9px] font-semibold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Discount</span>
             <span className="w-28 text-right text-[9px] font-semibold uppercase tracking-[0.14em] flex-shrink-0" style={{ color: T.textDim }}>Price</span>
             <span className="hidden lg:block w-20 text-right text-[9px] font-semibold uppercase tracking-[0.14em] flex-shrink-0" style={{ color: T.textDim }}>Trust</span>
-            <span className="w-10 text-right text-[9px] font-semibold uppercase tracking-[0.14em] flex-shrink-0" style={{ color: T.textDim }}>Side</span>
+            <span className="w-14 text-right text-[9px] font-semibold uppercase tracking-[0.14em] flex-shrink-0" style={{ color: T.textDim }}>Side</span>
             <div className="w-14 flex-shrink-0" />
           </div>
 
@@ -702,6 +745,22 @@ export default function Homepage({
             ))
           )}
         </div>
+
+        {/* View full market link */}
+        {has && (
+          <div className="flex justify-center mb-4">
+            <button onClick={onMarket}
+              className="flex items-center gap-1.5 rounded-xl px-5 py-2 text-[12px] font-semibold transition-all"
+              style={{ background: "rgba(255,255,255,0.75)", border: "1px solid rgba(11,107,75,0.20)", color: T.em }}
+              onMouseEnter={e => { e.currentTarget.style.background = T.emBg; e.currentTarget.style.borderColor = "rgba(11,107,75,0.35)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.75)"; e.currentTarget.style.borderColor = "rgba(11,107,75,0.20)"; }}>
+              View Full Market
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Bottom panels - settlements and most requested */}
         {!loading && (

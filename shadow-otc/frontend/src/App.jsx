@@ -4,6 +4,7 @@ import DealDetails     from "./components/DealDetails";
 import CreateDeal      from "./components/CreateDeal";
 import Dashboard       from "./components/Dashboard";
 import PrivateDealRoom from "./components/PrivateDealRoom";
+import MarketPage      from "./components/MarketPage";
 
 const API              = "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
@@ -139,15 +140,49 @@ export default function App() {
     history.pushState("", document.title, window.location.pathname);
   }
 
+  function goMarket() {
+    setPage("market");
+    window.scrollTo(0, 0);
+  }
+
   /* ── new listing submitted via wizard ───────────────── */
-  function handleNewListing(listing) {
+  async function handleNewListing(listing) {
+    // Optimistic update — user sees it immediately
     setDeals(prev => {
       const updated = [listing, ...prev];
       saveLocalListings(updated);
       return updated;
     });
+
+    // POST to backend so every device sees this listing
+    try {
+      await fetch(API + "/deals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(listing),
+      });
+    } catch {
+      // Backend offline — listing still lives in localStorage as fallback
+    }
+
+    // Auto-tweet new listing via bot
+    try {
+      await fetch(API + "/tweet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          asset:    listing.asset,
+          price:    listing.price,
+          side:     listing.side,
+          category: listing.category,
+          url:      "https://shadow-otc.vercel.app",
+        }),
+      });
+    } catch {
+      // Twitter bot offline — non-fatal
+    }
+
     goHome();
-    // Scroll to listings section after short delay so DOM updates
     setTimeout(() => {
       const el = document.getElementById("listings-section");
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -219,6 +254,22 @@ export default function App() {
     );
   }
 
+  if (page === "market") {
+    return (
+      <MarketPage
+        deals={deals}
+        loading={loading}
+        wallet={wallet}
+        onConnect={connectWallet}
+        onBack={goHome}
+        onDealClick={openDeal}
+        onCreateListing={() => setPage("create")}
+        onDashboard={() => setPage("dashboard")}
+        onStartOTCRoom={() => setPage("private")}
+      />
+    );
+  }
+
   return (
     <Homepage
       deals={deals}
@@ -232,6 +283,7 @@ export default function App() {
       onJoinEarlyAccess={handleJoinEarlyAccess}
       onDashboard={() => setPage("dashboard")}
       onStartOTCRoom={() => setPage("private")}
+      onMarket={goMarket}
     />
   );
 }

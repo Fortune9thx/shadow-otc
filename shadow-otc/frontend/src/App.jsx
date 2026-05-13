@@ -147,9 +147,12 @@ export default function App() {
 
   /* ── new listing submitted via wizard ───────────────── */
   async function handleNewListing(listing) {
+    // Stamp the creator's wallet onto the listing for ownership filtering
+    const stamped = { ...listing, walletAddress: wallet || null, createdAt: listing.createdAt || Date.now() };
+
     // Optimistic update — user sees it immediately
     setDeals(prev => {
-      const updated = [listing, ...prev];
+      const updated = [stamped, ...prev];
       saveLocalListings(updated);
       return updated;
     });
@@ -159,7 +162,7 @@ export default function App() {
       await fetch(API + "/deals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(listing),
+        body: JSON.stringify(stamped),
       });
     } catch {
       // Backend offline — listing still lives in localStorage as fallback
@@ -171,10 +174,10 @@ export default function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          asset:    listing.asset,
-          price:    listing.price,
-          side:     listing.side,
-          category: listing.category,
+          asset:    stamped.asset,
+          price:    stamped.price,
+          side:     stamped.side,
+          category: stamped.category,
           url:      "https://shadow-otc.vercel.app",
         }),
       });

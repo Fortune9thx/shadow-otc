@@ -392,10 +392,11 @@ export default function Homepage({
   onConnect, onDealClick, onCreateListing,
   onJoinEarlyAccess, onDashboard, onStartOTCRoom, onMarket,
 }) {
-  const [query, setQuery]       = useState("");
-  const [cat, setCat]           = useState("all");
-  const [focused, setFocused]   = useState(false);
-  const [copiedId, setCopiedId] = useState(null);
+  const [query, setQuery]         = useState("");
+  const [cat, setCat]             = useState("all");
+  const [focused, setFocused]     = useState(false);
+  const [copiedId, setCopiedId]   = useState(null);
+  const [mobileNav, setMobileNav] = useState(false);
   const has = deals.length > 0;
 
   const shown = useMemo(() => deals.filter(d => {
@@ -423,35 +424,33 @@ export default function Homepage({
     <div className="min-h-screen antialiased">
 
       {/* ── TOPBAR ──────────────────────────────────── */}
-      <header className="sticky top-0 z-40 h-13"
+      <header className="sticky top-0 z-40"
         style={{
-          background: "linear-gradient(180deg, rgba(230,235,233,0.96) 0%, rgba(221,227,224,0.94) 100%)",
+          background: "linear-gradient(180deg, rgba(230,235,233,0.97) 0%, rgba(221,227,224,0.95) 100%)",
           backdropFilter: "blur(20px) saturate(180%)",
           WebkitBackdropFilter: "blur(20px) saturate(180%)",
           borderBottom: "1px solid rgba(11,107,75,0.18)",
           boxShadow: "0 1px 0 rgba(255,255,255,0.8), 0 2px 6px rgba(0,0,0,0.04)",
         }}>
-        <div className="mx-auto flex h-13 max-w-7xl items-center px-5 py-2.5">
-          {/* Logo */}
-          <div className="flex items-center gap-2.5 mr-8">
-            {/* Shadow OTC logo */}
-            <img
-              src="/logo.png"
-              alt="Shadow OTC"
+        <div className="mx-auto flex h-14 max-w-7xl items-center px-4">
+
+          {/* ── Logo ── */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <img src="/logo.png" alt="Shadow OTC"
               className="flex-shrink-0 rounded-lg object-cover"
-              style={{ width: 32, height: 32, boxShadow: "0 0 0 1px rgba(11,107,75,0.30), 0 2px 8px rgba(0,0,0,0.20)" }}
+              style={{ width: 30, height: 30, boxShadow: "0 0 0 1px rgba(11,107,75,0.30), 0 2px 8px rgba(0,0,0,0.18)" }}
             />
             <span className="text-[14px] font-bold tracking-tight" style={{ color: T.text }}>
               Shadow<span style={{ color: T.emMid }}>OTC</span>
             </span>
             <span className="rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-              style={{ background: "#ecfdf5", border: `1px solid ${"#6ee7b7"}`, color: T.em }}>
+              style={{ background: "#ecfdf5", border: "1px solid #6ee7b7", color: T.em }}>
               Testnet
             </span>
           </div>
 
-          {/* Nav */}
-          <nav className="hidden items-center gap-0.5 md:flex">
+          {/* ── Desktop nav ── */}
+          <nav className="hidden md:flex items-center gap-0.5 ml-6">
             {[
               { label: "Market",    fn: onMarket },
               { label: "My Deals",  fn: onDashboard },
@@ -467,43 +466,89 @@ export default function Homepage({
             ))}
           </nav>
 
-          {/* Right - Connect Wallet (light) + Post Listing (dark emerald) */}
-          <div className="ml-auto flex items-center gap-2.5">
+          {/* ── Right: wallet + post + hamburger ── */}
+          <div className="ml-auto flex items-center gap-2">
+            {/* Wallet — full label on md+, just dot on mobile */}
             {wallet ? (
               <button onClick={onDashboard}
-                className="flex items-center gap-2 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all"
-                style={{ background: "#f7f8fa", border: "1px solid rgba(11,107,75,0.18)", color: "#2d3340", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <span className="relative flex h-2 w-2">
+                className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-medium transition-all"
+                style={{ background: "#f7f8fa", border: "1px solid rgba(11,107,75,0.18)", color: "#2d3340" }}>
+                <span className="relative flex h-2 w-2 flex-shrink-0">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: T.emBr }} />
                   <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: T.emBr }} />
                 </span>
-                {wallet.slice(0,6)}...{wallet.slice(-4)}
+                <span className="hidden sm:inline">{wallet.slice(0,6)}...{wallet.slice(-4)}</span>
+                <span className="sm:hidden text-[11px]">Connected</span>
               </button>
             ) : (
               <button onClick={onConnect}
-                className="rounded-xl px-4 py-2 text-[13px] font-semibold transition-all"
-                style={{ background: "#f7f8fa", border: "1px solid rgba(11,107,75,0.18)", color: "#2d3340", boxShadow: "0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(0,0,0,0.14)"; e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9)"; }}>
+                className="rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all hidden sm:block"
+                style={{ background: "#f7f8fa", border: "1px solid rgba(11,107,75,0.18)", color: "#2d3340" }}>
                 Connect Wallet
               </button>
             )}
             <button onClick={onCreateListing}
-              className="rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
-              style={{
-                background: "#0B6B4B",
-                boxShadow: "0 4px 12px rgba(11,107,75,0.15)",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.filter = "brightness(1.08)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(5,150,105,0.45)"; }}
-              onMouseLeave={e => { e.currentTarget.style.filter = "brightness(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(11,107,75,0.15)"; }}>
-              + Post Listing
+              className="rounded-xl px-3 py-1.5 text-[12px] sm:text-[13px] sm:px-4 font-semibold text-white transition-all active:scale-[0.98] flex items-center gap-1.5"
+              style={{ background: "#0B6B4B", boxShadow: "0 4px 12px rgba(11,107,75,0.15)" }}
+              onMouseEnter={e => { e.currentTarget.style.filter = "brightness(1.08)"; }}
+              onMouseLeave={e => { e.currentTarget.style.filter = "brightness(1)"; }}>
+              <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+              </svg>
+              <span className="hidden xs:inline sm:inline">Post Listing</span>
+              <span className="sm:hidden">Post</span>
+            </button>
+
+            {/* ── Hamburger — mobile only ── */}
+            <button
+              onClick={() => setMobileNav(v => !v)}
+              className="md:hidden flex flex-col items-center justify-center h-9 w-9 rounded-xl transition-all flex-shrink-0"
+              style={{ background: mobileNav ? "rgba(11,107,75,0.10)" : "rgba(0,0,0,0.04)", border: "1px solid rgba(11,107,75,0.16)" }}>
+              {mobileNav ? (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ color: T.em }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              ) : (
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: T.textMid }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                </svg>
+              )}
             </button>
           </div>
         </div>
+
+        {/* ── Mobile nav drawer ── */}
+        {mobileNav && (
+          <div className="md:hidden"
+            style={{ borderTop: "1px solid rgba(11,107,75,0.14)", background: "rgba(230,235,233,0.98)", backdropFilter: "blur(20px)" }}>
+            <div className="px-4 py-3 flex flex-col gap-1">
+              {[
+                { label: "Market",         icon: "M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z", fn: () => { onMarket(); setMobileNav(false); } },
+                { label: "My Deals",       icon: "M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5",  fn: () => { onDashboard(); setMobileNav(false); } },
+                { label: "OTC Rooms",      icon: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244", fn: () => { onStartOTCRoom(); setMobileNav(false); } },
+                ...(!wallet ? [{ label: "Connect Wallet", icon: "M21 12a2.25 2.25 0 00-2.25-2.25H15a3 3 0 11-6 0H5.25A2.25 2.25 0 003 12m18 0v6a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18v-6m18 0V9M3 12V9m18-3a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v3m18-3V6", fn: () => { onConnect(); setMobileNav(false); } }] : []),
+              ].map(item => (
+                <button key={item.label} onClick={item.fn}
+                  className="flex items-center gap-3 rounded-xl px-4 py-3 text-[14px] font-medium text-left transition-all w-full"
+                  style={{ color: T.text }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(11,107,75,0.07)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(11,107,75,0.08)", border: "1px solid rgba(11,107,75,0.14)" }}>
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} style={{ color: T.em }}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                    </svg>
+                  </div>
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </header>
 
       {/* ── HERO ─────────────────────────────────────── */}
-      <section className="relative flex flex-col items-center pt-12 pb-10 overflow-hidden">
+      <section className="relative flex flex-col items-center pt-8 pb-8 sm:pt-12 sm:pb-10 overflow-hidden">
 
         {/* ── OTC network topology (signature visual) ── */}
         <div className="pointer-events-none absolute inset-0 w-full h-full select-none" aria-hidden="true">
@@ -558,7 +603,7 @@ export default function Homepage({
             background: "radial-gradient(ellipse 55% 55% at 50% 50%, rgba(11,107,75,0.10) 0%, transparent 70%)",
           }}/>
 
-        <div className="relative z-10 w-full max-w-2xl px-5">
+        <div className="relative z-10 w-full max-w-2xl px-4 sm:px-5">
           {/* Status tag */}
           <div className="flex justify-center mb-5">
             <div className="flex items-center gap-2 rounded-lg px-3.5 py-1.5"
@@ -571,13 +616,13 @@ export default function Homepage({
           </div>
 
           {/* Hero headline */}
-          <div className="text-center mb-8 px-2">
-            <h1 className="text-[34px] font-bold tracking-tight leading-[1.15] mb-3"
+          <div className="text-center mb-7 px-2">
+            <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight leading-[1.15] mb-3"
               style={{ color: T.text, letterSpacing: "-0.02em" }}>
               Institutional OTC<br />
               <span style={{ color: T.em }}>on Ritual Chain</span>
             </h1>
-            <p className="text-[14px] leading-relaxed max-w-lg mx-auto" style={{ color: T.textSub }}>
+            <p className="text-[13px] sm:text-[14px] leading-relaxed max-w-lg mx-auto px-2" style={{ color: T.textSub }}>
               Discover, negotiate and settle pre-market allocations, airdrops and NFT deals — verified on-chain with autonomous AI agents.
             </p>
           </div>
@@ -605,9 +650,9 @@ export default function Homepage({
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
                 type="text"
-                placeholder="Search assets, allocations, deal types..."
+                placeholder="Search assets, deals..."
                 className="w-full border-0 bg-transparent focus:outline-none focus:ring-0"
-                style={{ color: "#0f1117", padding: "14px 120px 14px 52px", fontSize: "14px" }}
+                style={{ color: "#0f1117", padding: "13px 110px 13px 52px", fontSize: "14px" }}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 {query && (
@@ -627,11 +672,11 @@ export default function Homepage({
           </form>
 
           {/* Hints */}
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <span className="text-[10px]" style={{ color: T.textDim }}>Try:</span>
+          <div className="flex items-center justify-center gap-2 mt-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <span className="text-[10px] flex-shrink-0" style={{ color: T.textDim }}>Try:</span>
             {["Pre-Market","Airdrops","NFT Spots"].map(h => (
               <button key={h} onClick={() => setQuery(h)}
-                className="text-[11px] font-medium rounded-lg px-2.5 py-1 transition-all"
+                className="text-[11px] font-medium rounded-lg px-2.5 py-1 transition-all flex-shrink-0"
                 style={{ background: "rgba(255,255,255,0.65)", border: "1px solid rgba(11,107,75,0.15)", color: T.textSub }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(11,107,75,0.30)"; e.currentTarget.style.color = T.em; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(11,107,75,0.15)"; e.currentTarget.style.color = T.textSub; }}>
@@ -643,9 +688,65 @@ export default function Homepage({
       </section>
 
       {/* ── QUICK STATS ROW ──────────────────────────── */}
-      <div className="mx-auto max-w-7xl px-5 mb-6">
-        {/* overflow-x-auto allows scrolling on narrow screens instead of squishing */}
-        <div className="overflow-x-auto rounded-xl"
+      <div className="mx-auto max-w-7xl px-4 mb-6">
+
+        {/* ── Mobile stats: 3-key grid ── */}
+        <div className="sm:hidden rounded-xl overflow-hidden"
+          style={{
+            background: "rgba(255,255,255,0.82)",
+            backdropFilter: "blur(16px)",
+            WebkitBackdropFilter: "blur(16px)",
+            border: "1px solid rgba(11,107,75,0.20)",
+            boxShadow: "0 1px 0 rgba(255,255,255,0.90), 0 4px 16px rgba(0,0,0,0.06), inset 0 2px 0 rgba(11,107,75,0.14)",
+          }}>
+          {/* Top row: 3 key live metrics */}
+          <div className="grid grid-cols-3">
+            {[
+              { label: "LISTINGS",  value: String(deals.length || 0), live: true  },
+              { label: "UPTIME",    value: "99.9%",                   live: true  },
+              { label: "CHAIN",     value: "1979",                    live: true  },
+            ].map((s, i) => (
+              <div key={s.label}
+                className="flex flex-col items-center py-3.5 px-2"
+                style={{ borderRight: i < 2 ? "1px solid rgba(11,107,75,0.12)" : "none" }}>
+                <div className="flex items-center gap-1 mb-1">
+                  <span className="text-[8px] font-mono font-bold uppercase tracking-[0.12em]" style={{ color: "#8A9A94" }}>
+                    {s.label}
+                  </span>
+                  {s.live && (
+                    <span className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }}/>
+                  )}
+                </div>
+                <span className="text-[18px] font-mono font-bold tabular-nums" style={{ color: T.em, letterSpacing: "-0.01em" }}>
+                  {s.value}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Bottom row: volume + settlements */}
+          <div className="grid grid-cols-2"
+            style={{ borderTop: "1px solid rgba(11,107,75,0.10)", background: "rgba(0,0,0,0.015)" }}>
+            {[
+              { label: "VOLUME",      value: "0",      unit: "RITUAL" },
+              { label: "SETTLEMENTS", value: "0",      unit: "deals"  },
+            ].map((s, i) => (
+              <div key={s.label}
+                className="flex items-center justify-center gap-2.5 py-2.5 px-3"
+                style={{ borderRight: i === 0 ? "1px solid rgba(11,107,75,0.10)" : "none" }}>
+                <span className="text-[8px] font-mono font-bold uppercase tracking-[0.12em]" style={{ color: "#8A9A94" }}>
+                  {s.label}
+                </span>
+                <span className="text-[13px] font-mono font-bold" style={{ color: T.text }}>
+                  {s.value} <span className="text-[9px] font-normal" style={{ color: T.textDim }}>{s.unit}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── Desktop stats: full 5-col row ── */}
+        <div className="hidden sm:block overflow-x-auto rounded-xl"
           style={{
             background: "rgba(255,255,255,0.78)",
             backdropFilter: "blur(16px)",
@@ -667,7 +768,7 @@ export default function Homepage({
                       style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }}/>
                   )}
                 </div>
-                <span className="text-[17px] font-mono font-bold tabular-nums"
+                <span className="text-[17px] font-mono font-bold tabular-nums whitespace-nowrap"
                   style={{ color: s.value === "99.9%" || s.value === "1979" ? T.em : T.text, letterSpacing: "-0.01em" }}>
                   {s.value}
                 </span>
@@ -678,30 +779,44 @@ export default function Homepage({
       </div>
 
       {/* ── MAIN CONTENT ─────────────────────────────── */}
-      <main className="mx-auto max-w-7xl px-5 pb-20">
+      <main className="mx-auto max-w-7xl px-4 pb-20">
 
         {/* Market header */}
-        <div id="listings-section" className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: T.textSub }}>
-              {has ? `Market — ${shown.length} Listings` : "Market — Empty"}
-            </span>
-            {has && (
-              <div className="flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full" style={{ background: T.emBr }} />
-                <span className="text-[10px] font-semibold" style={{ color: T.emMid }}>Live</span>
-              </div>
-            )}
+        <div id="listings-section" className="mb-3">
+          {/* Label row */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.10em]" style={{ color: T.textSub }}>
+                {has ? `Market — ${shown.length}` : "Market — Empty"}
+              </span>
+              {has && (
+                <div className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: T.emBr }} />
+                  <span className="text-[10px] font-semibold" style={{ color: T.emMid }}>Live</span>
+                </div>
+              )}
+            </div>
+            {/* Desktop: filter pills inline */}
+            <div className="hidden sm:flex items-center gap-1.5">
+              {CATS.map(c => (
+                <button key={c.id} onClick={() => setCat(c.id)}
+                  className="rounded-lg px-3 py-1 text-[11px] font-medium transition-all whitespace-nowrap"
+                  style={cat === c.id
+                    ? { background: "#0B6B4B", color: "#fff", boxShadow: "0 4px 12px rgba(11,107,75,0.18)" }
+                    : { background: "linear-gradient(180deg,#ffffff,#F6F8F7)", border: "1px solid rgba(11,107,75,0.22)", color: "#4a5568" }}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          {/* Mobile: scrollable filter pills row */}
+          <div className="sm:hidden flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
             {CATS.map(c => (
               <button key={c.id} onClick={() => setCat(c.id)}
-                className="rounded-lg px-3 py-1 text-[11px] font-medium transition-all"
-                style={cat === c.id ? {
-                  background: "#0B6B4B", color: "#fff", boxShadow: "0 4px 12px rgba(11,107,75,0.18)",
-                } : {
-                  background: "linear-gradient(180deg,#ffffff,#F6F8F7)", border: "1px solid rgba(11,107,75,0.22)", color: "#4a5568", boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
-                }}>
+                className="rounded-lg px-3 py-1.5 text-[11px] font-medium transition-all flex-shrink-0"
+                style={cat === c.id
+                  ? { background: "#0B6B4B", color: "#fff", boxShadow: "0 2px 8px rgba(11,107,75,0.18)" }
+                  : { background: "rgba(255,255,255,0.85)", border: "1px solid rgba(11,107,75,0.22)", color: "#4a5568" }}>
                 {c.label}
               </button>
             ))}
@@ -775,7 +890,7 @@ export default function Homepage({
           style={{ background: "linear-gradient(135deg, #0d1a14 0%, #0a1510 60%, #091410 100%)", border: "1px solid rgba(255,255,255,0.07)" }}>
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full blur-3xl"
             style={{ background: "radial-gradient(ellipse 100% 100% at 100% 0%, rgba(11,107,75,0.25) 0%, transparent 70%)" }} />
-          <div className="relative flex flex-col gap-5 px-8 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-4 px-5 py-6 sm:px-8 sm:py-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-sm">
               <div className="flex items-center gap-2 mb-2">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}
@@ -784,15 +899,15 @@ export default function Homepage({
                 </svg>
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: T.emBr }}>OTC Rooms</p>
               </div>
-              <h3 className="text-[17px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.90)" }}>
+              <h3 className="text-[16px] sm:text-[17px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.90)" }}>
                 Already have a counterparty?
               </h3>
-              <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.48)" }}>
-                Create a private OTC Room. Share an invite link, negotiate directly, and settle securely on-chain. Separate from public listings.
+              <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.48)" }}>
+                Create a private OTC Room. Share an invite link, negotiate directly, and settle securely on-chain.
               </p>
             </div>
             <button onClick={onStartOTCRoom}
-              className="flex-shrink-0 flex items-center gap-2.5 rounded-xl px-6 py-3 text-[13px] font-semibold transition-all"
+              className="flex-shrink-0 flex items-center gap-2.5 rounded-xl px-5 py-2.5 sm:px-6 sm:py-3 text-[13px] font-semibold transition-all self-start sm:self-auto"
               style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.28)", color: "#059669" }}
               onMouseEnter={e => { e.currentTarget.style.background = "rgba(16,185,129,0.22)"; }}
               onMouseLeave={e => { e.currentTarget.style.background = "rgba(16,185,129,0.15)"; }}>
@@ -809,20 +924,20 @@ export default function Homepage({
           style={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.06)" }}>
           <div className="pointer-events-none absolute inset-0"
             style={{ background: "radial-gradient(ellipse 80% 70% at -5% 50%, rgba(11,107,75,0.18) 0%, rgba(11,107,75,0.06) 50%, transparent 75%)" }} />
-          <div className="relative flex flex-col gap-5 px-8 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-4 px-5 py-6 sm:px-8 sm:py-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-sm">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2" style={{ color: "rgba(16,185,129,0.60)" }}>
                 Public Listing
               </p>
-              <h3 className="text-[17px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.88)" }}>
+              <h3 className="text-[16px] sm:text-[17px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.88)" }}>
                 List publicly on the marketplace
               </h3>
-              <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
+              <p className="text-[12px] sm:text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
                 Post a sell or buy order that any trader can discover, interact with, and settle on-chain.
               </p>
             </div>
             <button onClick={onCreateListing}
-              className="flex-shrink-0 flex items-center gap-2.5 rounded-xl px-6 py-3 text-[13px] font-semibold text-white transition-all"
+              className="flex-shrink-0 flex items-center gap-2.5 rounded-xl px-5 py-2.5 sm:px-6 sm:py-3 text-[13px] font-semibold text-white transition-all self-start sm:self-auto"
               style={{ background: "#0B6B4B", boxShadow: "0 2px 14px rgba(5,150,105,0.35), inset 0 1px 0 rgba(255,255,255,0.12)" }}
               onMouseEnter={e => { e.currentTarget.style.filter = "brightness(1.08)"; }}
               onMouseLeave={e => { e.currentTarget.style.filter = "brightness(1)"; }}>

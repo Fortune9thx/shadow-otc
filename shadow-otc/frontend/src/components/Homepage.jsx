@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { fetchOnChainDeals, CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS } from "../lib/contract";
+import { fetchOnChainDeals, fetchPlatformStats, CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS } from "../lib/contract";
 import ReputationBadge from "./ReputationBadge";
 
 /* ─── design tokens ──────────────────────────────────── */
@@ -295,21 +295,27 @@ function EmptyState({ onCreateDeal }) {
 }
 
 /* ─── live stats bar ─────────────────────────────────── */
-function StatsBar({ deals }) {
-  const total   = deals.length;
-  const active  = deals.filter(d => d.status === 0 || d.status === 1 || d.status === 2 || d.status === 3).length;
-  const done    = deals.filter(d => d.status === 4).length;
-  const locked  = deals
-    .filter(d => d.status <= 3)
-    .reduce((acc, d) => acc + parseFloat(d.payment || "0"), 0)
-    .toFixed(3);
+function StatsBar({ deals, platformStats }) {
+  // Prefer V3 on-chain counters; fall back to computed from deals array
+  const total  = platformStats ? String(platformStats.total)
+               : String(deals.length);
+  const done   = platformStats ? String(platformStats.completed)
+               : String(deals.filter(d => d.status === 4).length);
+  const active = String(
+    deals.filter(d => d.status >= 0 && d.status <= 3).length
+  );
+  const locked = platformStats
+    ? parseFloat(platformStats.locked).toFixed(3)
+    : deals.filter(d => d.status <= 3)
+        .reduce((acc, d) => acc + parseFloat(d.payment || "0"), 0)
+        .toFixed(3);
 
   const stats = [
-    { label: "TOTAL DEALS",    value: String(total),    live: false },
-    { label: "ACTIVE",         value: String(active),   live: true  },
-    { label: "COMPLETED",      value: String(done),     live: false },
-    { label: "LOCKED RITUAL",  value: locked,           live: true  },
-    { label: "CHAIN ID",       value: "1979",           live: true  },
+    { label: "TOTAL DEALS",   value: total,   live: false },
+    { label: "ACTIVE",        value: active,  live: true  },
+    { label: "COMPLETED",     value: done,    live: false },
+    { label: "LOCKED RITUAL", value: locked,  live: true  },
+    { label: "CHAIN ID",      value: "1979",  live: true  },
   ];
 
   return (
@@ -351,18 +357,22 @@ export default function Homepage({
   onStartOTCRoom,
   onMarket,
 }) {
-  const [deals, setDeals]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [filter, setFilter]     = useState("all");
-  const [mobileNav, setMobileNav] = useState(false);
+  const [deals, setDeals]             = useState([]);
+  const [platformStats, setPlatform]  = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [filter, setFilter]           = useState("all");
+  const [mobileNav, setMobileNav]     = useState(false);
 
   /* fetch on mount */
   useEffect(() => {
     setLoading(true);
-    fetchOnChainDeals()
-      .then(d => setDeals(d))
-      .catch(() => setDeals([]))
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetchOnChainDeals().catch(() => []),
+      fetchPlatformStats().catch(() => null),
+    ]).then(([chainDeals, stats]) => {
+      setDeals(chainDeals);
+      setPlatform(stats);
+    }).finally(() => setLoading(false));
   }, []);
 
   /* filtered list */
@@ -609,7 +619,7 @@ export default function Homepage({
       <main className="mx-auto max-w-7xl px-4 pb-20">
 
         {/* Stats bar */}
-        <StatsBar deals={deals} />
+        <StatsBar deals={deals} platformStats={platformStats} />
 
         {/* How it works */}
         <HowItWorks />

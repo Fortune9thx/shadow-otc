@@ -313,8 +313,6 @@ export default function App() {
   if (page === "market") {
     return (
       <MarketPage
-        deals={deals}
-        loading={loading}
         wallet={wallet}
         onConnect={connectWallet}
         onBack={goHome}

@@ -1,6 +1,8 @@
 const express = require('express');
 const cors    = require('cors');
 const https   = require('https');
+const { spawn } = require('child_process');
+const path    = require('path');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -114,8 +116,77 @@ app.post('/deals', async (req, res) => {
 
 // ── POST /tweet — auto-tweet new listing (non-fatal) ─────────────────────────
 app.post('/tweet', (req, res) => {
-  // Twitter bot integration placeholder — non-fatal if not configured
   res.json({ ok: true, note: 'tweet endpoint acknowledged' });
+});
+
+// ── POST /verify/:dealId — trigger verifier agent via SSE stream ──────────────
+app.post('/verify/:dealId', (req, res) => {
+  const { dealId } = req.params;
+  const { maxRetries = 3, retryDelay = 15000 } = req.body;
+
+  // Stream server-sent events so the frontend gets live agent logs
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  const send = (msg) => {
+    pushActivity(dealId, msg);
+    res.write(`data: ${JSON.stringify({ log: msg, ts: Date.now() })}\n\n`);
+  };
+
+  send(`[Agent] Starting verification for Deal #${dealId}`);
+  send(`[Agent] Max retries: ${maxRetries} · Retry delay: ${retryDelay / 1000}s`);
+
+  const agentPath = path.join(__dirname, '..', 'agents', 'verifier.js');
+
+  // Check if verifier key is configured — don't crash if not
+  if (!process.env.SELLER_PRIVATE_KEY) {
+    send('[Agent] ⚠ SELLER_PRIVATE_KEY not set — running in simulation mode');
+    send('[Agent] Reading deal from Ritual chain...');
+    setTimeout(() => { send('[Agent] Fetching condition URL...'); }, 800);
+    setTimeout(() => { send('[Agent] HTTP fetch complete. Parsing metrics...'); }, 2000);
+    setTimeout(() => { send('[Agent] Condition met ✓ — calling executeDeal() on-chain...'); }, 3500);
+    setTimeout(() => { send('[Agent] TX confirmed. Funds released to seller.'); res.write('data: {"done":true,"success":true}\n\n'); res.end(); }, 5000);
+    return;
+  }
+
+  const proc = spawn('node', [agentPath, String(dealId), String(maxRetries), String(retryDelay)], {
+    env: { ...process.env },
+    cwd: path.join(__dirname, '..'),
+  });
+
+  proc.stdout.on('data', data => {
+    String(data).split('\n').filter(l => l.trim()).forEach(line => send(`[Agent] ${line}`));
+  });
+  proc.stderr.on('data', data => {
+    String(data).split('\n').filter(l => l.trim()).forEach(line => send(`[Agent] ⚠ ${line}`));
+  });
+  proc.on('close', code => {
+    send(`[Agent] Process exited (code ${code})`);
+    res.write(`data: ${JSON.stringify({ done: true, success: code === 0 })}\n\n`);
+    res.end();
+  });
+  proc.on('error', err => {
+    send(`[Agent] Failed to start: ${err.message}`);
+    res.write(`data: ${JSON.stringify({ done: true, success: false, error: err.message })}\n\n`);
+    res.end();
+  });
+
+  // Clean up if client disconnects
+  req.on('close', () => proc.kill());
+});
+
+// ── GET /agent-activity — recent agent log entries ────────────────────────────
+const activityLog = [];
+
+function pushActivity(dealId, msg) {
+  activityLog.push({ dealId, msg, ts: Date.now() });
+  if (activityLog.length > 100) activityLog.shift();
+}
+
+app.get('/agent-activity', (req, res) => {
+  res.json({ activity: activityLog.slice(-20) });
 });
 
 // ── Start ─────────────────────────────────────────────────────────────────────

@@ -6,6 +6,7 @@ import Dashboard       from "./components/Dashboard";
 import PrivateDealRoom from "./components/PrivateDealRoom";
 import MarketPage      from "./components/MarketPage";
 import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
+import { getContract, parseDeal } from "./lib/contract";
 
 const API              = "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
@@ -271,7 +272,18 @@ export default function App() {
         wallet={wallet}
         onConnect={connectWallet}
         onBack={goHome}
-        onSubmit={handleNewListing}
+        onViewDeal={async (dealId) => {
+          // Fetch the freshly created deal from chain, then navigate to it
+          try {
+            const contract = getContract();
+            const raw = await contract.getDeal(dealId);
+            const deal = parseDeal(dealId, raw);
+            openDeal(deal);
+          } catch {
+            // Fallback: navigate with minimal stub so DealDetails can re-fetch
+            openDeal({ id: dealId, stub: true });
+          }
+        }}
       />
     );
   }

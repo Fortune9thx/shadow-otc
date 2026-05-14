@@ -294,8 +294,7 @@ export default function App() {
         wallet={wallet}
         onConnect={connectWallet}
         onBack={goHome}
-        deals={deals}
-        settlements={settlements}
+        onDealClick={openDeal}
       />
     );
   }

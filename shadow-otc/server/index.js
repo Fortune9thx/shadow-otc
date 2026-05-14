@@ -120,6 +120,25 @@ app.post('/tweet', (req, res) => {
   res.json({ ok: true, note: 'tweet endpoint acknowledged' });
 });
 
+// ── GET /sellers — return all registered sellers with skills ──────────────────
+app.get('/sellers', (req, res) => {
+  const usersFile = path.join(__dirname, '..', 'agents', 'data', 'telegram-users.json');
+  try {
+    const raw   = require('fs').existsSync(usersFile)
+                  ? JSON.parse(require('fs').readFileSync(usersFile, 'utf8'))
+                  : {};
+    const sellers = Object.entries(raw)
+      .map(([wallet, entry]) => {
+        const e = typeof entry === 'object' ? entry : { chatId: entry, skills: [], role: null };
+        return { wallet, skills: e.skills || [], role: e.role };
+      })
+      .filter(s => s.role === 'seller');
+    res.json({ sellers, total: sellers.length });
+  } catch {
+    res.json({ sellers: [], total: 0 });
+  }
+});
+
 // ── POST /verify/:dealId — trigger verifier agent via SSE stream ──────────────
 app.post('/verify/:dealId', (req, res) => {
   const { dealId } = req.params;

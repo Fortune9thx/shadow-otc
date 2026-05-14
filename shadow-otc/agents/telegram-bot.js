@@ -45,7 +45,7 @@ const ABI = [
 ];
 
 // ─────────────────────────────────────────────────────────────────
-// USER STORE  (wallet ↔ chatId)
+// USER STORE  (wallet ↔ { chatId, skills[], role })
 // ─────────────────────────────────────────────────────────────────
 function loadUsers() {
   try {
@@ -61,16 +61,43 @@ function saveUsers(users) {
   } catch (e) { console.error("saveUsers error:", e.message); }
 }
 
+// Normalise entry — supports old format (plain chatId number) or new object
+function normaliseEntry(entry) {
+  if (!entry) return null;
+  if (typeof entry === "number" || typeof entry === "string") {
+    return { chatId: Number(entry), skills: [], role: null };
+  }
+  return { chatId: entry.chatId, skills: entry.skills || [], role: entry.role || null };
+}
+
 function registerUser(wallet, chatId) {
+  const users  = loadUsers();
+  const key    = wallet.toLowerCase();
+  const prev   = normaliseEntry(users[key]);
+  users[key]   = { chatId, skills: prev?.skills || [], role: prev?.role || null };
+  saveUsers(users);
+}
+
+function registerSellerSkills(wallet, chatId, skills) {
   const users = loadUsers();
-  users[wallet.toLowerCase()] = chatId;
+  const key   = wallet.toLowerCase();
+  users[key]  = { chatId, skills, role: "seller" };
   saveUsers(users);
 }
 
 function getChatId(wallet) {
   if (!wallet || wallet === ethers.ZeroAddress) return null;
   const users = loadUsers();
-  return users[wallet.toLowerCase()] || null;
+  const entry = normaliseEntry(users[wallet.toLowerCase()]);
+  return entry?.chatId || null;
+}
+
+// Return all registered sellers whose skills include categoryId
+function getMatchingSellers(categoryId) {
+  const users = loadUsers();
+  return Object.entries(users)
+    .map(([wallet, entry]) => ({ wallet, ...normaliseEntry(entry) }))
+    .filter(u => u.role === "seller" && u.skills.includes(Number(categoryId)));
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -112,6 +139,12 @@ async function sendMessage(chatId, text, extra = {}) {
 // ─────────────────────────────────────────────────────────────────
 // COMMAND HANDLER
 // ─────────────────────────────────────────────────────────────────
+const CATEGORY_SHORT = [
+  "0:Social","1:Content","2:Freelance","3:NFT Transfer",
+  "4:NFT WL","5:Airdrop","6:Token","7:Pre-Market",
+  "8:Marketing","9:Bug Bounty","10:Escrow","11:Conditional",
+];
+
 const WELCOME = `👋 <b>Welcome to Shadow OTC Bot</b>
 
 I watch the Ritual Chain and notify you when your deals move:
@@ -122,8 +155,13 @@ I watch the Ritual Chain and notify you when your deals move:
 ✅ <b>Completed</b> — funds released to seller
 ❌ <b>Failed/Disputed</b> — deal needs attention
 
-<b>To get notified, link your wallet:</b>
+<b>Buyer — link your wallet:</b>
 <code>/register 0xYourWalletAddress</code>
+
+<b>Seller — register + set skills to get matched:</b>
+<code>/sell 0xYourWallet 0 1 5</code>  (space-separated category IDs)
+
+Categories: ${CATEGORY_SHORT.join(", ")}
 
 <b>Other commands:</b>
 <code>/status &lt;dealId&gt;</code> — check a deal
@@ -154,6 +192,36 @@ async function handleUpdate(update, contract) {
       `✅ <b>Wallet registered!</b>\n\n` +
       `<code>${wallet}</code>\n\n` +
       `You'll now receive alerts for all deals where you're buyer or seller.\n\n` +
+      `<a href="https://shadow-otc.vercel.app">Open Shadow OTC →</a>`
+    );
+    return;
+  }
+
+  if (cmd === "/sell") {
+    const wallet = parts[1];
+    if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
+      await sendMessage(chatId,
+        "❌ <b>Usage:</b> <code>/sell 0xYourWallet 0 1 5</code>\n\n" +
+        "Categories: " + CATEGORY_SHORT.join(", ")
+      );
+      return;
+    }
+    const skills = parts.slice(2).map(Number).filter(n => n >= 0 && n <= 11 && !isNaN(n));
+    if (skills.length === 0) {
+      await sendMessage(chatId,
+        "❌ <b>No valid category IDs provided.</b>\n\n" +
+        "Categories: " + CATEGORY_SHORT.join(", ") + "\n\n" +
+        "Example: <code>/sell 0xYourWallet 0 2 7</code>"
+      );
+      return;
+    }
+    registerSellerSkills(wallet, chatId, skills);
+    const skillNames = skills.map(s => CATEGORY_NAMES[s] || s).join(", ");
+    await sendMessage(chatId,
+      `🎯 <b>Seller profile saved!</b>\n\n` +
+      `Wallet: <code>${wallet}</code>\n` +
+      `Skills: <b>${skillNames}</b>\n\n` +
+      `You'll get a DM when a matching deal goes live.\n\n` +
       `<a href="https://shadow-otc.vercel.app">Open Shadow OTC →</a>`
     );
     return;
@@ -220,7 +288,23 @@ function attachListeners(contract) {
         `<a href="https://shadow-otc.vercel.app/#deal=${dealId}">Track your deal →</a>`
       );
     }
-    console.log(`[Bot] DealCreated #${dealId} (${cat}, ${amt} RITUAL)`);
+
+    // ── Seller matching: DM all registered sellers with matching skills ──
+    const matchedSellers = getMatchingSellers(Number(category));
+    let matchCount = 0;
+    for (const seller of matchedSellers) {
+      // Don't ping the buyer themselves if they have a seller profile
+      if (seller.wallet === buyer.toLowerCase()) continue;
+      await sendMessage(seller.chatId,
+        `🎯 <b>New deal matches your skills!</b>\n\n` +
+        `<b>Deal #${dealId}</b> — ${cat}\n` +
+        `💰 ${amt} RITUAL locked in escrow\n` +
+        `⏰ Deadline: ${dlDate}\n\n` +
+        `<a href="https://shadow-otc.vercel.app/#deal=${dealId}">Accept Deal →</a>`
+      ).catch(() => {});
+      matchCount++;
+    }
+    console.log(`[Bot] DealCreated #${dealId} (${cat}, ${amt} RITUAL) — notified ${matchCount} matched sellers`);
   });
 
   // ── DealAccepted ─────────────────────────────────────────────────

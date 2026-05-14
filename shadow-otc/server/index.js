@@ -3,6 +3,7 @@ const cors    = require('cors');
 const https   = require('https');
 const { spawn } = require('child_process');
 const path    = require('path');
+require('dotenv').config();
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -192,4 +193,6 @@ app.get('/agent-activity', (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Shadow OTC backend running on port ${PORT}`);
+  console.log(`🤖 Telegram bot: ${process.env.TELEGRAM_BOT_TOKEN ? '@ShadowOTC_bot connected' : 'token not set'}`);
+  console.log(`📄 Contract V3:  ${process.env.CONTRACT_ADDRESS_V3 || process.env.CONTRACT_ADDRESS_V2 || 'not set'}`);
 });

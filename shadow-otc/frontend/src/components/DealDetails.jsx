@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ReputationBadge from "./ReputationBadge";
 
 /* ── design tokens (matches Homepage/MarketPage) ──────── */
 const T = {
@@ -472,14 +473,22 @@ export default function DealDetails({ deal, wallet, onConnect, onBack }) {
                   </span>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-px rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
-                {[["Total deals", deal.sellerDeals ?? "0"], ["Success rate", "100%"]].map(([l, v], i) => (
-                  <div key={l} className="px-4 py-3 text-center" style={{ background: T.panel, borderRight: i === 0 ? `1px solid ${T.border}` : "none" }}>
-                    <p className="text-[15px] font-bold" style={{ color: T.text }}>{v}</p>
-                    <p className="mt-0.5 text-[10px]" style={{ color: T.textDim }}>{l}</p>
-                  </div>
-                ))}
-              </div>
+              {/* Live on-chain reputation */}
+              {deal.sellerAddress && (
+                <div className="mt-3">
+                  <ReputationBadge address={deal.sellerAddress} compact={false} />
+                </div>
+              )}
+              {!deal.sellerAddress && (
+                <div className="grid grid-cols-2 gap-px rounded-xl overflow-hidden" style={{ border: `1px solid ${T.border}` }}>
+                  {[["Total deals", deal.sellerDeals ?? "0"], ["Success rate", "100%"]].map(([l, v], i) => (
+                    <div key={l} className="px-4 py-3 text-center" style={{ background: T.panel, borderRight: i === 0 ? `1px solid ${T.border}` : "none" }}>
+                      <p className="text-[15px] font-bold" style={{ color: T.text }}>{v}</p>
+                      <p className="mt-0.5 text-[10px]" style={{ color: T.textDim }}>{l}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Safety note */}

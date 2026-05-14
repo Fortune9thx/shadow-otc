@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchOnChainDeals, CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS } from "../lib/contract";
+import ReputationBadge from "./ReputationBadge";
 
 /* ─── design tokens ──────────────────────────────────── */
 const T = {
@@ -110,12 +111,15 @@ function DealRow({ deal, onClick }) {
         <p className="text-[13px] font-semibold truncate" style={{ color: T.text }}>
           {deal.intent || "(no description)"}
         </p>
-        <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>
-          {label} &middot; #{deal.id}
-          {deal.buyer && (
-            <span className="hidden sm:inline"> &middot; {deal.buyer.slice(0,6)}...{deal.buyer.slice(-4)}</span>
-          )}
-        </p>
+        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+          <span className="text-[11px]" style={{ color: T.textDim }}>
+            {label} &middot; #{deal.id}
+            {deal.buyer && (
+              <span className="hidden sm:inline"> &middot; {deal.buyer.slice(0,6)}...{deal.buyer.slice(-4)}</span>
+            )}
+          </span>
+          {deal.seller && <ReputationBadge address={deal.seller} compact={true} />}
+        </div>
       </div>
 
       {/* Amount */}

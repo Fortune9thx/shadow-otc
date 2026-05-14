@@ -41,39 +41,65 @@ export default function App() {
     }
   }, []);
 
-  /* ── fetch real listings from backend ───────────────── */
+  /* ── fetch + sync listings ───────────────────────────── */
   useEffect(() => {
     async function load() {
+      // Always start with whatever is in localStorage — instant render
+      const localListings = loadLocalListings();
+
       try {
         const res  = await fetch(API + "/deals");
         const data = await res.json();
-        if (data.deals?.length) {
-          // Merge backend deals with local listings, dedupe by id
-          setDeals(prev => {
-            const backendIds = new Set(data.deals.map(d => String(d.id)));
-            const localOnly  = prev.filter(d => !backendIds.has(String(d.id)));
-            const merged     = [...data.deals, ...localOnly];
-            saveLocalListings(merged);
-            return merged;
-          });
-          const done = data.deals.filter(
-            d => d.status === "Completed" || d.statusId === 3
-          );
-          setSettlements(done);
+        const backendDeals = Array.isArray(data.deals) ? data.deals : [];
 
-          // Resolve pending share link
-          const pending = sessionStorage.getItem("pendingListing");
-          if (pending) {
-            const deal = data.deals.find(d => String(d.id) === pending);
-            if (deal) { setSelectedDeal(deal); setPage("detail"); }
-            sessionStorage.removeItem("pendingListing");
-          }
+        // Dedupe: find listings this device has that the backend doesn't
+        const backendIds = new Set(backendDeals.map(d => String(d.id)));
+        const localOnly  = localListings.filter(d => !backendIds.has(String(d.id)));
+
+        // Merge: backend-authoritative + local-only listings
+        const merged = [...backendDeals, ...localOnly];
+        saveLocalListings(merged);
+        setDeals(merged);
+
+        // ── Self-healing sync ──────────────────────────────────
+        // Push any local-only listings to backend so every other device
+        // can see them. Runs silently in the background — if backend is
+        // asleep (Render free tier), this wakes it up and persists data.
+        if (localOnly.length > 0) {
+          localOnly.forEach(deal => {
+            fetch(API + "/deals", {
+              method:  "POST",
+              headers: { "Content-Type": "application/json" },
+              body:    JSON.stringify(deal),
+            }).catch(() => {}); // non-fatal
+          });
         }
-      } catch {
-        // backend offline - use localStorage listings, no fake data added
+
+        // Settlements
+        const done = merged.filter(
+          d => d.status === "Completed" || d.status === "completed" || d.statusId === 3
+        );
+        setSettlements(done);
+
+        // Resolve pending share link against full merged set
         const pending = sessionStorage.getItem("pendingListing");
         if (pending) {
-          const deal = loadLocalListings().find(d => String(d.id) === pending);
+          const deal = merged.find(d => String(d.id) === pending);
+          if (deal) { setSelectedDeal(deal); setPage("detail"); }
+          sessionStorage.removeItem("pendingListing");
+        }
+
+      } catch {
+        // Backend offline — stay with localStorage, still functional
+        setDeals(localListings);
+        const done = localListings.filter(
+          d => d.status === "Completed" || d.status === "completed"
+        );
+        setSettlements(done);
+
+        const pending = sessionStorage.getItem("pendingListing");
+        if (pending) {
+          const deal = localListings.find(d => String(d.id) === pending);
           if (deal) { setSelectedDeal(deal); setPage("detail"); }
           sessionStorage.removeItem("pendingListing");
         }

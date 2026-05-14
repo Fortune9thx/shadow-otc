@@ -42,10 +42,63 @@ function Tile({ label, value, accent }) {
 }
 
 export default function DealDetails({ deal, wallet, onConnect, onBack }) {
-  const [mode, setMode]       = useState(null);
+  const [mode, setMode]         = useState(null);
   const [offerAmt, setOfferAmt] = useState(deal ? (deal.price * 0.9).toFixed(2) : "");
   const [offerNote, setOfferNote] = useState("");
-  const [done, setDone]       = useState(null);
+  const [done, setDone]         = useState(null);
+  const [signing, setSigning]   = useState(false);
+  const [signature, setSignature] = useState(null);
+
+  async function handleConfirmBuy() {
+    if (!wallet) { onConnect?.(); return; }
+    setSigning(true);
+    try {
+      const message = [
+        "Shadow OTC — Confirm Purchase",
+        `Asset: ${deal.asset}`,
+        `Price: ${deal.price} RITUAL`,
+        `Chain: Ritual Testnet (1979)`,
+        `Timestamp: ${new Date().toISOString()}`,
+      ].join("\n");
+      const sig = await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, wallet],
+      });
+      setSignature(sig);
+      setDone("buy");
+    } catch (err) {
+      if (err?.code !== 4001) console.error("Signing error:", err);
+      // user rejected — stay on confirmation screen, no error shown
+    } finally {
+      setSigning(false);
+    }
+  }
+
+  async function handleSendOffer(e) {
+    e.preventDefault();
+    if (!wallet) { onConnect?.(); return; }
+    setSigning(true);
+    try {
+      const message = [
+        "Shadow OTC — Send Offer",
+        `Asset: ${deal.asset}`,
+        `Offer: ${offerAmt} RITUAL`,
+        `Note: ${offerNote || "(none)"}`,
+        `Chain: Ritual Testnet (1979)`,
+        `Timestamp: ${new Date().toISOString()}`,
+      ].join("\n");
+      const sig = await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, wallet],
+      });
+      setSignature(sig);
+      setDone("offer");
+    } catch (err) {
+      if (err?.code !== 4001) console.error("Signing error:", err);
+    } finally {
+      setSigning(false);
+    }
+  }
 
   if (!deal) return null;
 
@@ -62,17 +115,23 @@ export default function DealDetails({ deal, wallet, onConnect, onBack }) {
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full" style={{ background:"rgba(5,150,105,0.12)", border:"1px solid rgba(5,150,105,0.28)", boxShadow:"0 0 28px rgba(5,150,105,0.12)" }}>
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color:"rgba(52,211,153,0.88)" }}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
           </div>
-          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color:"rgba(52,211,153,0.5)" }}>{done==="buy"?"Purchase Initiated":"Offer Sent"}</p>
-          <h2 className="mb-2 text-[22px] font-semibold tracking-tight" style={{ color:"rgba(255,255,255,0.88)" }}>{done==="buy"?"Funds Locked":"Offer Delivered"}</h2>
-          <p className="mb-7 text-[13px] leading-relaxed" style={{ color:"rgba(255,255,255,0.38)" }}>{done==="buy"?`${deal.price} RITUAL locked in Ritual Chain TEE escrow. The seller has been notified.`:`Your offer of ${offerAmt} RITUAL has been sent. The seller will respond shortly.`}</p>
-          <div className="mb-6 rounded-xl overflow-hidden" style={{ border:"1px solid rgba(255,255,255,0.07)" }}>
-            {[["Asset",deal.asset],["Amount",`${done==="buy"?deal.price:offerAmt} RITUAL`],["Escrow","Ritual TEE · Chain 1979"]].map(([l,v],i)=>(
-              <div key={l} className="flex justify-between px-4 py-3 text-[12px]" style={{ borderBottom:i<2?"1px solid rgba(255,255,255,0.05)":"none", background:i%2===0?"rgba(255,255,255,0.015)":"transparent" }}>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.18em]" style={{ color:"rgba(52,211,153,0.5)" }}>{done==="buy"?"Purchase Signed":"Offer Signed"}</p>
+          <h2 className="mb-2 text-[22px] font-semibold tracking-tight" style={{ color:"rgba(255,255,255,0.88)" }}>{done==="buy"?"Intent Confirmed":"Offer Delivered"}</h2>
+          <p className="mb-7 text-[13px] leading-relaxed" style={{ color:"rgba(255,255,255,0.38)" }}>{done==="buy"?`Your purchase intent for ${deal.price} RITUAL has been wallet-signed. Share this with the seller to coordinate delivery.`:`Your offer of ${offerAmt} RITUAL is wallet-signed. Share this with the seller to start negotiating.`}</p>
+          <div className="mb-4 rounded-xl overflow-hidden" style={{ border:"1px solid rgba(255,255,255,0.07)" }}>
+            {[["Asset",deal.asset],["Amount",`${done==="buy"?deal.price:offerAmt} RITUAL`],["Chain","Ritual Testnet · ID 1979"],["Signer",wallet?`${wallet.slice(0,8)}…${wallet.slice(-6)}`:"—"]].map(([l,v],i)=>(
+              <div key={l} className="flex justify-between px-4 py-3 text-[12px]" style={{ borderBottom:i<3?"1px solid rgba(255,255,255,0.05)":"none", background:i%2===0?"rgba(255,255,255,0.015)":"transparent" }}>
                 <span style={{ color:"rgba(255,255,255,0.30)" }}>{l}</span>
                 <span style={{ color:"rgba(255,255,255,0.72)" }}>{v}</span>
               </div>
             ))}
           </div>
+          {signature && (
+            <div className="mb-6 rounded-xl px-4 py-3" style={{ background:"rgba(5,150,105,0.06)", border:"1px solid rgba(5,150,105,0.18)" }}>
+              <p className="mb-1.5 text-[9px] font-bold uppercase tracking-[0.16em]" style={{ color:"rgba(52,211,153,0.50)" }}>Wallet Signature</p>
+              <p className="font-mono text-[10px] break-all leading-relaxed" style={{ color:"rgba(52,211,153,0.75)" }}>{signature.slice(0,42)}…{signature.slice(-10)}</p>
+            </div>
+          )}
           <EmeraldBtn onClick={onBack} full>Back to Marketplace</EmeraldBtn>
         </div>
       </div>
@@ -205,14 +264,16 @@ export default function DealDetails({ deal, wallet, onConnect, onBack }) {
                   </div>
                 ) : mode==="buy" ? (
                   <div>
-                    <p className="mb-4 text-[12px] leading-relaxed" style={{ color:"rgba(255,255,255,0.38)" }}>This will lock <strong style={{ color:"rgba(255,255,255,0.65)" }}>{deal.price} RITUAL</strong> into Ritual Chain escrow. The seller will be notified to deliver.</p>
+                    <p className="mb-4 text-[12px] leading-relaxed" style={{ color:"rgba(255,255,255,0.38)" }}>This will sign a cryptographic intent to purchase <strong style={{ color:"rgba(255,255,255,0.65)" }}>{deal.price} RITUAL</strong> via your wallet. The seller will be notified to deliver.</p>
                     <div className="space-y-2">
-                      <EmeraldBtn onClick={()=>setDone("buy")} full>Confirm Purchase →</EmeraldBtn>
+                      <EmeraldBtn onClick={handleConfirmBuy} disabled={signing} full>
+                        {signing ? "Waiting for signature…" : "Sign & Confirm Purchase →"}
+                      </EmeraldBtn>
                       <EmeraldBtn outline onClick={()=>setMode(null)} full>Cancel</EmeraldBtn>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={e=>{e.preventDefault();setDone("offer");}} className="space-y-3">
+                  <form onSubmit={handleSendOffer} className="space-y-3">
                     <div>
                       <p className="mb-1.5 text-[11px] font-medium uppercase tracking-[0.14em]" style={{ color:"rgba(255,255,255,0.28)" }}>Your Offer (RITUAL)</p>
                       <div className="relative">
@@ -228,7 +289,7 @@ export default function DealDetails({ deal, wallet, onConnect, onBack }) {
                       <svg className="mt-0.5 h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color:"rgba(52,211,153,0.55)" }}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" /></svg>
                       <p className="text-[11px] leading-relaxed" style={{ color:"rgba(255,255,255,0.35)" }}>AI suggestion: fair range is <strong style={{ color:"rgba(52,211,153,0.75)" }}>{(deal.price*0.85).toFixed(2)} {(deal.price*0.95).toFixed(2)} RITUAL</strong> based on similar deals.</p>
                     </div>
-                    <EmeraldBtn full>Send Offer</EmeraldBtn>
+                    <EmeraldBtn full disabled={signing}>{signing ? "Waiting for signature…" : "Sign & Send Offer"}</EmeraldBtn>
                     <EmeraldBtn outline onClick={()=>setMode(null)} full>Cancel</EmeraldBtn>
                   </form>
                 )}

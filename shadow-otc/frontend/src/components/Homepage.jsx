@@ -623,7 +623,7 @@ export default function Homepage({
               <span style={{ color: T.em }}>on Ritual Chain</span>
             </h1>
             <p className="text-[13px] sm:text-[14px] leading-relaxed max-w-lg mx-auto px-2" style={{ color: T.textSub }}>
-              Discover, negotiate and settle pre-market allocations, airdrops and NFT deals — verified on-chain with autonomous AI agents.
+              Discover, negotiate and settle pre-market token allocations, airdrop rights, and NFT deals — peer-to-peer on Ritual Testnet. Every action is wallet-signed on-chain.
             </p>
           </div>
 

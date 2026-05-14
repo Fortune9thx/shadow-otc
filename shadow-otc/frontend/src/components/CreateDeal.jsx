@@ -148,9 +148,10 @@ function ReviewRow({ label, value, highlight }) {
 }
 
 export default function CreateDeal({ wallet, onConnect, onBack, onSubmit }) {
-  const [step, setStep]     = useState(1);
+  const [step, setStep]         = useState(1);
   const [submitted, setSubmitted] = useState(false);
-  const [form, setForm]     = useState({
+  const [fieldError, setFieldError] = useState(null);
+  const [form, setForm]         = useState({
     side:       "sell",
     category:   "",
     asset:      "",
@@ -184,10 +185,11 @@ export default function CreateDeal({ wallet, onConnect, onBack, onSubmit }) {
 
   function next() {
     const err = validate();
-    if (err) { alert(err); return; }
+    if (err) { setFieldError(err); return; }
+    setFieldError(null);
     setStep((s) => Math.min(s + 1, 5));
   }
-  function back() { setStep((s) => Math.max(s - 1, 1)); }
+  function back() { setFieldError(null); setStep((s) => Math.max(s - 1, 1)); }
 
   function handleSubmit() {
     if (!wallet) { onConnect?.(); return; }
@@ -254,6 +256,19 @@ export default function CreateDeal({ wallet, onConnect, onBack, onSubmit }) {
 
       <main className="mx-auto max-w-2xl px-6 py-8">
         <StepIndicator current={step} />
+
+        {/* ── Inline field error ── */}
+        {fieldError && (
+          <div className="mb-5 flex items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+            <svg className="h-4 w-4 flex-shrink-0 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <p className="text-sm font-medium text-rose-700">{fieldError}</p>
+            <button onClick={() => setFieldError(null)} className="ml-auto text-rose-400 hover:text-rose-600 transition-colors">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        )}
 
         {/* ── STEP 1: Category ─────────────────────────── */}
         {step === 1 && (

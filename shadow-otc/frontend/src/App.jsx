@@ -5,6 +5,7 @@ import CreateDeal      from "./components/CreateDeal";
 import Dashboard       from "./components/Dashboard";
 import PrivateDealRoom from "./components/PrivateDealRoom";
 import MarketPage      from "./components/MarketPage";
+import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
 
 const API              = "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
@@ -48,30 +49,42 @@ export default function App() {
       const localListings = loadLocalListings();
 
       try {
-        const res  = await fetch(API + "/deals");
-        const data = await res.json();
-        const backendDeals = Array.isArray(data.deals) ? data.deals : [];
+        let authoritative = [];
 
-        // Dedupe: find listings this device has that the backend doesn't
-        const backendIds = new Set(backendDeals.map(d => String(d.id)));
-        const localOnly  = localListings.filter(d => !backendIds.has(String(d.id)));
+        // ── 1. Try Supabase first (persistent, cross-device) ──────────
+        if (supabaseConfigured) {
+          const sbDeals = await sbGetDeals();
+          if (sbDeals) authoritative = sbDeals;
+        }
 
-        // Merge: backend-authoritative + local-only listings
-        const merged = [...backendDeals, ...localOnly];
+        // ── 2. Fall back to Render backend if Supabase not configured ─
+        if (!supabaseConfigured || authoritative.length === 0) {
+          try {
+            const res  = await fetch(API + "/deals");
+            const data = await res.json();
+            const renderDeals = Array.isArray(data.deals) ? data.deals : [];
+            if (renderDeals.length > 0) authoritative = renderDeals;
+          } catch { /* Render offline — fine */ }
+        }
+
+        // ── 3. Merge: authoritative + local-only listings ─────────────
+        const authIds   = new Set(authoritative.map(d => String(d.id)));
+        const localOnly = localListings.filter(d => !authIds.has(String(d.id)));
+        const merged    = [...authoritative, ...localOnly];
         saveLocalListings(merged);
         setDeals(merged);
 
-        // ── Self-healing sync ──────────────────────────────────
-        // Push any local-only listings to backend so every other device
-        // can see them. Runs silently in the background — if backend is
-        // asleep (Render free tier), this wakes it up and persists data.
+        // ── 4. Self-healing sync: push local-only to all backends ──────
         if (localOnly.length > 0) {
           localOnly.forEach(deal => {
+            // Push to Supabase if configured
+            if (supabaseConfigured) sbUpsertDeal(deal).catch(() => {});
+            // Also push to Render as secondary backup
             fetch(API + "/deals", {
               method:  "POST",
               headers: { "Content-Type": "application/json" },
               body:    JSON.stringify(deal),
-            }).catch(() => {}); // non-fatal
+            }).catch(() => {});
           });
         }
 
@@ -90,7 +103,7 @@ export default function App() {
         }
 
       } catch {
-        // Backend offline — stay with localStorage, still functional
+        // All backends offline — stay with localStorage, still functional
         setDeals(localListings);
         const done = localListings.filter(
           d => d.status === "Completed" || d.status === "completed"
@@ -183,7 +196,10 @@ export default function App() {
       return updated;
     });
 
-    // POST to backend so every device sees this listing
+    // POST to Supabase (primary) + Render (secondary backup)
+    if (supabaseConfigured) {
+      sbUpsertDeal(stamped).catch(() => {});
+    }
     try {
       await fetch(API + "/deals", {
         method: "POST",
@@ -191,7 +207,7 @@ export default function App() {
         body: JSON.stringify(stamped),
       });
     } catch {
-      // Backend offline — listing still lives in localStorage as fallback
+      // Backend offline — listing still lives in localStorage + Supabase
     }
 
     // Auto-tweet new listing via bot

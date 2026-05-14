@@ -5,7 +5,7 @@
  */
 import { ethers } from "ethers";
 
-export const CONTRACT_ADDRESS = "0xe48aB58BEA9AD3d4c94A3d09c5Fd98320151bF80";
+export const CONTRACT_ADDRESS = "0x644417E2fC010E03E129a35761FF603e69Cc52aC";
 export const RPC_URL          = "https://rpc.ritualfoundation.org";
 
 export const STATUS_LABELS = [
@@ -26,24 +26,38 @@ export const CATEGORY_ICONS = [
 ];
 
 const ABI = [
-  // Read
+  // ── Read (V2 + V3) ─────────────────────────────────────────────
   "function dealCounter() external view returns (uint256)",
   "function getDeal(uint256) external view returns (tuple(address buyer,address seller,address verifier,uint8 category,uint8 status,uint8 verificationMethod,uint8 collateralRequirement,uint256 paymentAmount,uint256 collateralAmount,uint256 commitmentFee,uint256 remainingPayment,uint256 createdAt,uint256 acceptedAt,uint256 deadline,uint256 deliveryClaimedAt,string intent,string conditionUrl,string conditionParams,string deliveryProof,bool requiresCollateral,bool partialPaymentEnabled,bool autoRefundOnExpiry,bool disputed))",
   "function getBuyerDeals(address) external view returns (uint256[])",
   "function getSellerDeals(address) external view returns (uint256[])",
   "function getRequiredCollateral(uint256) external view returns (uint256)",
-  // Write
+  // ── V3: Reputation ─────────────────────────────────────────────
+  "function getReputation(address) external view returns (tuple(uint256 score,uint256 completed,uint256 failed,uint256 disputed,uint256 totalDeals,uint256 totalVolume))",
+  "function getTrustScore(address) external view returns (uint256 score, string memory tier)",
+  // ── V3: Milestones ─────────────────────────────────────────────
+  "function addMilestones(uint256,string[],uint256[]) external",
+  "function approveMilestone(uint256,uint256) external",
+  // ── V3: On-chain verification helpers ──────────────────────────
+  "function verifyNFTOwnership(address,uint256,address) external view returns (bool)",
+  "function verifyTokenBalance(address,address,uint256) external view returns (bool)",
+  // ── V3: Platform stats ─────────────────────────────────────────
+  "function getPlatformStats() external view returns (uint256 locked, uint256 completed, uint256 failed, uint256 total)",
+  // ── Write ──────────────────────────────────────────────────────
   "function createDeal(uint8,string,string,string,uint256,uint256,uint8,uint8) external payable returns (uint256)",
   "function acceptDeal(uint256) external payable",
   "function submitDelivery(uint256,string) external",
   "function cancelDeal(uint256) external",
   "function raiseDispute(uint256,string) external",
-  // Events
+  // ── Events ─────────────────────────────────────────────────────
   "event DealCreated(uint256 indexed dealId,address indexed buyer,uint8 category,uint256 amount,uint256 deadline)",
   "event DealAccepted(uint256 indexed dealId,address indexed seller,uint256 collateral)",
   "event DealCompleted(uint256 indexed dealId,uint256 sellerPayout,uint256 platformFee)",
   "event DealFailed(uint256 indexed dealId,string reason)",
   "event DeliverySubmitted(uint256 indexed dealId,address indexed seller,string proofUrl)",
+  "event DisputeRaised(uint256 indexed dealId,address indexed by,string reason)",
+  "event ReputationUpdated(address indexed user,uint256 newScore,uint256 completed,uint256 total)",
+  "event MilestoneCompleted(uint256 indexed dealId,uint256 milestoneIndex,uint256 amount)",
 ];
 
 /* ── read-only provider (no wallet needed) ── */
@@ -188,5 +202,50 @@ export async function submitDelivery(dealId, proofUrl) {
 export async function cancelDeal(dealId) {
   const contract = await getWriteContract();
   const tx = await contract.cancelDeal(dealId);
+  return tx.wait();
+}
+
+/* ── V3: fetch reputation for any address ── */
+export async function fetchReputation(address) {
+  try {
+    const contract = getContract();
+    const raw = await contract.getReputation(address);
+    return {
+      score:      Number(raw.score),
+      completed:  Number(raw.completed),
+      failed:     Number(raw.failed),
+      disputed:   Number(raw.disputed),
+      totalDeals: Number(raw.totalDeals),
+      totalVolume: ethers.formatEther(raw.totalVolume),
+    };
+  } catch { return null; }
+}
+
+/* ── V3: platform-wide stats ── */
+export async function fetchPlatformStats() {
+  try {
+    const contract = getContract();
+    const s = await contract.getPlatformStats();
+    return {
+      locked:    ethers.formatEther(s.locked),
+      completed: Number(s.completed),
+      failed:    Number(s.failed),
+      total:     Number(s.total),
+    };
+  } catch { return null; }
+}
+
+/* ── V3: add milestones to a deal ── */
+export async function addMilestones(dealId, descriptions, amountsEth) {
+  const contract = await getWriteContract();
+  const amounts  = amountsEth.map(a => ethers.parseEther(String(a)));
+  const tx = await contract.addMilestones(dealId, descriptions, amounts);
+  return tx.wait();
+}
+
+/* ── V3: approve a milestone (buyer or verifier) ── */
+export async function approveMilestone(dealId, milestoneIndex) {
+  const contract = await getWriteContract();
+  const tx = await contract.approveMilestone(dealId, milestoneIndex);
   return tx.wait();
 }

@@ -523,12 +523,42 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
 
               <div className="px-5 py-5 space-y-2.5">
 
+                {/* ── YOUR ROLE BANNER ── always shown when wallet connected ── */}
+                {wallet && deal && (
+                  <div className="flex items-center justify-between rounded-xl px-3.5 py-2.5"
+                    style={isBuyer
+                      ? { background: T.emBg,     border:`1px solid ${T.emBdr}`,    color: T.emMid }
+                      : isSeller
+                      ? { background: "#eff6ff",   border:"1px solid rgba(29,78,216,0.28)", color:"#1d4ed8" }
+                      : { background: T.panel,     border:`1px solid ${T.border}`,  color: T.textDim }}>
+                    <span className="text-[11px] font-bold">
+                      {isBuyer  ? "🛒 You are the Buyer"
+                      : isSeller ? "🔨 You are the Seller"
+                      :            "👁 Observer"}
+                    </span>
+                    {/* Share deal link (shown to buyer or any viewer) */}
+                    <button
+                      onClick={() => {
+                        const url = `${window.location.origin}/#deal=${deal.id}`;
+                        navigator.clipboard.writeText(url).catch(()=>{});
+                        setCopied("share");
+                        setTimeout(()=>setCopied(null), 2000);
+                      }}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                      style={{ background: copied==="share" ? T.em : "rgba(0,0,0,0.06)",
+                               color: copied==="share" ? "#fff" : "inherit" }}>
+                      {copied==="share" ? "✓ Copied!" : "Share Link"}
+                    </button>
+                  </div>
+                )}
+
                 {/* ── NOT CONNECTED ── */}
                 {!wallet && (
                   <Btn full onClick={onConnect}>Connect Wallet to Interact</Btn>
                 )}
 
                 {/* ── OPEN DEAL ── */}
+                {/* Only show Accept Deal to wallets that are NOT the buyer of this deal */}
                 {wallet && isOpen && !isBuyer && (
                   <>
                     <Alert>
@@ -541,14 +571,16 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                       </Alert>
                     )}
                     <Btn full loading={txPending && txLabel.includes("Accept")} onClick={handleAccept}>
-                      ✅ Accept Deal
+                      ✅ Accept Deal as Seller
                     </Btn>
                   </>
                 )}
 
                 {wallet && isOpen && isBuyer && (
                   <>
-                    <Alert>Your deal is open and waiting for a seller to accept.</Alert>
+                    <Alert>
+                      Your deal is live and waiting for a seller. Share the link above to recruit one, or wait for the matching bot to notify sellers automatically.
+                    </Alert>
                     <Btn full danger onClick={handleCancel}
                       loading={txPending && txLabel.includes("Cancel")}>
                       Cancel Deal (refund me)

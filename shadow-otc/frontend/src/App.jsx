@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Homepage        from "./components/Homepage";
 import DealDetails     from "./components/DealDetails";
 import CreateDeal      from "./components/CreateDeal";
@@ -6,7 +6,7 @@ import Dashboard       from "./components/Dashboard";
 import PrivateDealRoom from "./components/PrivateDealRoom";
 import MarketPage      from "./components/MarketPage";
 import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
-import { getContract, parseDeal } from "./lib/contract";
+import { getContract, parseDeal, fetchMyDeals, STATUS_LABELS } from "./lib/contract";
 
 const API              = "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
@@ -22,6 +22,17 @@ function saveLocalListings(listings) {
   try { localStorage.setItem(LS_KEY, JSON.stringify(listings)); } catch {}
 }
 
+/* ── notification toast helpers ─────────────────────── */
+const STATUS_CHANGE_MSGS = {
+  1: "🤝 Seller accepted your deal",
+  2: "📦 Delivery submitted — ready to verify",
+  3: "🔍 Verification agent running",
+  4: "✅ Deal completed! Funds released",
+  5: "❌ Deal failed — buyer refunded",
+  6: "⚠️ Dispute raised",
+  7: "🚫 Deal cancelled",
+};
+
 export default function App() {
   const [page, setPage]                 = useState("home");
   const [wallet, setWallet]             = useState(null);
@@ -30,6 +41,41 @@ export default function App() {
   const [settlements, setSettlements]   = useState([]);
   const [requests, setRequests]         = useState([]);
   const [loading, setLoading]           = useState(true);
+  const [toasts, setToasts]             = useState([]);  // [{id, msg, dealId, ts}]
+  const lastStates                      = useRef({});    // dealId → status
+
+  /* ── notification polling ────────────────────────────── */
+  useEffect(() => {
+    if (!wallet) return;
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const myDeals = await fetchMyDeals(wallet);
+        if (cancelled) return;
+        myDeals.forEach(d => {
+          const prev = lastStates.current[d.id];
+          if (prev !== undefined && prev !== d.status) {
+            const msg = STATUS_CHANGE_MSGS[d.status];
+            if (msg) {
+              const toastId = `${d.id}-${d.status}-${Date.now()}`;
+              setToasts(t => [...t, { id: toastId, msg, dealId: d.id, ts: Date.now() }]);
+              setTimeout(() => setToasts(t => t.filter(x => x.id !== toastId)), 6000);
+            }
+          }
+          lastStates.current[d.id] = d.status;
+        });
+      } catch { /* silent */ }
+    }
+
+    // Seed initial states without triggering toasts
+    fetchMyDeals(wallet)
+      .then(ds => ds.forEach(d => { lastStates.current[d.id] = d.status; }))
+      .catch(() => {});
+
+    const timer = setInterval(poll, 20_000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [wallet]);
 
   /* ── handle share link on load ──────────────────────── */
   useEffect(() => {
@@ -38,8 +84,12 @@ export default function App() {
       const id = hash.split("=")[1];
       sessionStorage.setItem("pendingListing", id);
     }
+    // #deal=N → navigate directly to DealDetails for that on-chain deal
     if (hash.startsWith("#deal=")) {
-      setPage("private");
+      const dealId = Number(hash.split("=")[1]);
+      if (!isNaN(dealId)) {
+        sessionStorage.setItem("pendingDealId", dealId);
+      }
     }
   }, []);
 
@@ -101,6 +151,22 @@ export default function App() {
           const deal = merged.find(d => String(d.id) === pending);
           if (deal) { setSelectedDeal(deal); setPage("detail"); }
           sessionStorage.removeItem("pendingListing");
+        }
+
+        // Resolve #deal=N deep-link — fetch directly from chain
+        const pendingDealId = sessionStorage.getItem("pendingDealId");
+        if (pendingDealId) {
+          sessionStorage.removeItem("pendingDealId");
+          try {
+            const c   = getContract();
+            const raw = await c.getDeal(Number(pendingDealId));
+            const d   = parseDeal(Number(pendingDealId), raw);
+            setSelectedDeal(d);
+            setPage("detail");
+          } catch {
+            setSelectedDeal({ id: Number(pendingDealId), stub: true });
+            setPage("detail");
+          }
         }
 
       } catch {
@@ -255,89 +321,146 @@ export default function App() {
   }
 
   /* ── routing ────────────────────────────────────────── */
-  if (page === "detail" && selectedDeal) {
+  function pageContent() {
+    if (page === "detail" && selectedDeal) {
+      return (
+        <DealDetails
+          deal={selectedDeal}
+          wallet={wallet}
+          onConnect={connectWallet}
+          onBack={goHome}
+        />
+      );
+    }
+    if (page === "create") {
+      return (
+        <CreateDeal
+          wallet={wallet}
+          onConnect={connectWallet}
+          onBack={goHome}
+          onViewDeal={async (dealId) => {
+            try {
+              const contract = getContract();
+              const raw = await contract.getDeal(dealId);
+              const deal = parseDeal(dealId, raw);
+              openDeal(deal);
+            } catch {
+              openDeal({ id: dealId, stub: true });
+            }
+          }}
+        />
+      );
+    }
+    if (page === "dashboard") {
+      return (
+        <Dashboard
+          wallet={wallet}
+          onConnect={connectWallet}
+          onBack={goHome}
+          onDealClick={openDeal}
+        />
+      );
+    }
+    if (page === "private") {
+      return (
+        <PrivateDealRoom
+          wallet={wallet}
+          onConnect={connectWallet}
+          onBack={goHome}
+          deal={selectedDeal}
+        />
+      );
+    }
+    if (page === "market") {
+      return (
+        <MarketPage
+          wallet={wallet}
+          onConnect={connectWallet}
+          onBack={goHome}
+          onDealClick={openDeal}
+          onCreateListing={() => setPage("create")}
+          onDashboard={() => setPage("dashboard")}
+          onStartOTCRoom={() => setPage("private")}
+        />
+      );
+    }
     return (
-      <DealDetails
-        deal={selectedDeal}
+      <Homepage
+        deals={deals}
+        settlements={settlements}
+        requests={requests}
+        loading={loading}
         wallet={wallet}
         onConnect={connectWallet}
-        onBack={goHome}
-      />
-    );
-  }
-
-  if (page === "create") {
-    return (
-      <CreateDeal
-        wallet={wallet}
-        onConnect={connectWallet}
-        onBack={goHome}
-        onViewDeal={async (dealId) => {
-          // Fetch the freshly created deal from chain, then navigate to it
-          try {
-            const contract = getContract();
-            const raw = await contract.getDeal(dealId);
-            const deal = parseDeal(dealId, raw);
-            openDeal(deal);
-          } catch {
-            // Fallback: navigate with minimal stub so DealDetails can re-fetch
-            openDeal({ id: dealId, stub: true });
-          }
-        }}
-      />
-    );
-  }
-
-  if (page === "dashboard") {
-    return (
-      <Dashboard
-        wallet={wallet}
-        onConnect={connectWallet}
-        onBack={goHome}
-        onDealClick={openDeal}
-      />
-    );
-  }
-
-  if (page === "private") {
-    return (
-      <PrivateDealRoom
-        wallet={wallet}
-        onConnect={connectWallet}
-        onBack={goHome}
-        deal={selectedDeal}
-      />
-    );
-  }
-
-  if (page === "market") {
-    return (
-      <MarketPage
-        wallet={wallet}
-        onConnect={connectWallet}
-        onBack={goHome}
         onDealClick={openDeal}
         onCreateListing={() => setPage("create")}
+        onJoinEarlyAccess={handleJoinEarlyAccess}
         onDashboard={() => setPage("dashboard")}
         onStartOTCRoom={() => setPage("private")}
+        onMarket={goMarket}
       />
     );
   }
 
   return (
-    <Homepage
-      deals={deals}
-      settlements={settlements}
-      requests={requests}
-      loading={loading}
-      wallet={wallet}
-      onConnect={connectWallet}
-      onDealClick={openDeal}
-      onCreateListing={() => setPage("create")}
-      onJoinEarlyAccess={handleJoinEarlyAccess}
-      onDashboard={() => setPage("dashboard")}
-      onStartOTCRoom={() => setPage("private")}
-      onMarket={goMarket}
-    />
+    <>
+      {pageContent()}
+
+      {/* ── Notification toasts (fixed overlay — works on all pages) ── */}
+      {toasts.length > 0 && (
+        <div style={{
+          position: "fixed", bottom: 24, right: 20,
+          zIndex: 9999, display: "flex", flexDirection: "column", gap: 8,
+          pointerEvents: "none",
+        }}>
+          {toasts.map(t => (
+            <div key={t.id}
+              style={{
+                pointerEvents: "all",
+                display: "flex", alignItems: "center", gap: 10,
+                background: "#0F1F1A",
+                border: "1px solid rgba(11,107,75,0.40)",
+                borderRadius: 14,
+                padding: "10px 14px",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.30)",
+                cursor: "pointer",
+                minWidth: 240, maxWidth: 320,
+                animation: "slideInToast 0.25s ease",
+              }}
+              onClick={() => {
+                setToasts(prev => prev.filter(x => x.id !== t.id));
+                // Navigate to the deal
+                const c = getContract();
+                c.getDeal(t.dealId)
+                  .then(raw => openDeal(parseDeal(t.dealId, raw)))
+                  .catch(() => openDeal({ id: t.dealId, stub: true }));
+              }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>🔔</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#e2e8f0", margin: 0, lineHeight: 1.4 }}>
+                  Deal #{t.dealId}
+                </p>
+                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", margin: 0, marginTop: 1 }}>
+                  {t.msg}
+                </p>
+              </div>
+              <button
+                onClick={e => { e.stopPropagation(); setToasts(prev => prev.filter(x => x.id !== t.id)); }}
+                style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", background:"none", border:"none", cursor:"pointer", flexShrink:0 }}>
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Toast slide-in keyframe */}
+      <style>{`
+        @keyframes slideInToast {
+          from { opacity:0; transform:translateY(12px); }
+          to   { opacity:1; transform:translateY(0); }
+        }
+      `}</style>
+    </>
   );
 }

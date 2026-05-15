@@ -212,6 +212,28 @@ app.get('/agent-activity', (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Shadow OTC backend running on port ${PORT}`);
-  console.log(`🤖 Telegram bot: ${process.env.TELEGRAM_BOT_TOKEN ? '@ShadowOTC_bot connected' : 'token not set'}`);
   console.log(`📄 Contract V3:  ${process.env.CONTRACT_ADDRESS_V3 || process.env.CONTRACT_ADDRESS_V2 || 'not set'}`);
+
+  // ── Auto-spawn Telegram bot if token is present ──────────────────────────
+  if (process.env.TELEGRAM_BOT_TOKEN) {
+    const botPath = path.join(__dirname, '..', 'agents', 'telegram-bot.js');
+    const bot = spawn('node', [botPath], {
+      env:   { ...process.env },
+      cwd:   path.join(__dirname, '..'),
+      stdio: 'inherit',
+    });
+    bot.on('error', err => console.error('[Bot] Failed to start:', err.message));
+    bot.on('exit',  code => {
+      console.warn(`[Bot] Exited with code ${code} — restarting in 5s…`);
+      setTimeout(() => {
+        const retry = spawn('node', [botPath], {
+          env: { ...process.env }, cwd: path.join(__dirname, '..'), stdio: 'inherit',
+        });
+        retry.on('error', e => console.error('[Bot] Retry failed:', e.message));
+      }, 5000);
+    });
+    console.log('🤖 Telegram bot spawned (@ShadowOTC_bot)');
+  } else {
+    console.warn('⚠️  TELEGRAM_BOT_TOKEN not set — bot not started');
+  }
 });

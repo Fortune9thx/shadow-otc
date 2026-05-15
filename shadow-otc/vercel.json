@@ -1,8 +1,5 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "echo skip",
-  "framework": null,
+  "name": "shadow-otc",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]

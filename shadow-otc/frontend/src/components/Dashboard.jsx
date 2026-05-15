@@ -194,7 +194,7 @@ function NotConnected({ onConnect }) {
 /* ══════════════════════════════════════════════════════════
    MAIN DASHBOARD
 ══════════════════════════════════════════════════════════ */
-export default function Dashboard({ wallet, onConnect, onBack, onDealClick }) {
+export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onStartOTCRoom }) {
   const [deals,       setDeals]       = useState([]);
   const [platformStats, setPlatform]  = useState(null);
   const [loading,     setLoading]     = useState(false);
@@ -333,6 +333,15 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick }) {
           )}
 
           <div className="ml-auto flex items-center gap-2">
+            {/* OTC Room */}
+            {wallet && (
+              <button onClick={onStartOTCRoom}
+                className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all"
+                style={{ background: T.emBg, border: `1px solid ${T.emBdr}`, color: T.em }}>
+                🔒 OTC Room
+              </button>
+            )}
+
             {/* Refresh button */}
             <button onClick={loadDeals} disabled={loading}
               className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all disabled:opacity-40"

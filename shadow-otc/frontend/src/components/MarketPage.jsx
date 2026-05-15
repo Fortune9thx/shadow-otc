@@ -316,6 +316,15 @@ export default function MarketPage({
               </button>
             )}
 
+            {/* OTC Room */}
+            {wallet && (
+              <button onClick={onStartOTCRoom}
+                className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all"
+                style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
+                🔒 OTC Room
+              </button>
+            )}
+
             {/* Connect / wallet pill */}
             {wallet ? (
               <button onClick={onDashboard}

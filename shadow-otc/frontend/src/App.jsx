@@ -8,7 +8,7 @@ import MarketPage      from "./components/MarketPage";
 import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
 import { getContract, parseDeal, fetchMyDeals, STATUS_LABELS } from "./lib/contract";
 
-const API              = "https://shadow-otc.onrender.com";
+const API              = import.meta.env.VITE_API_URL || "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
 
 /* ── load / save listings from localStorage ─────────── */
@@ -358,6 +358,7 @@ export default function App() {
           onConnect={connectWallet}
           onBack={goHome}
           onDealClick={openDeal}
+          onStartOTCRoom={() => setPage("private")}
         />
       );
     }

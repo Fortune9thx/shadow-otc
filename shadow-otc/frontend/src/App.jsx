@@ -91,6 +91,10 @@ export default function App() {
         sessionStorage.setItem("pendingDealId", dealId);
       }
     }
+    // #room=X → open Private Deal Room directly
+    if (hash.startsWith("#room=")) {
+      setPage("private");
+    }
   }, []);
 
   /* ── fetch + sync listings ───────────────────────────── */
@@ -368,7 +372,6 @@ export default function App() {
           wallet={wallet}
           onConnect={connectWallet}
           onBack={goHome}
-          deal={selectedDeal}
         />
       );
     }

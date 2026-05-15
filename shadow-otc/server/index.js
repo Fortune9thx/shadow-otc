@@ -209,6 +209,54 @@ app.get('/agent-activity', (req, res) => {
   res.json({ activity: activityLog.slice(-20) });
 });
 
+// ── PRIVATE DEAL ROOMS ─────────────────────────────────────────────────────────
+// In-memory room store. Rooms expire after 7 days.
+// Structure: { roomId → { buyerWallet, deal, dealId, messages:[{wallet,text,ts}], updatedAt } }
+const rooms = {};
+
+// Evict rooms older than 7 days (run hourly)
+setInterval(() => {
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  Object.keys(rooms).forEach(id => { if (rooms[id]?.updatedAt < cutoff) delete rooms[id]; });
+}, 60 * 60 * 1000);
+
+// GET /rooms/:roomId — fetch room state + messages
+app.get('/rooms/:roomId', (req, res) => {
+  const room = rooms[req.params.roomId];
+  if (!room) return res.json({ exists: false, messages: [] });
+  res.json({ exists: true, ...room });
+});
+
+// PUT /rooms/:roomId — create or patch room (deal terms, dealId, wallets, status)
+app.put('/rooms/:roomId', (req, res) => {
+  const { roomId } = req.params;
+  const prev = rooms[roomId] || { messages: [], updatedAt: 0 };
+  // Only allow patching safe fields — never overwrite messages via PUT
+  const { buyerWallet, deal, dealId, status } = req.body;
+  rooms[roomId] = {
+    ...prev,
+    ...(buyerWallet !== undefined && { buyerWallet }),
+    ...(deal       !== undefined && { deal }),
+    ...(dealId     !== undefined && { dealId }),
+    ...(status     !== undefined && { status }),
+    updatedAt: Date.now(),
+  };
+  res.json({ ok: true, room: rooms[roomId] });
+});
+
+// POST /rooms/:roomId/message — append a chat message
+app.post('/rooms/:roomId/message', (req, res) => {
+  const { roomId } = req.params;
+  const { wallet, text } = req.body;
+  if (!text?.trim()) return res.status(400).json({ error: 'empty message' });
+  if (!rooms[roomId]) rooms[roomId] = { messages: [], updatedAt: Date.now() };
+  if (!rooms[roomId].messages) rooms[roomId].messages = [];
+  rooms[roomId].messages.push({ wallet: wallet || 'anon', text: text.trim(), ts: Date.now() });
+  if (rooms[roomId].messages.length > 200) rooms[roomId].messages.shift();
+  rooms[roomId].updatedAt = Date.now();
+  res.json({ ok: true });
+});
+
 // ── Start ─────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`🚀 Shadow OTC backend running on port ${PORT}`);

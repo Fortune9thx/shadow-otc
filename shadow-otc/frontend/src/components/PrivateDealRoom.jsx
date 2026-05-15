@@ -233,17 +233,200 @@ function DealSummaryPanel({ deal, chainDeal }) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   LOBBY — entry point: create a new room or join existing
+══════════════════════════════════════════════════════════════ */
+function OTCLobby({ wallet, onConnect, onBack, onEnterRoom }) {
+  const [joinInput, setJoinInput] = useState("");
+  const [joinErr,   setJoinErr]   = useState("");
+
+  function handleCreate() {
+    const id = Math.random().toString(36).slice(2, 10).toUpperCase();
+    onEnterRoom(id);
+  }
+
+  function handleJoin() {
+    let raw = joinInput.trim();
+    // Accept full URLs (shadow-otc.vercel.app/#room=ABC123) or bare IDs (ABC123)
+    if (raw.includes("#room=")) raw = raw.split("#room=")[1];
+    else if (raw.includes("room=")) raw = raw.split("room=")[1];
+    raw = raw.split(/[?&#]/)[0].toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!raw) { setJoinErr("Paste a valid room link or room ID"); return; }
+    setJoinErr("");
+    onEnterRoom(raw);
+  }
+
+  return (
+    <div className="min-h-screen antialiased" style={{ background: T.bg }}>
+      <header className="sticky top-0 z-30 border-b"
+        style={{ background: "rgba(240,244,242,0.96)", backdropFilter: "blur(16px)", borderColor: T.border }}>
+        <div className="mx-auto flex h-14 max-w-4xl items-center gap-3 px-4">
+          <button onClick={onBack}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium"
+            style={{ color: T.textSub }}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,0.05)"}
+            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back
+          </button>
+          <div className="h-4 w-px" style={{ background: T.border }}/>
+          <span className="text-[13px] font-semibold" style={{ color: T.text }}>Private OTC Rooms</span>
+          <div className="ml-auto">
+            {wallet ? (
+              <div className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5"
+                style={{ background: T.emBg, border: `1px solid ${T.emBdr}` }}>
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60" style={{ background: T.em }}/>
+                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: T.em }}/>
+                </span>
+                <span className="font-mono text-[12px] font-medium" style={{ color: T.em }}>
+                  {wallet.slice(0,6)}…{wallet.slice(-4)}
+                </span>
+              </div>
+            ) : (
+              <Btn small onClick={onConnect}>Connect Wallet</Btn>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-4xl px-4 py-12">
+        {/* Hero */}
+        <div className="text-center mb-10">
+          <div className="mx-auto mb-4 inline-flex h-14 w-14 items-center justify-center rounded-2xl text-2xl"
+            style={{ background: T.emBg, border: `1px solid ${T.emBdr}`, boxShadow: T.shadow }}>
+            🔒
+          </div>
+          <h1 className="text-[26px] font-bold tracking-tight mb-2" style={{ color: T.text }}>
+            Private OTC Deal Rooms
+          </h1>
+          <p className="text-[14px] max-w-md mx-auto leading-relaxed" style={{ color: T.textSub }}>
+            Negotiate directly with a counterparty. Funds lock in smart contract escrow — an AI agent auto-settles based on delivery proof.
+          </p>
+        </div>
+
+        {/* How it works */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 rounded-2xl overflow-hidden mb-10"
+          style={{ border: `1px solid ${T.border}`, background: T.card, boxShadow: T.shadow }}>
+          {[
+            { n:"01", icon:"🤝", title:"Agree Terms",   desc:"Set asset, price, conditions privately in chat" },
+            { n:"02", icon:"🔒", title:"Lock Escrow",   desc:"Buyer locks RITUAL in ShadowOTCV3 smart contract" },
+            { n:"03", icon:"📦", title:"Deliver Proof", desc:"Seller submits a verifiable delivery proof URL" },
+            { n:"04", icon:"🤖", title:"AI Settles",    desc:"Agent verifies on-chain and releases funds instantly" },
+          ].map((s, i) => (
+            <div key={s.n} className="flex flex-col gap-2 px-5 py-5"
+              style={{ borderRight: i < 3 ? `1px solid ${T.border}` : "none",
+                       borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[9px] font-mono font-bold" style={{ color: T.textDim }}>{s.n}</span>
+                <span className="text-lg">{s.icon}</span>
+              </div>
+              <p className="text-[12px] font-bold" style={{ color: T.text }}>{s.title}</p>
+              <p className="text-[11px] leading-relaxed" style={{ color: T.textSub }}>{s.desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Two action cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+
+          {/* ── Create New Room ── */}
+          <div className="rounded-2xl p-7 flex flex-col"
+            style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl mb-4 text-xl"
+              style={{ background: T.emBg, border: `1px solid ${T.emBdr}` }}>✨</div>
+            <h2 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>Start New Room</h2>
+            <p className="text-[13px] leading-relaxed mb-5 flex-1" style={{ color: T.textSub }}>
+              Generate a private deal room and send the invite link to your counterparty. You'll set the deal terms and lock funds as the buyer.
+            </p>
+            <div className="space-y-1.5 mb-6">
+              {["You control the deal terms","Share invite link with your seller","Lock funds in escrow when ready"].map(t => (
+                <div key={t} className="flex items-center gap-2 text-[12px]" style={{ color: T.textDim }}>
+                  <span style={{ color: T.em }}>✓</span> {t}
+                </div>
+              ))}
+            </div>
+            {wallet
+              ? <Btn full onClick={handleCreate}>✨ Create Private Room</Btn>
+              : <Btn full onClick={onConnect}>Connect Wallet to Start</Btn>
+            }
+          </div>
+
+          {/* ── Join Existing Room ── */}
+          <div className="rounded-2xl p-7 flex flex-col"
+            style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl mb-4 text-xl"
+              style={{ background: "#eff6ff", border: "1px solid rgba(29,78,216,0.20)" }}>🔗</div>
+            <h2 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>Join Existing Room</h2>
+            <p className="text-[13px] leading-relaxed mb-5 flex-1" style={{ color: T.textSub }}>
+              Received an invite link from your counterparty? Paste it below to enter their room as the seller.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5" style={{ color: T.textDim }}>
+                  Paste Room Link or Room ID
+                </p>
+                <textarea
+                  rows={3}
+                  value={joinInput}
+                  onChange={e => { setJoinInput(e.target.value); setJoinErr(""); }}
+                  onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleJoin(); } }}
+                  placeholder={"https://shadow-otc.vercel.app/#room=ABC123\n\nor just paste the room ID: ABC123"}
+                  className="w-full resize-none rounded-xl px-4 py-3 text-[12px] font-mono outline-none"
+                  style={{ background: T.panel, border: `1px solid ${joinErr ? "#fca5a5" : T.borderS}`, color: T.text, lineHeight: 1.6 }}
+                />
+                {joinErr && <p className="mt-1 text-[11px]" style={{ color: T.danger }}>{joinErr}</p>}
+              </div>
+              <Btn full outline onClick={handleJoin} disabled={!joinInput.trim()}>
+                🔗 Enter Room
+              </Btn>
+            </div>
+            <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${T.border}` }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: T.textDim }}>
+                You'll join as the <strong style={{ color: T.textSub }}>seller</strong>. Review the buyer's terms before accepting.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Security note */}
+        <div className="rounded-xl px-5 py-4" style={{ background: T.emBg, border: `1px solid ${T.emBdr}` }}>
+          <div className="flex items-start gap-3">
+            <svg className="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} style={{ color: T.em }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+            </svg>
+            <p className="text-[12px] leading-relaxed" style={{ color: T.emMid }}>
+              Rooms are <strong>invite-only</strong> — only parties with the link can participate. All funds secured in <strong>ShadowOTCV3</strong> on Ritual Testnet. The AI agent settles autonomously — no human override possible.
+            </p>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════ */
 export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
-  /* ── roomId from URL hash ──────────────────────────────── */
-  const [roomId] = useState(() => {
+  /* ── roomId: null shows lobby, string enters the room ─── */
+  const [roomId, setRoomId] = useState(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#room=")) return hash.split("=")[1];
-    const id = Math.random().toString(36).slice(2,10).toUpperCase();
-    history.replaceState(null, "", window.location.pathname + "#room=" + id);
-    return id;
+    return null; // no hash → show lobby
   });
+
+  function enterRoom(id) {
+    const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    history.replaceState(null, "", window.location.pathname + "#room=" + clean);
+    setRoomId(clean);
+  }
+
+  /* Lobby gate — shown when no roomId */
+  if (!roomId) {
+    return <OTCLobby wallet={wallet} onConnect={onConnect} onBack={onBack} onEnterRoom={enterRoom} />;
+  }
 
   const roomLink = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
 

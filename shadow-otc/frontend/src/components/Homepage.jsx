@@ -201,8 +201,19 @@ function AgentFeed() {
       const res = await fetch(`${BASE}/agent-activity`);
       if (!res.ok) throw new Error("no data");
       const data = await res.json();
-      const raw = Array.isArray(data) ? data : (data.logs ?? data.lines ?? []);
-      if (raw.length) setLines(raw.slice(-20));
+      // Backend returns { activity: [{dealId, msg, ts}, ...] }
+      const raw = Array.isArray(data)
+        ? data
+        : (data.activity ?? data.logs ?? data.lines ?? []);
+      if (raw.length) {
+        // Normalize: items may be strings or {dealId, msg, ts} objects
+        const formatted = raw.slice(-20).map(item =>
+          typeof item === "string"
+            ? item
+            : `[Deal #${item.dealId}] ${item.msg}`
+        );
+        setLines(formatted);
+      }
     } catch {
       // backend may be down; show placeholder
       setLines(prev => prev.length ? prev : [

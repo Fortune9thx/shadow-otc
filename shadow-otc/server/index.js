@@ -66,6 +66,8 @@ loadCache();
 app.use(cors({
   origin: [
     'https://shadow-otc.vercel.app',
+    'https://shadowotc.xyz',
+    'https://www.shadowotc.xyz',
     'http://localhost:3000',
     'http://localhost:5000',
     /\.vercel\.app$/,

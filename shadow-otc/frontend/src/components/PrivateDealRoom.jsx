@@ -459,62 +459,43 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     return null; // no hash → show lobby
   });
 
-  function enterRoom(id) {
-    const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    history.replaceState(null, "", window.location.pathname + "#room=" + clean);
-    setRoomId(clean);
-  }
-
-  /* Lobby gate — shown when no roomId */
-  if (!roomId) {
-    return <OTCLobby wallet={wallet} onConnect={onConnect} onBack={onBack} onEnterRoom={enterRoom} />;
-  }
-
-  const roomLink = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
-
-  /* ── state ─────────────────────────────────────────────── */
-  const [roomData,   setRoomData]   = useState(null);   // backend room state
-  const [chainDeal,  setChainDeal]  = useState(null);   // contract deal state
-  const [myRole,     setMyRole]     = useState(null);   // 'buyer'|'seller'|null
-  const [uiStep,     setUiStep]     = useState("loading"); // current UI step
-
-  // form state
+  /* ── ALL hooks must be declared before any conditional return ── */
+  const [roomData,   setRoomData]   = useState(null);
+  const [chainDeal,  setChainDeal]  = useState(null);
+  const [myRole,     setMyRole]     = useState(null);
+  const [uiStep,     setUiStep]     = useState("loading");
   const [form,       setForm]       = useState({ category:"premarket", settlement:"ai-auto" });
-
-  // tx state
   const [txPending,  setTxPending]  = useState(false);
   const [txLabel,    setTxLabel]    = useState("");
   const [error,      setError]      = useState(null);
-
-  // proof
   const [proofUrl,   setProofUrl]   = useState("");
-
-  // chat
   const [chatInput,  setChatInput]  = useState("");
   const [msgs,       setMsgs]       = useState([
-    { wallet:"system", text:`Room #${roomId} — Share the link with your counterparty`, ts: Date.now() }
+    { wallet:"system", text:"Share the invite link with your counterparty to begin", ts: Date.now() }
   ]);
-
-  // agent
   const [agentLogs,  setAgentLogs]  = useState([]);
   const [verifying,  setVerifying]  = useState(false);
   const [verifDone,  setVerifDone]  = useState(null);
-
   const [copied,     setCopied]     = useState(false);
   const chatEndRef       = useRef(null);
   const chatContainerRef = useRef(null);
   const logEndRef        = useRef(null);
 
-  /* ── helpers ─────────────────────────────────────────────── */
-  const myWalletLc = wallet?.toLowerCase();
-
-  function update(key, val) { setForm(f => ({ ...f, [key]: val })); }
-
-  function copyLink() {
-    navigator.clipboard.writeText(roomLink).catch(()=>{});
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  function enterRoom(id) {
+    const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    history.replaceState(null, "", window.location.pathname + "#room=" + clean);
+    setRoomId(clean);
+    // Reset room state when entering a new room
+    setRoomData(null);
+    setChainDeal(null);
+    setMyRole(null);
+    setUiStep("loading");
+    setError(null);
+    setMsgs([{ wallet:"system", text:`Room #${clean} — Share the link with your counterparty`, ts: Date.now() }]);
   }
+
+  /* ── helpers (safe to define before lobby gate) ─────────── */
+  const myWalletLc = wallet?.toLowerCase();
 
   /* ── fetch chain deal ────────────────────────────────────── */
   const loadChainDeal = useCallback(async (dealId) => {
@@ -540,7 +521,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
       if (s === 2) return "can_verify";
       if (s === 3) return "verifying_chain";
       if (s >= 4)  return "done";
-      return "review"; // fallback
+      return "review";
     } else {
       if (!room?.dealId && !chain) return "preview_waiting";
       const s = chain?.status ?? -1;
@@ -554,6 +535,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
 
   /* ── poll backend room every 5s ──────────────────────────── */
   useEffect(() => {
+    if (!roomId) return; // no-op when in lobby
     let cancelled = false;
 
     async function poll() {
@@ -564,7 +546,6 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
         setRoomData(data);
         if (data.messages?.length) setMsgs(data.messages);
 
-        // Determine role
         const w = myWalletLc;
         let role = myRole;
         if (w) {
@@ -578,19 +559,16 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
           if (role !== myRole) setMyRole(role);
         }
 
-        // Load chain deal if we have a dealId
         let chain = chainDeal;
         if (data.dealId && (!chain || chain.id !== Number(data.dealId))) {
           chain = await loadChainDeal(data.dealId);
         } else if (data.dealId && chain) {
-          // Refresh chain state
           chain = await loadChainDeal(data.dealId);
         }
 
         if (role && !txPending) {
           const step = resolveStep(data, chain, role);
           if (step !== uiStep) setUiStep(step);
-          // Pre-fill form from saved deal
           if (data.deal) setForm(f => ({ ...f, ...data.deal }));
         }
       } catch { /* silent */ }
@@ -611,6 +589,21 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     }
   }, [msgs]);
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior:"smooth" }); }, [agentLogs]);
+
+  /* Lobby gate — shown when no roomId (all hooks already declared above) */
+  if (!roomId) {
+    return <OTCLobby wallet={wallet} onConnect={onConnect} onBack={onBack} onEnterRoom={enterRoom} />;
+  }
+
+  const roomLink = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
+
+  function update(key, val) { setForm(f => ({ ...f, [key]: val })); }
+
+  function copyLink() {
+    navigator.clipboard.writeText(roomLink).catch(()=>{});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   /* ── chat ─────────────────────────────────────────────────── */
   async function sendMessage() {

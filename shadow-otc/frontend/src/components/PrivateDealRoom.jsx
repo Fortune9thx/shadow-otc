@@ -6,10 +6,52 @@ import {
   submitDelivery as contractSubmitDelivery,
   CATEGORY_LABELS, CATEGORY_ICONS,
 } from "../lib/contract";
+import {
+  supabaseConfigured,
+  sbGetRoom, sbUpsertRoom, sbAddMessage,
+} from "../lib/supabase";
 import { ethers } from "ethers";
 
 /* ── constants ───────────────────────────────────────────────── */
 const API = import.meta.env.VITE_API_URL || "https://shadow-otc.onrender.com";
+
+/* ── room data layer: Supabase when configured, Render fallback ── */
+async function roomGet(roomId) {
+  if (supabaseConfigured) {
+    const data = await sbGetRoom(roomId);
+    return data ?? { exists: false, messages: [] };
+  }
+  try {
+    const res = await fetch(`${API}/rooms/${roomId}`);
+    return res.ok ? res.json() : { exists: false, messages: [] };
+  } catch { return { exists: false, messages: [] }; }
+}
+
+async function roomPut(roomId, patch) {
+  if (supabaseConfigured) {
+    return sbUpsertRoom(roomId, patch);
+  }
+  try {
+    await fetch(`${API}/rooms/${roomId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+  } catch {}
+}
+
+async function roomMsg(roomId, wallet, text) {
+  if (supabaseConfigured) {
+    return sbAddMessage(roomId, wallet, text);
+  }
+  try {
+    await fetch(`${API}/rooms/${roomId}/message`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ wallet, text }),
+    });
+  } catch {}
+}
 
 const T = {
   bg:      "#F0F4F2",
@@ -174,7 +216,7 @@ function ChatBubble({ msg, myWallet }) {
   return (
     <div className={`flex ${isMe?"justify-end":"justify-start"} mb-2`}>
       {!isMe && (
-        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full mr-2 mt-0.5 text-[9px] font-bold"
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full mr-2 mt-0.5 text-[11px] font-bold"
           style={{ background:T.emBg, border:`1px solid ${T.emBdr}`, color:T.em }}>
           {msg.wallet?.slice(2,4).toUpperCase() ?? "?"}
         </div>
@@ -184,9 +226,9 @@ function ChatBubble({ msg, myWallet }) {
           ? { background:T.emBg, border:`1px solid ${T.emBdr}`, color:T.em, borderBottomRightRadius:4 }
           : { background:T.panel, border:`1px solid ${T.border}`, color:T.textSub, borderBottomLeftRadius:4 }
         }>
-        {!isMe && <p className="font-mono text-[9px] mb-0.5" style={{ color:T.textDim }}>{msg.wallet?.slice(0,6)}…{msg.wallet?.slice(-4)}</p>}
+        {!isMe && <p className="font-mono text-[11px] mb-0.5" style={{ color:T.textDim }}>{msg.wallet?.slice(0,6)}…{msg.wallet?.slice(-4)}</p>}
         {msg.text}
-        <div className="mt-1 text-[9px]" style={{ color: isMe ? T.emMid : T.textDim }}>
+        <div className="mt-1 text-[11px]" style={{ color: isMe ? T.emMid : T.textDim }}>
           {new Date(msg.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
         </div>
       </div>
@@ -319,7 +361,7 @@ function OTCLobby({ wallet, onConnect, onBack, onEnterRoom }) {
               style={{ borderRight: i < 3 ? `1px solid ${T.border}` : "none",
                        borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-mono font-bold" style={{ color: T.textDim }}>{s.n}</span>
+                <span className="text-[11px] font-mono font-bold" style={{ color: T.textDim }}>{s.n}</span>
                 <span className="text-lg">{s.icon}</span>
               </div>
               <p className="text-[12px] font-bold" style={{ color: T.text }}>{s.title}</p>
@@ -372,9 +414,9 @@ function OTCLobby({ wallet, onConnect, onBack, onEnterRoom }) {
                   value={joinInput}
                   onChange={e => { setJoinInput(e.target.value); setJoinErr(""); }}
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleJoin(); } }}
-                  placeholder={"https://shadow-otc.vercel.app/#room=ABC123\n\nor just paste the room ID: ABC123"}
+                  placeholder={"Paste room link or ID"}
                   className="w-full resize-none rounded-xl px-4 py-3 text-[12px] font-mono outline-none"
-                  style={{ background: T.panel, border: `1px solid ${joinErr ? "#fca5a5" : T.borderS}`, color: T.text, lineHeight: 1.6 }}
+                  style={{ fontSize: 16, background: T.panel, border: `1px solid ${joinErr ? "#fca5a5" : T.borderS}`, color: T.text, lineHeight: 1.6 }}
                 />
                 {joinErr && <p className="mt-1 text-[11px]" style={{ color: T.danger }}>{joinErr}</p>}
               </div>
@@ -459,8 +501,9 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   const [verifDone,  setVerifDone]  = useState(null);
 
   const [copied,     setCopied]     = useState(false);
-  const chatEndRef = useRef(null);
-  const logEndRef  = useRef(null);
+  const chatEndRef       = useRef(null);
+  const chatContainerRef = useRef(null);
+  const logEndRef        = useRef(null);
 
   /* ── helpers ─────────────────────────────────────────────── */
   const myWalletLc = wallet?.toLowerCase();
@@ -515,8 +558,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
 
     async function poll() {
       try {
-        const res  = await fetch(`${API}/rooms/${roomId}`);
-        const data = await res.json();
+        const data = await roomGet(roomId);
         if (cancelled) return;
 
         setRoomData(data);
@@ -560,7 +602,14 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet, roomId]);
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior:"smooth" }); }, [msgs]);
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    if (distFromBottom < 120) {
+      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [msgs]);
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior:"smooth" }); }, [agentLogs]);
 
   /* ── chat ─────────────────────────────────────────────────── */
@@ -568,32 +617,19 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     const text = chatInput.trim();
     if (!text || !wallet) return;
     setChatInput("");
-    try {
-      await fetch(`${API}/rooms/${roomId}/message`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ wallet, text }),
-      });
-    } catch {}
+    // Optimistic update
+    setMsgs(m => [...m, { wallet, text, ts: Date.now() }]);
+    await roomMsg(roomId, wallet, text);
   }
 
-  /* ── BUYER: save terms to backend ───────────────────────── */
+  /* ── BUYER: save terms ───────────────────────────────────── */
   async function handleSaveTerms() {
     if (!form.asset || !form.price) { setError("Asset name and price are required"); return; }
     setError(null);
     try {
-      await fetch(`${API}/rooms/${roomId}`, {
-        method:"PUT",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ buyerWallet: wallet, deal: form }),
-      });
-      // System chat message
-      await fetch(`${API}/rooms/${roomId}/message`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ wallet:"system", text:`Buyer set terms: ${form.asset} for ${form.price} RITUAL` }),
-      });
-      setRoomData(r => ({ ...r, exists:true, buyerWallet:wallet, deal:form }));
+      await roomPut(roomId, { buyerWallet: wallet, deal: form });
+      await roomMsg(roomId, "system", `Buyer set terms: ${form.asset} for ${form.price} RITUAL`);
+      setRoomData(r => ({ ...r, exists: true, buyerWallet: wallet, deal: form }));
       setMyRole("buyer");
       setUiStep("review");
     } catch (e) { setError("Failed to save terms: " + e.message); }
@@ -607,7 +643,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     setTxLabel("Locking funds in escrow…");
     try {
       const catId = CAT_MAP[form.category] ?? 7;
-      const { txHash, dealId } = await contractCreateDeal({
+      const { dealId } = await contractCreateDeal({
         category:           catId,
         intent:             `${form.asset}${form.notes ? " — " + form.notes : ""}`,
         conditionUrl:       form.conditionUrl || "",
@@ -618,20 +654,8 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
         verificationMethod: form.settlement === "ai-auto" ? 0 : 2,
         amountEth:          String(form.price),
       });
-
-      // Save dealId to backend room
-      await fetch(`${API}/rooms/${roomId}`, {
-        method:"PUT",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ dealId: dealId, status:"active" }),
-      });
-      await fetch(`${API}/rooms/${roomId}/message`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ wallet:"system", text:`🔒 Funds locked! Deal #${dealId} created on Ritual Chain.` }),
-      });
-
-      // Load and sync chain state
+      await roomPut(roomId, { dealId, status: "active" });
+      await roomMsg(roomId, "system", `🔒 Funds locked! Deal #${dealId} created on Ritual Chain.`);
       const chain = await loadChainDeal(dealId);
       setUiStep(resolveStep({ ...roomData, dealId }, chain, "buyer"));
     } catch (e) {
@@ -649,16 +673,10 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     setTxPending(true);
     setTxLabel("Accepting deal…");
     try {
-      let collateralEth = "0";
-      if (chainDeal?.requiresCollateral && chainDeal?.collateral) {
-        collateralEth = chainDeal.collateral;
-      }
+      const collateralEth = chainDeal?.requiresCollateral && chainDeal?.collateral
+        ? chainDeal.collateral : "0";
       await contractAcceptDeal(chainDeal.id, collateralEth);
-      await fetch(`${API}/rooms/${roomId}/message`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ wallet:"system", text:`✅ Seller accepted Deal #${chainDeal.id}. Complete the work and submit proof.` }),
-      });
+      await roomMsg(roomId, "system", `✅ Seller accepted Deal #${chainDeal.id}. Complete the work and submit proof.`);
       const chain = await loadChainDeal(chainDeal.id);
       setUiStep(resolveStep(roomData, chain, "seller"));
     } catch (e) {
@@ -679,11 +697,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     setTxLabel("Submitting delivery proof…");
     try {
       await contractSubmitDelivery(chainDeal.id, proofUrl.trim());
-      await fetch(`${API}/rooms/${roomId}/message`, {
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({ wallet:"system", text:`📦 Proof submitted for Deal #${chainDeal.id}. Awaiting verification.` }),
-      });
+      await roomMsg(roomId, "system", `📦 Proof submitted for Deal #${chainDeal.id}. Awaiting verification.`);
       const chain = await loadChainDeal(chainDeal.id);
       setUiStep(resolveStep(roomData, chain, "seller"));
       setProofUrl("");
@@ -789,7 +803,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
               <div className="flex h-6 w-6 items-center justify-center rounded text-white text-[10px]"
                 style={{ background:"linear-gradient(135deg,#047857,#064e3b)" }}>🔒</div>
               <span className="text-[13px] font-semibold" style={{ color:T.text }}>Private Deal Room</span>
-              <span className="rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+              <span className="rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
                 style={{ background:T.emBg, border:`1px solid ${T.emBdr}`, color:T.em }}>
                 #{roomId}
               </span>
@@ -824,7 +838,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
           <StepBar steps={steps} current={currentStepLabel} />
         )}
 
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_320px] lg:items-start">
 
           {/* ══ LEFT PANEL ══════════════════════════════════ */}
           <div className="space-y-4">
@@ -1261,10 +1275,10 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
               <div className="flex items-center justify-between px-4 py-3"
                 style={{ borderBottom:`1px solid ${T.border}` }}>
                 <p className="text-[13px] font-semibold" style={{ color:T.text }}>Deal Chat</p>
-                <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
                   style={{ background:T.emBg, color:T.em }}>Live</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-3" style={{ maxHeight:300, minHeight:120 }}>
+              <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3" style={{ maxHeight:300, minHeight:120 }}>
                 {msgs.map((m, i) => (
                   <ChatBubble key={i} msg={m} myWallet={wallet}/>
                 ))}
@@ -1278,11 +1292,11 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
                   onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); sendMessage(); } }}
                   placeholder="Message counterparty…"
                   className="flex-1 rounded-xl px-3 py-2 text-[12px] outline-none"
-                  style={{ background:T.panel, border:`1px solid ${T.border}`, color:T.text }}
+                  style={{ fontSize: 16, background:T.panel, border:`1px solid ${T.border}`, color:T.text }}
                 />
                 <button onClick={sendMessage}
                   disabled={!chatInput.trim()}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-40"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white disabled:opacity-40"
                   style={{ background:T.em }}>
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>

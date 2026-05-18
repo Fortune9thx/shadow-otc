@@ -38,14 +38,6 @@ const CATEGORY_GRID = [
   { id: 11, icon: "⚡", title: "Conditional",        desc: "Custom condition verified by fetching a URL and checking the response." },
 ];
 
-/* ─── deadline options ───────────────────────────────── */
-const DEADLINE_OPTIONS = [
-  { hours: 24,   label: "24 hours" },
-  { hours: 72,   label: "3 days"   },
-  { hours: 168,  label: "7 days"   },
-  { hours: 720,  label: "30 days"  },
-];
-
 /* ─── collateral options ─────────────────────────────── */
 const COLLATERAL_OPTIONS = [
   { value: 0, label: "None",    desc: "Seller posts no collateral." },
@@ -125,12 +117,8 @@ function TextInput({ value, onChange, placeholder, type = "text", min, step, suf
         min={min}
         step={step}
         {...rest}
-        className="w-full rounded-xl border bg-white px-4 py-2.5 text-[13px] outline-none transition-all focus:ring-2"
-        style={{
-          borderColor: T.border,
-          color: T.text,
-          paddingRight: suffix ? "60px" : undefined,
-        }}
+        className="w-full rounded-xl border bg-white px-4 py-3 text-[13px] outline-none transition-all focus:ring-2"
+        style={{ fontSize: 16, ...rest.style, borderColor: T.border, color: T.text, paddingRight: suffix ? "60px" : undefined }}
         onFocus={e => {
           e.currentTarget.style.borderColor = T.em;
           e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(11,107,75,0.10)";
@@ -155,8 +143,8 @@ function TextArea({ value, onChange, placeholder, rows = 3 }) {
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full resize-none rounded-xl border bg-white px-4 py-2.5 text-[13px] outline-none transition-all"
-      style={{ borderColor: T.border, color: T.text }}
+      className="w-full resize-none rounded-xl border bg-white px-4 py-3 text-[13px] outline-none transition-all"
+      style={{ fontSize: 16, borderColor: T.border, color: T.text }}
       onFocus={e => {
         e.currentTarget.style.borderColor = T.em;
         e.currentTarget.style.boxShadow   = "0 0 0 3px rgba(11,107,75,0.10)";
@@ -258,13 +246,6 @@ function LivePreview({ form }) {
             <span style={{ color: "#4ade80" }}>{remaining} RITUAL</span>
           </div>
         </div>
-        {form.deadlineHours > 0 && (
-          <div>
-            <span style={{ color: "rgba(74,222,128,0.70)" }}>expires</span>
-            <span style={{ color: "rgba(255,255,255,0.45)" }}> = </span>
-            <span>{DEADLINE_OPTIONS.find(d => d.hours === form.deadlineHours)?.label ?? `${form.deadlineHours}h`}</span>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -303,7 +284,6 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
     if (step === 2) {
       if (!form.intent.trim())        return "Please describe what you want done.";
       if (!form.conditionUrl.trim())  return "Please enter the condition URL the agent will check.";
-      if (form.deadlineHours <= 0)    return "Please select a deadline.";
     }
     if (step === 3) {
       if (!form.amountEth || parseFloat(form.amountEth) <= 0)
@@ -503,7 +483,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
             <div>
               <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>Deal Terms</h2>
               <p className="text-[13px] mb-6" style={{ color: T.textSub }}>
-                Describe what you want, provide the URL the agent will fetch to verify delivery, and set the deadline.
+                Describe what you want and provide the URL the agent will fetch to verify delivery.
               </p>
 
               <div className="space-y-5 rounded-2xl p-5 sm:p-6"
@@ -552,7 +532,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                     ].map(h => (
                       <button key={h}
                         onClick={() => set("conditionParams", h)}
-                        className="text-[10px] font-mono px-2 py-1 rounded-lg transition-all"
+                        className="text-[12px] font-mono px-3 py-2 rounded-lg transition-all"
                         style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
                         {h}
                       </button>
@@ -565,24 +545,6 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                   />
                 </div>
 
-                {/* Deadline */}
-                <div>
-                  <FieldLabel required>Deadline</FieldLabel>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {DEADLINE_OPTIONS.map(opt => (
-                      <button key={opt.hours}
-                        onClick={() => set("deadlineHours", opt.hours)}
-                        className="rounded-xl py-2.5 text-[13px] font-semibold transition-all"
-                        style={{
-                          border: form.deadlineHours === opt.hours ? `2px solid ${T.em}` : `1px solid ${T.border}`,
-                          background: form.deadlineHours === opt.hours ? T.emBg : "#fff",
-                          color: form.deadlineHours === opt.hours ? T.em : T.text,
-                        }}>
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -593,7 +555,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
           {step === 3 && (
             <>
               {/* Left: form */}
-              <div className="lg:col-span-3">
+              <div className="lg:col-span-3 col-span-full">
                 <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>Escrow Setup</h2>
                 <p className="text-[13px] mb-6" style={{ color: T.textSub }}>
                   Set the amount to lock, commitment fee, collateral from the seller, and verification method.
@@ -601,6 +563,13 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
 
                 <div className="space-y-5 rounded-2xl p-5 sm:p-6"
                   style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+
+                  {/* Collateral & fee clarification note */}
+                  <div className="rounded-xl px-4 py-3" style={{ background: "#EAF4EF", border: "1px solid rgba(11,107,75,0.20)" }}>
+                    <p className="text-[11px]" style={{ color: "#084C38" }}>
+                      💡 <strong>Collateral & Commit Fee</strong> are optional seller protections. If unsure, leave at defaults (0% fee, no collateral). You can configure these to increase deal security.
+                    </p>
+                  </div>
 
                   {/* Amount */}
                   <div>
@@ -700,7 +669,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
               </div>
 
               {/* Right: live preview */}
-              <div className="lg:col-span-2">
+              <div className="hidden lg:block lg:col-span-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider mb-3" style={{ color: T.textDim }}>
                   Live Preview
                 </p>
@@ -741,7 +710,6 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 <ReviewRow label="Intent"       value={form.intent || "—"} />
                 <ReviewRow label="Condition URL" value={form.conditionUrl || "—"} />
                 {form.conditionParams && <ReviewRow label="Condition Params" value={form.conditionParams} />}
-                <ReviewRow label="Deadline" value={DEADLINE_OPTIONS.find(d => d.hours === form.deadlineHours)?.label ?? `${form.deadlineHours}h`} />
                 <ReviewRow label="Amount to Lock" value={`${form.amountEth} RITUAL`} highlight />
                 <ReviewRow label="Commit Fee"     value={`${form.commitFeePercent}%`} />
                 <ReviewRow label="Collateral"
@@ -814,7 +782,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
           {step > 1 && (
             <button onClick={back}
               disabled={txPending}
-              className="flex items-center gap-1.5 rounded-xl px-5 py-2.5 text-[13px] font-semibold transition-all"
+              className="flex items-center gap-1.5 rounded-xl px-5 py-3 text-[13px] font-semibold transition-all"
               style={{ background: "#fff", border: `1px solid ${T.border}`, color: T.text,
                        opacity: txPending ? 0.5 : 1 }}>
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -826,7 +794,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
 
           {step < 4 ? (
             <button onClick={next}
-              className="flex items-center gap-1.5 rounded-xl px-6 py-2.5 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
+              className="flex items-center gap-1.5 rounded-xl px-6 py-3 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
               style={{ background: T.em, boxShadow: "0 4px 12px rgba(11,107,75,0.18)" }}
               onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.08)"}
               onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
@@ -839,7 +807,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
             <button
               onClick={handleLockFunds}
               disabled={txPending || !wallet || !confirmed}
-              className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
+              className="flex items-center gap-2 rounded-xl px-6 py-3 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
               style={{
                 background: txPending ? "rgba(11,107,75,0.60)" : T.em,
                 boxShadow: "0 4px 12px rgba(11,107,75,0.18)",

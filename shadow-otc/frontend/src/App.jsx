@@ -236,6 +236,14 @@ export default function App() {
     return () => window.ethereum.removeListener("accountsChanged", h);
   }, []);
 
+  // Auto-reconnect wallet on page load (no prompt)
+  useEffect(() => {
+    if (!window.ethereum) return;
+    window.ethereum.request({ method: "eth_accounts" })
+      .then(accounts => { if (accounts?.[0]) setWallet(accounts[0]); })
+      .catch(() => {});
+  }, []);
+
   /* ── navigation helpers ─────────────────────────────── */
   function openDeal(deal) {
     setSelectedDeal(deal);

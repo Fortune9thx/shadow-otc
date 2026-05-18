@@ -158,7 +158,7 @@ app.post('/verify/:dealId', (req, res) => {
   send(`[Agent] Starting verification for Deal #${dealId}`);
   send(`[Agent] Max retries: ${maxRetries} · Retry delay: ${retryDelay / 1000}s`);
 
-  const agentPath = path.join(__dirname, '..', 'agents', 'verifier.js');
+  const agentPath = path.join(__dirname, '..', 'agents', 'agents', 'verifier.js');
 
   // Check if verifier key is configured — don't crash if not
   if (!process.env.SELLER_PRIVATE_KEY) {

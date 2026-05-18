@@ -49,6 +49,8 @@ const ABI = [
   "function submitDelivery(uint256,string) external",
   "function cancelDeal(uint256) external",
   "function raiseDispute(uint256,string) external",
+  "function executeDeal(uint256,bool,string) external",
+  "function checkExpiry(uint256) external",
   // ── Events ─────────────────────────────────────────────────────
   "event DealCreated(uint256 indexed dealId,address indexed buyer,uint8 category,uint256 amount,uint256 deadline)",
   "event DealAccepted(uint256 indexed dealId,address indexed seller,uint256 collateral)",
@@ -127,7 +129,7 @@ export function parseDeal(id, d) {
     id,
     buyer:         d.buyer,
     seller:        d.seller === ethers.ZeroAddress ? null : d.seller,
-    verifier:      d.verifier === ethers.ZeroAddress ? null : d.verifier,
+    verifier:      d.verifier,   // keep raw address (zero = unset)
     category:      categoryId,
     categoryLabel: CATEGORY_LABELS[categoryId] ?? "Unknown",
     categoryIcon:  CATEGORY_ICONS[categoryId] ?? "📦",
@@ -140,10 +142,10 @@ export function parseDeal(id, d) {
     intent:        d.intent,
     conditionUrl:  d.conditionUrl,
     deliveryProof: d.deliveryProof || null,
-    deadline:      Number(d.deadline) * 1000,
-    createdAt:     Number(d.createdAt) * 1000,
-    acceptedAt:    d.acceptedAt > 0n ? Number(d.acceptedAt) * 1000 : null,
-    isExpired:     Date.now() > Number(d.deadline) * 1000,
+    deadline:      Number(d.deadline),
+    createdAt:     Number(d.createdAt),
+    acceptedAt:    d.acceptedAt > 0n ? Number(d.acceptedAt) : null,
+    isExpired:     Date.now() > Number(d.deadline),
     requiresCollateral: d.requiresCollateral,
     disputed:      d.disputed,
     // UI helpers
@@ -172,7 +174,7 @@ export async function createDeal({
   const value    = ethers.parseEther(amountEth);
   const tx = await contract.createDeal(
     category, intent, conditionUrl, conditionParams ?? "{}",
-    deadlineHours, commitFeePercent, collateral, verificationMethod,
+    87600000, commitFeePercent, collateral, verificationMethod,
     { value }
   );
   const receipt = await tx.wait();
@@ -247,5 +249,19 @@ export async function addMilestones(dealId, descriptions, amountsEth) {
 export async function approveMilestone(dealId, milestoneIndex) {
   const contract = await getWriteContract();
   const tx = await contract.approveMilestone(dealId, milestoneIndex);
+  return tx.wait();
+}
+
+/* ── Execute deal outcome (verifier or buyer when verifier=address(0)) ── */
+export async function executeDeal(dealId, success, reason = "") {
+  const contract = await getWriteContract();
+  const tx = await contract.executeDeal(dealId, success, reason);
+  return tx.wait();
+}
+
+/* ── Trigger expiry check ── */
+export async function checkExpiry(dealId) {
+  const contract = await getWriteContract();
+  const tx = await contract.checkExpiry(dealId);
   return tx.wait();
 }

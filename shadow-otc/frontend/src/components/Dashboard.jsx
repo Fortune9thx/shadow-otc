@@ -68,12 +68,12 @@ function StatCard({ label, value, sub, accent, loading }) {
   return (
     <div className="rounded-2xl p-4 sm:p-5"
       style={{ background: T.card, border:`1px solid ${T.border}`, boxShadow:"0 1px 3px rgba(0,0,0,0.04)" }}>
-      <div className="text-[10px] font-bold uppercase tracking-[0.12em] mb-2" style={{ color: T.textDim }}>{label}</div>
+      <div className="text-[11px] font-bold uppercase tracking-[0.10em] mb-2" style={{ color: T.textDim }}>{label}</div>
       {loading
         ? <div className="h-7 w-16 rounded-lg animate-pulse" style={{ background: T.surface }}/>
-        : <div className="text-[24px] sm:text-[26px] font-bold tracking-tight" style={{ color: accent || T.text }}>{value}</div>
+        : <div className="text-[26px] font-bold tracking-tight leading-none" style={{ color: accent || T.text }}>{value}</div>
       }
-      {sub && <div className="text-[11px] mt-1" style={{ color: T.textDim }}>{sub}</div>}
+      {sub && <div className="text-[11px] mt-1.5" style={{ color: T.textDim }}>{sub}</div>}
     </div>
   );
 }
@@ -104,7 +104,7 @@ function DealRow({ deal, role, onClick }) {
             {deal.intent || `Deal #${deal.id}`}
           </span>
           {/* Role pill */}
-          <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase"
+          <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-[11px] font-bold uppercase"
             style={ role === "buyer"
               ? { background:"#eff6ff", color:"#1d4ed8", border:"1px solid #bfdbfe" }
               : { background: T.emBg,   color: T.em,     border:`1px solid ${T.emBdr}` }}>
@@ -128,12 +128,12 @@ function DealRow({ deal, role, onClick }) {
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="hidden sm:block text-right flex-shrink-0">
-        <div className="text-[13px] font-bold font-mono" style={{ color: T.em }}>
-          {parseFloat(deal.payment || 0).toFixed(4)}
+      {/* Amount — visible on all screens */}
+      <div className="flex flex-col items-end flex-shrink-0 w-20 sm:w-24">
+        <div className="text-[12px] sm:text-[13px] font-bold font-mono" style={{ color: T.em }}>
+          {parseFloat(deal.payment || 0).toFixed(3)}
         </div>
-        <div className="text-[9px]" style={{ color: T.textDim }}>RITUAL</div>
+        <div className="text-[10px]" style={{ color: T.textDim }}>RITUAL</div>
       </div>
 
       {/* Status */}
@@ -307,7 +307,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
         }}>
         <div className="mx-auto flex h-14 max-w-4xl items-center gap-3 px-4">
           <button onClick={onBack}
-            className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all"
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition-all"
             style={{ color: T.textSub, border:`1px solid ${T.border}` }}
             onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.04)"}
             onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
@@ -322,7 +322,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
 
           {/* Action needed badge */}
           {counts.action > 0 && (
-            <span className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold"
+            <span className="hidden sm:flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold"
               style={{ background:"#fff7ed", border:"1px solid #fed7aa", color:"#c2410c" }}>
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"/>
@@ -336,7 +336,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
             {/* OTC Room */}
             {wallet && (
               <button onClick={onStartOTCRoom}
-                className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all"
+                className="hidden sm:flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[12px] font-medium transition-all"
                 style={{ background: T.emBg, border: `1px solid ${T.emBdr}`, color: T.em }}>
                 🔒 OTC Room
               </button>
@@ -344,7 +344,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
 
             {/* Refresh button */}
             <button onClick={loadDeals} disabled={loading}
-              className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all disabled:opacity-40"
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[12px] font-semibold transition-all disabled:opacity-40"
               style={{ color: T.textSub, border:`1px solid ${T.border}` }}
               title="Refresh from chain"
               onMouseEnter={e=>e.currentTarget.style.background="rgba(0,0,0,0.04)"}
@@ -395,7 +395,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
               style={{ background: T.card, border:`1px solid ${T.border}`, boxShadow:"0 1px 3px rgba(0,0,0,0.04)" }}>
               {SECTION_TABS.map(s => (
                 <button key={s.id} onClick={() => setSection(s.id)}
-                  className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0"
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-3 text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0"
                   style={activeSection === s.id
                     ? { background:"#0F1412", color:"#fff", boxShadow:"0 2px 8px rgba(0,0,0,0.20)" }
                     : { color: T.textSub }}>
@@ -416,7 +416,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                   style={{ borderBottom:`1px solid rgba(11,107,75,0.10)` }}>
                   {FILTER_TABS.map(t => (
                     <button key={t.id} onClick={() => setActiveTab(t.id)}
-                      className="relative flex items-center gap-1.5 px-4 py-2.5 text-[12px] font-semibold transition-all whitespace-nowrap"
+                      className="relative flex items-center gap-1.5 px-4 py-3 text-[12px] font-semibold transition-all whitespace-nowrap"
                       style={{
                         color: activeTab === t.id ? T.text : T.textDim,
                         borderBottom: activeTab === t.id ? `2px solid ${T.em}` : "2px solid transparent",
@@ -424,7 +424,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                       }}>
                       {t.label}
                       {counts[t.id] > 0 && (
-                        <span className="rounded-md px-1.5 py-0.5 text-[9px] font-bold"
+                        <span className="rounded-md px-1.5 py-0.5 text-[11px] font-bold"
                           style={t.alert
                             ? { background:"#c2410c", color:"white" }
                             : activeTab === t.id
@@ -490,7 +490,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                   <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1"
                     style={{ background: T.emBg, border:`1px solid ${T.emBdr}` }}>
                     <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: T.emBr }}/>
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: T.em }}>Live</span>
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: T.em }}>Live</span>
                   </div>
                 )}
               </div>
@@ -530,7 +530,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                       <p className="text-[13px] font-bold font-mono" style={{ color: T.em }}>
                         {parseFloat(deal.payment || 0).toFixed(4)}
                       </p>
-                      <p className="text-[9px]" style={{ color: T.textDim }}>RITUAL</p>
+                      <p className="text-[11px]" style={{ color: T.textDim }}>RITUAL</p>
                     </div>
                   </div>
                 ))

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ReputationBadge from "./ReputationBadge";
 import {
   getContract, getWriteContract, parseDeal,
-  acceptDeal, submitDelivery, cancelDeal,
+  acceptDeal, submitDelivery, cancelDeal, executeDeal,
   CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS,
 } from "../lib/contract";
 import { ethers } from "ethers";
@@ -393,15 +393,14 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 </a>
               )}
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   ["Payment",    `${parseFloat(deal.payment).toFixed(4)} RITUAL`, true],
                   ["Commit Fee", deal.commitFee > 0 ? `${parseFloat(deal.commitFee).toFixed(4)} RITUAL` : "None", false],
                   ["Collateral", deal.collateral ? `${parseFloat(deal.collateral).toFixed(4)} RITUAL` : "None", false],
-                  ["Deadline",   countdown(deal.deadline), deal.isExpired],
                 ].map(([l, v, hi]) => (
                   <div key={l} className="rounded-xl px-4 py-3" style={{ background:T.panel, border:`1px solid ${T.border}` }}>
-                    <p className="text-[10px] font-medium uppercase tracking-[0.14em] mb-1" style={{ color:T.textDim }}>{l}</p>
+                    <p className="text-[11px] font-medium uppercase tracking-[0.14em] mb-1" style={{ color:T.textDim }}>{l}</p>
                     <p className="text-[13px] font-semibold" style={{ color: hi ? T.em : T.text }}>{v}</p>
                   </div>
                 ))}
@@ -415,7 +414,6 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
               <InfoRow label="Seller"      value={deal.seller ? `${deal.seller.slice(0,10)}…${deal.seller.slice(-8)}` : "Awaiting seller"} mono />
               <InfoRow label="Status"      value={statusLabel} highlight />
               <InfoRow label="Created"     value={new Date(deal.createdAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})} />
-              <InfoRow label="Deadline"    value={deadlineStr} />
               {deal.acceptedAt && <InfoRow label="Accepted" value={new Date(deal.acceptedAt).toLocaleDateString()} />}
               {deal.deliveryProof && (
                 <div className="flex items-center justify-between py-2.5" style={{ borderBottom:`1px solid ${T.border}` }}>
@@ -483,7 +481,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 <textarea rows={3} value={disputeMsg} onChange={e=>setDisputeMsg(e.target.value)}
                   placeholder="e.g. Seller has not responded in 48h. Proof URL is inaccessible."
                   className="w-full resize-none rounded-xl border px-4 py-2.5 text-[12px] outline-none"
-                  style={{ borderColor:"#fecdd3", background:T.dangerBg, color:T.text }}/>
+                  style={{ fontSize: 16, borderColor:"#fecdd3", background:T.dangerBg, color:T.text }}/>
                 <div className="flex gap-2">
                   <Btn danger full loading={txPending && txLabel.includes("dispute")}>
                     Submit Dispute
@@ -544,7 +542,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                         setCopied("share");
                         setTimeout(()=>setCopied(null), 2000);
                       }}
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-lg transition-all"
+                      className="text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-all"
                       style={{ background: copied==="share" ? T.em : "rgba(0,0,0,0.06)",
                                color: copied==="share" ? "#fff" : "inherit" }}>
                       {copied==="share" ? "✓ Copied!" : "Share Link"}
@@ -583,7 +581,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                     </Alert>
                     <Btn full danger onClick={handleCancel}
                       loading={txPending && txLabel.includes("Cancel")}>
-                      Cancel Deal (refund me)
+                      Remove Listing
                     </Btn>
                   </>
                 )}
@@ -596,12 +594,12 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                     </Alert>
                     <form onSubmit={handleSubmitDelivery} className="space-y-2">
                       <input
-                        type="url"
+                        type="url" id="proof-url-input"
                         value={proofUrl}
                         onChange={e=>setProofUrl(e.target.value)}
                         placeholder="https://your-proof-url.com"
                         className="w-full rounded-xl border px-4 py-2.5 text-[13px] outline-none"
-                        style={{ borderColor:T.borderS, background:T.panel, color:T.text }}
+                        style={{ fontSize: 16, borderColor:T.borderS, background:T.panel, color:T.text }}
                       />
                       <Btn full loading={txPending && txLabel.includes("delivery")}>
                         📤 Submit Delivery Proof
@@ -642,6 +640,33 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                     <Btn full onClick={handleTriggerVerify}>
                       🤖 Trigger Verification Agent
                     </Btn>
+                    {/* Manual completion — shown when verifier is unset (address(0)) */}
+                    {(!deal.verifier || deal.verifier === "0x0000000000000000000000000000000000000000") && isBuyer && (
+                      <div className="rounded-xl p-3" style={{ background: T.warnBg, border:"1px solid #fde68a" }}>
+                        <p className="text-[11px] font-semibold mb-2" style={{ color: T.warn }}>
+                          ⚡ Manual Settlement (testnet)
+                        </p>
+                        <p className="text-[10px] mb-2" style={{ color: T.warn }}>
+                          No verifier set on this deal. You can settle it directly from your wallet.
+                        </p>
+                        <div className="flex gap-2">
+                          <Btn small full
+                            loading={txPending && txLabel.includes("Complete")}
+                            onClick={() => withTx("Completing deal…", () =>
+                              executeDeal(deal.id, true, "Buyer confirmed delivery")
+                            )}>
+                            ✅ Release Funds to Seller
+                          </Btn>
+                          <Btn small full danger
+                            loading={txPending && txLabel.includes("Refund")}
+                            onClick={() => withTx("Refunding buyer…", () =>
+                              executeDeal(deal.id, false, "Buyer rejected delivery")
+                            )}>
+                            ❌ Refund Me
+                          </Btn>
+                        </div>
+                      </div>
+                    )}
                     {(isBuyer || isSeller) && (
                       <Btn outline full danger onClick={()=>setShowDispute(true)}>Raise Dispute</Btn>
                     )}
@@ -743,7 +768,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                   </div>
                   {deal.buyer && (
                     <button onClick={()=>copy(deal.buyer,"buyer")}
-                      className="text-[10px] px-2 py-1 rounded-lg"
+                      className="text-[11px] px-3 py-1.5 rounded-lg"
                       style={{ background: copied==="buyer"?T.em:"white",
                                color: copied==="buyer"?"white":T.em,
                                border:`1px solid ${T.emBdr}` }}>
@@ -771,7 +796,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                         {isSeller && <p className="text-[10px]" style={{ color:T.em }}>You</p>}
                       </div>
                       <button onClick={()=>copy(deal.seller,"seller")}
-                        className="text-[10px] px-2 py-1 rounded-lg"
+                        className="text-[11px] px-3 py-1.5 rounded-lg"
                         style={{ background: copied==="seller"?T.em:"white",
                                  color: copied==="seller"?"white":T.em,
                                  border:`1px solid ${T.emBdr}` }}>
@@ -818,6 +843,40 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
           </div>
         </div>
       </main>
+
+      {/* ── Sticky mobile action bar ─────────────────────── */}
+      {deal && !isFinal && wallet && (isBuyer || isSeller) && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 sm:hidden px-4 pb-safe"
+          style={{ background: "rgba(240,244,242,0.97)", backdropFilter: "blur(16px)",
+                   borderTop: `1px solid ${T.border}`, paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
+          <div className="py-3 flex gap-2">
+            {isOpen && isBuyer && (
+              <Btn full danger loading={txPending} onClick={handleCancel}>Remove Listing</Btn>
+            )}
+            {isOpen && !isBuyer && (
+              <Btn full loading={txPending} onClick={handleAccept}>✅ Accept Deal as Seller</Btn>
+            )}
+            {isAccepted && isSeller && (
+              <Btn full loading={txPending} onClick={() => document.getElementById('proof-url-input')?.focus()}>
+                📤 Submit Delivery Proof
+              </Btn>
+            )}
+            {isPending && isBuyer && (
+              <Btn full loading={txPending || verifying} onClick={handleTriggerVerify}>
+                🤖 Trigger Verification
+              </Btn>
+            )}
+            {isPending && (isBuyer || isSeller) && (
+              <Btn outline loading={txPending} onClick={() => setShowDispute(true)}>Dispute</Btn>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bottom padding on mobile so sticky bar doesn't cover content */}
+      {deal && !isFinal && wallet && (isBuyer || isSeller) && (
+        <div className="h-24 sm:hidden" />
+      )}
     </div>
   );
 }

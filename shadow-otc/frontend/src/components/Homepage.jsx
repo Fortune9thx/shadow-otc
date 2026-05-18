@@ -41,16 +41,6 @@ const FILTERS = [
   { id: "completed", label: "Completed", status: 4 },
 ];
 
-/* ─── deadline countdown helper ─────────────────────── */
-function countdown(deadlineMs) {
-  const diff = deadlineMs - Date.now();
-  if (diff <= 0) return "Expired";
-  const h = Math.floor(diff / 3600000);
-  if (h < 24) return `${h}h left`;
-  const d = Math.floor(h / 24);
-  return `${d}d left`;
-}
-
 /* ─── loading skeleton row ───────────────────────────── */
 function SkelRow() {
   return (
@@ -90,7 +80,6 @@ function StatusBadge({ statusId }) {
 function DealRow({ deal, onClick }) {
   const icon  = CATEGORY_ICONS[deal.category] ?? "📦";
   const label = CATEGORY_LABELS[deal.category] ?? "Unknown";
-  const dead  = countdown(deal.deadline);
 
   return (
     <div
@@ -106,34 +95,33 @@ function DealRow({ deal, onClick }) {
         {icon}
       </div>
 
-      {/* Intent + category */}
+      {/* Intent + meta */}
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold truncate" style={{ color: T.text }}>
           {deal.intent || "(no description)"}
         </p>
-        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+        <div className="flex items-center gap-2 mt-0.5">
           <span className="text-[11px]" style={{ color: T.textDim }}>
             {label} &middot; #{deal.id}
             {deal.buyer && (
-              <span className="hidden sm:inline"> &middot; {deal.buyer.slice(0,6)}...{deal.buyer.slice(-4)}</span>
+              <span className="hidden sm:inline"> &middot; {deal.buyer.slice(0,6)}…{deal.buyer.slice(-4)}</span>
             )}
           </span>
           {deal.seller && <ReputationBadge address={deal.seller} compact={true} />}
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="hidden sm:block text-right flex-shrink-0">
-        <p className="text-[13px] font-mono font-bold" style={{ color: T.em }}>{parseFloat(deal.payment).toFixed(3)}</p>
+      {/* Amount — visible on all screens */}
+      <div className="flex flex-col items-end flex-shrink-0 w-20 sm:w-24">
+        <p className="text-[12px] sm:text-[13px] font-mono font-bold" style={{ color: T.em }}>
+          {parseFloat(deal.payment).toFixed(3)}
+        </p>
         <p className="text-[10px] font-mono" style={{ color: T.textDim }}>RITUAL</p>
       </div>
 
-      {/* Status */}
-      <StatusBadge statusId={deal.status} />
-
-      {/* Deadline */}
-      <div className="hidden md:block text-right flex-shrink-0 w-16">
-        <p className="text-[11px] font-mono" style={{ color: deal.isExpired ? "#dc2626" : T.textDim }}>{dead}</p>
+      {/* Status badge */}
+      <div className="flex-shrink-0">
+        <StatusBadge statusId={deal.status} />
       </div>
 
       {/* Chevron */}
@@ -164,15 +152,16 @@ function HowItWorks() {
           4-step flow
         </span>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4">
-        {steps.map((s, i) => (
+      {/* gap-px + background = dividers that work at every breakpoint */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px"
+        style={{ background: T.border }}>
+        {steps.map(s => (
           <div key={s.n}
-            className="relative flex flex-col gap-3 px-5 py-5"
-            style={{ borderRight: i < steps.length - 1 ? `1px solid ${T.border}` : "none",
-                     borderBottom: i < 2 ? `1px solid ${T.border}` : "none" }}>
+            className="flex flex-col gap-3 px-5 py-5"
+            style={{ background: T.card }}>
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono font-bold" style={{ color: T.textDim }}>{s.n}</span>
-              <div className="h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0"
+              <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{ background: T.emBg, border: `1px solid ${T.border}` }}>
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}
                   style={{ color: T.em }}>
@@ -181,7 +170,7 @@ function HowItWorks() {
               </div>
             </div>
             <p className="text-[13px] font-bold" style={{ color: T.text }}>{s.title}</p>
-            <p className="text-[11px] leading-relaxed" style={{ color: T.textSub }}>{s.desc}</p>
+            <p className="text-[12px] leading-relaxed" style={{ color: T.textSub }}>{s.desc}</p>
           </div>
         ))}
       </div>
@@ -194,6 +183,7 @@ function AgentFeed() {
   const [lines, setLines]     = useState([]);
   const [loading, setLoading] = useState(true);
   const bottomRef             = useRef(null);
+  const containerRef          = useRef(null);
   const BASE = "https://shadow-otc.onrender.com";
 
   async function fetchActivity() {
@@ -233,7 +223,13 @@ function AgentFeed() {
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = containerRef.current;
+    if (!container) return;
+    const distFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    // Scroll INSIDE the terminal only — never trigger a full-page scroll
+    if (distFromBottom < 120) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [lines]);
 
   return (
@@ -247,7 +243,7 @@ function AgentFeed() {
           <span className="text-[12px] font-bold" style={{ color: "rgba(255,255,255,0.88)" }}>
             Agent Activity Feed
           </span>
-          <span className="text-[9px] font-mono px-2 py-0.5 rounded"
+          <span className="text-[11px] font-mono px-2 py-0.5 rounded"
             style={{ background: "rgba(74,222,128,0.12)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.20)" }}>
             HTTP-FETCH
           </span>
@@ -258,8 +254,8 @@ function AgentFeed() {
       </div>
 
       {/* Terminal body */}
-      <div className="overflow-y-auto px-5 py-4 font-mono text-[11px] leading-relaxed"
-        style={{ minHeight: 120, maxHeight: 200, color: "#4ade80" }}>
+      <div ref={containerRef} className="overflow-y-auto px-4 sm:px-5 py-4 font-mono text-[11px] leading-relaxed"
+        style={{ minHeight: 80, maxHeight: 140, color: "#4ade80" }}>
         {loading ? (
           <span style={{ color: "rgba(74,222,128,0.50)" }}>Connecting to agent...</span>
         ) : lines.length === 0 ? (
@@ -307,21 +303,22 @@ function EmptyState({ onCreateDeal }) {
 
 /* ─── live stats bar ─────────────────────────────────── */
 function StatsBar({ deals, platformStats }) {
-  // Prefer V3 on-chain counters; fall back to computed from deals array
-  const total  = platformStats ? String(platformStats.total)
-               : String(deals.length);
-  const done   = platformStats ? String(platformStats.completed)
-               : String(deals.filter(d => d.status === 4).length);
-  const active = String(
-    deals.filter(d => d.status >= 0 && d.status <= 3).length
-  );
+  const total  = platformStats ? String(platformStats.total) : String(deals.length);
+  const done   = platformStats ? String(platformStats.completed) : String(deals.filter(d => d.status === 4).length);
+  const active = String(deals.filter(d => d.status >= 0 && d.status <= 3).length);
   const locked = platformStats
     ? parseFloat(platformStats.locked).toFixed(3)
     : deals.filter(d => d.status <= 3)
         .reduce((acc, d) => acc + parseFloat(d.payment || "0"), 0)
         .toFixed(3);
 
-  const stats = [
+  const mobileStats = [
+    { label: "Total Deals", value: total,  live: false },
+    { label: "Active",      value: active, live: true  },
+    { label: "Completed",   value: done,   live: false },
+    { label: "Locked",      value: locked, live: true, unit: "RITUAL" },
+  ];
+  const desktopStats = [
     { label: "TOTAL DEALS",   value: total,   live: false },
     { label: "ACTIVE",        value: active,  live: true  },
     { label: "COMPLETED",     value: done,    live: false },
@@ -329,17 +326,21 @@ function StatsBar({ deals, platformStats }) {
     { label: "CHAIN ID",      value: "1979",  live: true  },
   ];
 
+  const wrapStyle = {
+    border: `1px solid ${T.border}`,
+    boxShadow: "0 1px 0 rgba(255,255,255,0.90), 0 4px 16px rgba(0,0,0,0.06)",
+  };
+
   return (
-    <div className="rounded-xl overflow-hidden mb-6"
-      style={{ background: "rgba(255,255,255,0.78)", border: `1px solid ${T.border}`,
-               boxShadow: "0 1px 0 rgba(255,255,255,0.90), 0 4px 16px rgba(0,0,0,0.06)" }}>
-      <div className="flex items-center overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-        {stats.map((s, i) => (
-          <div key={s.label}
-            className="flex-1 flex flex-col items-center py-4 px-3 flex-shrink-0"
-            style={{ borderRight: i < stats.length - 1 ? `1px solid ${T.border}` : "none", minWidth: 80 }}>
-            <div className="flex items-center gap-1 mb-1.5">
-              <span className="text-[9px] font-mono font-bold uppercase tracking-[0.12em]" style={{ color: T.textDim }}>
+    <div className="mb-6">
+      {/* Mobile: 2×2 grid */}
+      <div className="sm:hidden grid grid-cols-2 gap-px rounded-xl overflow-hidden"
+        style={{ ...wrapStyle, background: T.border }}>
+        {mobileStats.map(s => (
+          <div key={s.label} className="flex flex-col items-center py-5 px-4"
+            style={{ background: "rgba(255,255,255,0.90)" }}>
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.08em]" style={{ color: T.textDim }}>
                 {s.label}
               </span>
               {s.live && (
@@ -347,7 +348,34 @@ function StatsBar({ deals, platformStats }) {
                   style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }} />
               )}
             </div>
-            <span className="text-[15px] sm:text-[17px] font-mono font-bold tabular-nums"
+            <span className="text-[24px] font-mono font-bold tabular-nums leading-none"
+              style={{ color: s.live ? T.em : T.text }}>
+              {s.value}
+            </span>
+            {s.unit && (
+              <span className="text-[10px] font-mono mt-1.5" style={{ color: T.textDim }}>{s.unit}</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop: horizontal row */}
+      <div className="hidden sm:flex items-center rounded-xl overflow-hidden"
+        style={{ ...wrapStyle, background: "rgba(255,255,255,0.78)" }}>
+        {desktopStats.map((s, i) => (
+          <div key={s.label}
+            className="flex-1 flex flex-col items-center py-4 px-3"
+            style={{ borderRight: i < desktopStats.length - 1 ? `1px solid ${T.border}` : "none" }}>
+            <div className="flex items-center gap-1 mb-1.5">
+              <span className="text-[11px] font-mono font-bold uppercase tracking-[0.12em]" style={{ color: T.textDim }}>
+                {s.label}
+              </span>
+              {s.live && (
+                <span className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                  style={{ background: T.emBr, animation: "nodeBreath 2.4s ease-in-out infinite" }} />
+              )}
+            </div>
+            <span className="text-[17px] font-mono font-bold tabular-nums"
               style={{ color: s.live ? T.em : T.text, letterSpacing: "-0.01em" }}>
               {s.value}
             </span>
@@ -432,9 +460,13 @@ export default function Homepage({
             <span className="text-[14px] font-bold tracking-tight" style={{ color: T.text }}>
               Shadow<span style={{ color: T.emMid }}>OTC</span>
             </span>
-            <span className="rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+            <span className="hidden sm:inline rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
               style={{ background: "#ecfdf5", border: "1px solid #6ee7b7", color: T.em }}>
               Ritual Testnet
+            </span>
+            <span className="sm:hidden rounded-md px-1 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+              style={{ background: "#ecfdf5", border: "1px solid #6ee7b7", color: T.em }}>
+              Testnet
             </span>
           </div>
 
@@ -492,7 +524,7 @@ export default function Homepage({
             {/* Hamburger */}
             <button
               onClick={() => setMobileNav(v => !v)}
-              className="md:hidden flex flex-col items-center justify-center h-9 w-9 rounded-xl transition-all flex-shrink-0"
+              className="md:hidden flex flex-col items-center justify-center h-11 w-11 rounded-xl transition-all flex-shrink-0"
               style={{
                 background: mobileNav ? "rgba(11,107,75,0.10)" : "rgba(0,0,0,0.04)",
                 border: `1px solid ${T.border}`,
@@ -604,19 +636,19 @@ export default function Homepage({
             Funds release automatically — no middleman.
           </p>
 
-          <div className="flex items-center justify-center gap-3 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto px-2 sm:px-0">
             <button onClick={onCreateListing}
-              className="flex items-center gap-2 rounded-xl px-6 py-2.5 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
+              className="flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-[14px] font-semibold text-white transition-all active:scale-[0.98]"
               style={{ background: T.em, boxShadow: "0 4px 14px rgba(11,107,75,0.20)" }}
               onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.08)"}
               onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
               Create Deal
             </button>
             <button onClick={onDashboard}
-              className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-medium transition-all"
+              className="flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-medium transition-all"
               style={{ background: "rgba(255,255,255,0.75)", border: `1px solid ${T.border}`, color: T.text }}>
               My Deals
             </button>
@@ -643,31 +675,31 @@ export default function Homepage({
           style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
           {/* Table header + filters */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4"
+          <div className="flex flex-col gap-3 px-4 sm:px-5 py-4"
             style={{ borderBottom: `1px solid ${T.border}`, background: T.panel }}>
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: T.textSub }}>
+            <div className="flex items-center justify-between">
+              <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: T.textSub }}>
                 On-Chain Deals
               </span>
               {!loading && hasDeals && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: T.emBr }} />
-                  <span className="text-[10px] font-semibold" style={{ color: T.em }}>
-                    {shown.length} shown
+                  <span className="text-[11px] font-semibold" style={{ color: T.em }}>
+                    {shown.length} listed
                   </span>
                 </div>
               )}
             </div>
 
-            {/* Filter pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            {/* Filter pills — horizontal scroll */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
               {FILTERS.map(f => (
                 <button key={f.id}
                   onClick={() => setFilter(f.id)}
-                  className="rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all whitespace-nowrap flex-shrink-0"
+                  className="rounded-lg px-3.5 py-2 text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0"
                   style={filter === f.id
                     ? { background: T.em, color: "#fff", boxShadow: "0 2px 8px rgba(11,107,75,0.18)" }
-                    : { background: "rgba(255,255,255,0.85)", border: `1px solid ${T.border}`, color: T.textSub }}>
+                    : { background: T.card, border: `1px solid ${T.borderS}`, color: T.textSub }}>
                   {f.label}
                 </button>
               ))}
@@ -679,10 +711,9 @@ export default function Homepage({
             <div className="hidden sm:flex items-center gap-4 px-5 py-2.5"
               style={{ borderBottom: `1px solid ${T.border}`, background: "rgba(0,0,0,0.02)" }}>
               <div className="w-9 flex-shrink-0" />
-              <span className="flex-1 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Deal / Intent</span>
-              <span className="w-24 text-right text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Amount</span>
-              <span className="w-24 text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Status</span>
-              <span className="hidden md:block w-16 text-right text-[9px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Deadline</span>
+              <span className="flex-1 text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Deal / Intent</span>
+              <span className="hidden sm:block w-24 text-right text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Amount</span>
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em]" style={{ color: T.textDim }}>Status</span>
               <div className="w-4" />
             </div>
           )}
@@ -711,23 +742,23 @@ export default function Homepage({
                    border: "1px solid rgba(11,107,75,0.25)" }}>
           <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full blur-3xl"
             style={{ background: "radial-gradient(ellipse 100% 100% at 100% 0%,rgba(11,107,75,0.22) 0%,transparent 70%)" }} />
-          <div className="relative flex flex-col gap-4 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-5 px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-sm">
               <p className="text-[11px] font-bold uppercase tracking-[0.14em] mb-2"
                 style={{ color: "rgba(74,222,128,0.70)" }}>Private OTC</p>
-              <h3 className="text-[16px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.90)" }}>
+              <h3 className="text-[17px] font-semibold mb-2" style={{ color: "rgba(255,255,255,0.90)" }}>
                 Already have a counterparty?
               </h3>
-              <p className="text-[12px] leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <p className="text-[13px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
                 Create a private OTC Room, share an invite link, and settle on-chain without public listings.
               </p>
             </div>
             <button onClick={onStartOTCRoom}
-              className="flex-shrink-0 flex items-center gap-2.5 rounded-xl px-5 py-2.5 text-[13px] font-semibold self-start sm:self-auto transition-all"
-              style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.28)", color: "#059669" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.22)"}
+              className="flex-shrink-0 flex items-center justify-center gap-2.5 rounded-xl px-5 py-3 text-[14px] font-semibold transition-all w-full sm:w-auto"
+              style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.28)", color: "#34d399" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(16,185,129,0.25)"}
               onMouseLeave={e => e.currentTarget.style.background = "rgba(16,185,129,0.15)"}>
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
               </svg>
               Open OTC Room

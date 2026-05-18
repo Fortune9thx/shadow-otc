@@ -116,7 +116,7 @@ function DealRow({ deal, wallet, onClick }) {
             )}
           </span>
           {isMine && (
-            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded"
               style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
               MINE
             </span>
@@ -125,9 +125,9 @@ function DealRow({ deal, wallet, onClick }) {
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="hidden sm:block text-right flex-shrink-0">
-        <p className="text-[13px] font-mono font-bold" style={{ color: T.em }}>
+      {/* Amount — show on all screens */}
+      <div className="flex flex-col items-end flex-shrink-0 w-20 sm:w-24">
+        <p className="text-[12px] sm:text-[13px] font-mono font-bold" style={{ color: T.em }}>
           {parseFloat(deal.payment).toFixed(3)}
         </p>
         <p className="text-[10px] font-mono" style={{ color: T.textDim }}>RITUAL</p>
@@ -280,7 +280,7 @@ export default function MarketPage({
           {/* Title */}
           <div className="flex items-center gap-2">
             <span className="text-[14px] font-bold" style={{ color: T.text }}>Market</span>
-            <span className="rounded-md px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+            <span className="rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
               style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
               Live on-chain
             </span>
@@ -296,7 +296,7 @@ export default function MarketPage({
           <div className="ml-auto flex items-center gap-2">
             {/* Refresh */}
             <button onClick={() => { setLoading(true); loadDeals(); }}
-              className="h-8 w-8 rounded-xl flex items-center justify-center transition-all flex-shrink-0"
+              className="h-11 w-11 rounded-xl flex items-center justify-center transition-all flex-shrink-0"
               style={{ background: T.panel, border: `1px solid ${T.border}` }}
               title="Refresh">
               <svg className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
@@ -378,7 +378,7 @@ export default function MarketPage({
               className="rounded-xl flex flex-col items-center py-3 px-2 text-center"
               style={{ background: T.card, border: `1px solid ${T.border}` }}>
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.10em]"
+                <span className="text-[11px] font-mono font-bold uppercase tracking-[0.10em]"
                   style={{ color: T.textDim }}>{s.label}</span>
                 {s.live && <span className="h-1.5 w-1.5 rounded-full flex-shrink-0"
                   style={{ background: T.emBr, animation: "pulse 2s infinite" }} />}
@@ -407,7 +407,7 @@ export default function MarketPage({
               onChange={e => setSearch(e.target.value)}
               placeholder="Search by intent, wallet, or deal ID…"
               className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-[13px]"
-              style={{ color: T.text }}
+              style={{ fontSize: 16, color: T.text }}
             />
             {search && (
               <button onClick={() => setSearch("")}
@@ -417,7 +417,7 @@ export default function MarketPage({
 
             {/* Mobile filter toggle */}
             <button onClick={() => setMobF(v => !v)}
-              className="sm:hidden h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              className="sm:hidden h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: mobileFilters ? T.emBg : T.panel, border: `1px solid ${T.border}` }}>
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 strokeWidth={2} style={{ color: T.em }}>
@@ -440,7 +440,7 @@ export default function MarketPage({
                 { id: "done",   label: "Done"   },
               ].map(f => (
                 <button key={f.id} onClick={() => setStatus(f.id)}
-                  className="rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all"
+                  className="rounded-lg px-3 py-2 text-[12px] font-semibold transition-all"
                   style={statusFilter === f.id
                     ? { background: T.em, color: "#fff" }
                     : { background: T.card, border: `1px solid ${T.border}`, color: T.textSub }}>
@@ -467,7 +467,7 @@ export default function MarketPage({
             style={{ scrollbarWidth: "none" }}>
             {usedCats.map(c => (
               <button key={String(c.id)} onClick={() => setCatFilter(String(c.id) === catFilter ? "all" : String(c.id))}
-                className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-semibold transition-all flex-shrink-0 whitespace-nowrap"
+                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[12px] font-semibold transition-all flex-shrink-0 whitespace-nowrap"
                 style={String(c.id) === catFilter
                   ? { background: T.em, color: "#fff", border: `1px solid ${T.em}` }
                   : { background: T.panel, color: T.textSub, border: `1px solid ${T.border}` }}>
@@ -544,7 +544,7 @@ export default function MarketPage({
                 Showing {shown.length} of {deals.length} total deals
               </span>
               <button onClick={() => { setLoading(true); loadDeals(); }}
-                className="text-[11px] font-semibold transition-all"
+                className="px-3 py-2 text-[11px] font-semibold transition-all"
                 style={{ color: T.em }}>
                 Refresh
               </button>

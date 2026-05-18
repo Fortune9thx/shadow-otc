@@ -136,7 +136,7 @@ app.post('/notify', async (req, res) => {
   try {
     const emailRes = await new Promise((resolve, reject) => {
       const body = JSON.stringify({
-        from:    'Shadow OTC <notifications@shadowotc.xyz>',
+        from:    'Shadow OTC <onboarding@resend.dev>',
         to:      [email],
         subject: `Deal #${dealId} Update — Shadow OTC`,
         html: `

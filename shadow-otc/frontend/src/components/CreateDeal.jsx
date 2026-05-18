@@ -30,13 +30,14 @@ const T = {
 /* ─── categories for step 1 ─────────────────────────── */
 // indices match CATEGORY_LABELS from contract.js
 const CATEGORY_GRID = [
-  { id: 0,  icon: "📣", title: "Social Media",      desc: "Likes, followers, posts, or social deliverables verified by URL check." },
-  { id: 2,  icon: "💼", title: "Freelance",          desc: "Dev work, design, writing — verified by delivery URL or live site check." },
-  { id: 3,  icon: "🖼️", title: "NFT Transfer",       desc: "NFT delivery confirmed directly on-chain via ownerOf() across any EVM chain." },
-  { id: 4,  icon: "🎫", title: "NFT Whitelist",      desc: "Verify a wallet is on a project's allowlist using their public checker URL." },
-  { id: 5,  icon: "🪂", title: "Airdrop",            desc: "Airdrop eligibility verified via the project's public claim checker URL." },
-  { id: 6,  icon: "🪙", title: "Token Allocation",   desc: "ERC-20 balance confirmed on-chain — no trust in seller reporting required." },
-  { id: 11, icon: "⚡", title: "Conditional",        desc: "Custom condition verified by fetching a URL and checking the response." },
+  { id: 0,  icon: "📣", title: "Social Media",      desc: "Likes, followers, posts or reach — verified via a public URL or metrics API." },
+  { id: 2,  icon: "💼", title: "Freelance / Dev",   desc: "Dev work, design, writing — agent checks a delivery URL or GitHub PR." },
+  { id: 3,  icon: "🖼️", title: "NFT Transfer",      desc: "Verify an NFT landed in the buyer's wallet — checked directly on-chain. Works without a URL." },
+  { id: 4,  icon: "🎫", title: "NFT Whitelist",     desc: "Confirm a wallet is on an allowlist via the project's public checker page." },
+  { id: 5,  icon: "🪂", title: "Airdrop",           desc: "Confirm airdrop eligibility or allocation via the project's public claim page." },
+  { id: 6,  icon: "🪙", title: "Token Allocation",  desc: "Verify an ERC-20 balance on-chain — no URL needed, just the token contract." },
+  { id: 10, icon: "📦", title: "Escrow / Manual",   desc: "Discord roles, wallet submissions, or any deal confirmed by submitting proof. Manual or URL-based." },
+  { id: 11, icon: "⚡", title: "Conditional",       desc: "Custom condition: agent fetches any URL and checks the response for a value or keyword." },
 ];
 
 /* ─── per-category field hints for step 2 ───────────── */
@@ -546,87 +547,166 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
           ══════════════════════════════════════════ */}
           {step === 2 && (
             <div>
-              <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>Deal Terms</h2>
+              {/* Selected category pill */}
+              {form.category !== null && (() => {
+                const cat = CATEGORY_GRID.find(c => c.id === form.category);
+                return cat ? (
+                  <div className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 mb-5 text-[12px] font-semibold"
+                    style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
+                    <span>{cat.icon}</span>{cat.title}
+                  </div>
+                ) : null;
+              })()}
+
+              <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>Describe the deal</h2>
               <p className="text-[13px] mb-6" style={{ color: T.textSub }}>
-                Describe what you want and provide the URL the agent will fetch to verify delivery.
+                Tell the seller what to deliver and how the agent should verify it.
               </p>
 
-              <div className="space-y-5 rounded-2xl p-5 sm:p-6"
-                style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+              <div className="space-y-6">
 
                 {/* Intent */}
-                <div>
-                  <FieldLabel required hint="Be specific — this is what the seller must deliver.">
-                    What do you want done?
-                  </FieldLabel>
+                <div className="rounded-2xl p-5"
+                  style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
+                  <label className="block text-[13px] font-semibold mb-1" style={{ color: T.text }}>
+                    What do you want done? <span style={{ color: "#dc2626" }}>*</span>
+                  </label>
+                  <p className="text-[11px] mb-3" style={{ color: T.textDim }}>Be specific — the seller must deliver exactly this.</p>
                   <TextArea
                     rows={3}
                     value={form.intent}
                     onChange={e => set("intent", e.target.value)}
-                    placeholder="e.g. Post a tweet mentioning @ShadowOTC with at least 50 likes within 3 days."
+                    placeholder={
+                      form.category === 3  ? "e.g. Transfer NFT #42 from collection 0x... to my wallet 0x..." :
+                      form.category === 6  ? "e.g. Send 500 USDC from your wallet to 0x... on Ethereum" :
+                      form.category === 10 ? "e.g. Grant Discord role 'Holder' to my wallet 0x... and send screenshot proof" :
+                      form.category === 0  ? "e.g. Post a tweet mentioning @ShadowOTC with at least 50 likes within 3 days" :
+                      "Describe the deliverable clearly..."
+                    }
                   />
                 </div>
 
-                {/* Condition URL */}
-                <div>
-                  <FieldLabel
-                    required
-                    hint={CATEGORY_HINTS[form.category]?.url || "The HTTP-fetch agent will GET this URL to verify delivery."}>
-                    Condition URL
-                  </FieldLabel>
-                  <TextInput
-                    value={form.conditionUrl}
-                    onChange={e => set("conditionUrl", e.target.value)}
-                    placeholder="https://..."
-                  />
-                  {/* Category-specific call-out */}
-                  {(form.category === 4) && (
-                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
-                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
-                      💡 The agent will automatically append <code className="font-mono">?wallet=0xBUYER</code> to your URL.
-                      Make sure the URL works without the parameter as a base.
-                    </p>
-                  )}
-                  {(form.category === 5) && (
-                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
-                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
-                      💡 The agent will automatically append <code className="font-mono">?address=0xBUYER</code> to your URL.
-                    </p>
-                  )}
-                  {(form.category === 3 || form.category === 6) && (
-                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
-                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
-                      💡 For on-chain verification, leave URL blank and fill the JSON params with contract details.
-                    </p>
-                  )}
-                </div>
+                {/* Verification section — layout changes by category */}
+                <div className="rounded-2xl overflow-hidden"
+                  style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
-                {/* Condition params */}
-                <div>
-                  <FieldLabel hint={CATEGORY_HINTS[form.category]?.params
-                    ? `Format: ${CATEGORY_HINTS[form.category].params}`
-                    : "Leave blank for basic URL-accessibility checks."}>
-                    Condition Parameters
-                  </FieldLabel>
+                  {/* On-chain categories (3, 6) — show params first, URL optional */}
+                  {(form.category === 3 || form.category === 6) ? (
+                    <div className="p-5 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.10em]" style={{ color: T.em }}>
+                          On-chain verification
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                          style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
+                          No URL needed
+                        </span>
+                      </div>
+                      <p className="text-[12px]" style={{ color: T.textSub }}>
+                        {form.category === 3
+                          ? "The agent checks NFT ownership directly on-chain. Fill in the contract details below."
+                          : "The agent checks token balance directly on-chain via balanceOf(). Fill in the contract details below."}
+                      </p>
+                      <div>
+                        <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                          Contract Details <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <TextInput
+                          value={form.conditionParams}
+                          onChange={e => set("conditionParams", e.target.value)}
+                          placeholder={
+                            form.category === 3
+                              ? '{"nftContract":"0x...","tokenId":"42","chain":"eth"}'
+                              : '{"tokenContract":"0x...","minBalance":"100","chain":"eth"}'
+                          }
+                        />
+                        <p className="text-[11px] mt-1.5" style={{ color: T.textDim }}>
+                          Supported chains: eth · bsc · poly · ritual
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                          Explorer URL <span className="font-normal" style={{ color: T.textDim }}>(optional fallback)</span>
+                        </label>
+                        <TextInput
+                          value={form.conditionUrl}
+                          onChange={e => set("conditionUrl", e.target.value)}
+                          placeholder="https://opensea.io/assets/... or leave blank"
+                        />
+                      </div>
+                    </div>
+                  ) : form.category === 10 ? (
+                    /* Escrow / Manual — proof URL only */
+                    <div className="p-5 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.10em]" style={{ color: T.textSub }}>
+                          Proof of delivery
+                        </span>
+                      </div>
+                      <p className="text-[12px]" style={{ color: T.textSub }}>
+                        The seller will submit a proof URL (screenshot link, Notion page, Google Drive, etc.) when they're done.
+                        The agent checks it's accessible. For manual deals, select "Manual" in the next step — no agent runs.
+                      </p>
+                      <div>
+                        <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                          Expected proof URL format <span className="font-normal" style={{ color: T.textDim }}>(optional hint)</span>
+                        </label>
+                        <TextInput
+                          value={form.conditionUrl}
+                          onChange={e => set("conditionUrl", e.target.value)}
+                          placeholder="https://drive.google.com/... or any public URL"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    /* Standard URL-based categories */
+                    <div className="p-5 space-y-4">
+                      <div>
+                        <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                          Condition URL <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <p className="text-[11px] mb-2" style={{ color: T.textDim }}>
+                          {CATEGORY_HINTS[form.category]?.url || "The agent fetches this URL and checks the response to verify delivery."}
+                          {form.category === 4 && " · Buyer wallet auto-appended as ?wallet=0x..."}
+                          {form.category === 5 && " · Buyer address auto-appended as ?address=0x..."}
+                        </p>
+                        <TextInput
+                          value={form.conditionUrl}
+                          onChange={e => set("conditionUrl", e.target.value)}
+                          placeholder="https://..."
+                        />
+                      </div>
 
-                  {/* Dynamic hint chips based on category */}
-                  {(CATEGORY_HINTS[form.category]?.chips?.length > 0) && (
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      {CATEGORY_HINTS[form.category].chips.map(h => (
-                        <button key={h}
-                          onClick={() => set("conditionParams", h)}
-                          className="text-[12px] font-mono px-3 py-2 rounded-lg transition-all"
-                          style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
-                          {h}
-                        </button>
-                      ))}
+                      {/* Params — only show if category has chips or a hint */}
+                      <div>
+                        <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                          Condition <span className="font-normal" style={{ color: T.textDim }}>(optional)</span>
+                        </label>
+                        <p className="text-[11px] mb-2" style={{ color: T.textDim }}>
+                          What the agent should look for in the response. Pick a suggestion or type your own.
+                        </p>
+                        {(CATEGORY_HINTS[form.category]?.chips?.length > 0) && (
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {CATEGORY_HINTS[form.category].chips.map(h => (
+                              <button key={h}
+                                onClick={() => set("conditionParams", h)}
+                                className="rounded-full px-3 py-1.5 text-[11px] font-semibold transition-all"
+                                style={form.conditionParams === h
+                                  ? { background: T.em, color: "#fff", border: `1px solid ${T.em}` }
+                                  : { background: T.panel, color: T.textSub, border: `1px solid ${T.border}` }}>
+                                {h.replace("keyword: ", "").replace('{"contains":"', "contains ").replace('"}"', '"')}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        <TextInput
+                          value={form.conditionParams}
+                          onChange={e => set("conditionParams", e.target.value)}
+                          placeholder={CATEGORY_HINTS[form.category]?.params || "e.g.  keyword: delivered  or leave blank"}
+                        />
+                      </div>
                     </div>
                   )}
-                  <TextInput
-                    value={form.conditionParams}
-                    onChange={e => set("conditionParams", e.target.value)}
-                    placeholder={CATEGORY_HINTS[form.category]?.params || "Optional — leave blank for basic checks"}
-                  />
                 </div>
 
               </div>
@@ -648,12 +728,10 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 <div className="space-y-5 rounded-2xl p-5 sm:p-6"
                   style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
-                  {/* Collateral & fee clarification note */}
-                  <div className="rounded-xl px-4 py-3" style={{ background: "#EAF4EF", border: "1px solid rgba(11,107,75,0.20)" }}>
-                    <p className="text-[11px]" style={{ color: "#084C38" }}>
-                      💡 <strong>Collateral & Commit Fee</strong> are optional seller protections. If unsure, leave at defaults (0% fee, no collateral). You can configure these to increase deal security.
-                    </p>
-                  </div>
+                  {/* Note */}
+                  <p className="text-[12px]" style={{ color: T.textDim }}>
+                    Collateral and commit fee are optional. Leave at defaults if unsure — you can always adjust.
+                  </p>
 
                   {/* Amount */}
                   <div>

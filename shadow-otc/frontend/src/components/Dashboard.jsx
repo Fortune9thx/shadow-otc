@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchMyDeals, fetchPlatformStats, CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS } from "../lib/contract";
 import ReputationBadge from "./ReputationBadge";
+import { sbGetProfile, sbUpsertProfile, supabaseConfigured } from "../lib/supabase";
 
 /* ── design tokens ─────────────────────────────────────── */
 const T = {
@@ -194,6 +195,24 @@ function NotConnected({ onConnect }) {
 /* ══════════════════════════════════════════════════════════
    MAIN DASHBOARD
 ══════════════════════════════════════════════════════════ */
+const ALL_SKILLS = [
+  "NFT Trader", "Token Deals", "Freelance Dev", "Content Creator",
+  "Marketing", "Airdrop Hunter", "Bug Bounty", "Escrow / Delivery",
+];
+
+const PROFILE_LS_KEY = (w) => `shadowotc_profile_${w?.toLowerCase() ?? "anon"}`;
+
+function loadLocalProfile(wallet) {
+  try {
+    const raw = localStorage.getItem(PROFILE_LS_KEY(wallet));
+    return raw ? JSON.parse(raw) : { displayName: "", bio: "", email: "", skills: [] };
+  } catch { return { displayName: "", bio: "", email: "", skills: [] }; }
+}
+
+function saveLocalProfile(wallet, profile) {
+  try { localStorage.setItem(PROFILE_LS_KEY(wallet), JSON.stringify(profile)); } catch {}
+}
+
 export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onStartOTCRoom }) {
   const [deals,       setDeals]       = useState([]);
   const [platformStats, setPlatform]  = useState(null);
@@ -201,6 +220,12 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
   const [lastFetch,   setLastFetch]   = useState(null);
   const [activeTab,   setActiveTab]   = useState("all");
   const [activeSection, setSection]   = useState("deals");
+
+  // ── profile state ──────────────────────────────────────
+  const [profile,     setProfile]     = useState({ displayName: "", bio: "", email: "", skills: [] });
+  const [profileDraft, setDraft]      = useState({ displayName: "", bio: "", email: "", skills: [] });
+  const [profileSaving, setSaving]    = useState(false);
+  const [profileSaved,  setSaved]     = useState(false);
 
   /* ── fetch real on-chain deals for this wallet ─────── */
   async function loadDeals() {
@@ -227,6 +252,33 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
     const timer = setInterval(loadDeals, 30_000);
     return () => clearInterval(timer);
   }, [wallet]);
+
+  // ── load profile ─────────────────────────────────────
+  useEffect(() => {
+    if (!wallet) return;
+    const local = loadLocalProfile(wallet);
+    setProfile(local);
+    setDraft(local);
+    // Merge with Supabase if configured
+    sbGetProfile(wallet).then(remote => {
+      if (!remote) return;
+      const merged = { ...local, ...remote };
+      setProfile(merged);
+      setDraft(merged);
+      saveLocalProfile(wallet, merged);
+    }).catch(() => {});
+  }, [wallet]);
+
+  async function saveProfile() {
+    if (!wallet) return;
+    setSaving(true);
+    saveLocalProfile(wallet, profileDraft);
+    setProfile(profileDraft);
+    await sbUpsertProfile(wallet, profileDraft).catch(() => {});
+    setSaving(false);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2500);
+  }
 
   /* ── role detection per deal ─────────────────────── */
   function getRole(deal) {
@@ -281,6 +333,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
     { id:"deals",       label:"My Deals",    icon:"📋" },
     { id:"settlements", label:"Settlements", icon:"✅" },
     { id:"reputation",  label:"Reputation",  icon:"⭐" },
+    { id:"profile",     label:"Profile",     icon:"👤" },
     { id:"stats",       label:"Platform",    icon:"📊" },
   ];
 
@@ -571,6 +624,154 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                 <p className="text-[11px] mt-4" style={{ color: T.textDim }}>
                   Scores are updated on-chain by the ShadowOTCV3 smart contract after every deal. No one can modify them manually.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* ══ PROFILE ═══════════════════════════════ */}
+          {activeSection === "profile" && (
+            <div className="space-y-4">
+              {/* Wallet identity */}
+              <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
+                style={{ background: T.card, border: `1px solid ${T.border}` }}>
+                <div className="h-10 w-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                  style={{ background: T.emBg, border: `1px solid ${T.emBdr}` }}>👤</div>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-bold truncate" style={{ color: T.text }}>
+                    {profileDraft.displayName || `${wallet.slice(0,6)}…${wallet.slice(-4)}`}
+                  </p>
+                  <p className="text-[11px] font-mono" style={{ color: T.textDim }}>{wallet}</p>
+                </div>
+                <span className="ml-auto text-[11px] px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                  style={{ background: T.emBg, color: T.em, border: `1px solid ${T.emBdr}` }}>
+                  Wallet identity
+                </span>
+              </div>
+
+              {/* All fields optional note */}
+              <div className="rounded-xl px-4 py-3 text-[11px] leading-relaxed"
+                style={{ background: "#fffbeb", border: "1px solid rgba(180,83,9,0.20)", color: "#92400e" }}>
+                ✦ All profile fields are <strong>completely optional</strong> and opt-in.
+                Your wallet address is your permanent identity — everything else is extra.
+                Email is only used to send you deal update notifications.
+              </div>
+
+              {/* Form */}
+              <div className="rounded-2xl p-5 space-y-5"
+                style={{ background: T.card, border: `1px solid ${T.border}` }}>
+
+                {/* Display name */}
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                    Display Name <span className="font-normal text-[11px]" style={{ color: T.textDim }}>(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={profileDraft.displayName}
+                    onChange={e => setDraft(d => ({ ...d, displayName: e.target.value }))}
+                    placeholder="e.g. Shadow Trader or leave blank"
+                    maxLength={40}
+                    className="w-full rounded-xl border px-4 py-3 text-[13px] outline-none transition-all"
+                    style={{ fontSize: 16, borderColor: T.border, color: T.text, background: T.card }}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.em; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(11,107,75,0.10)"; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
+                  />
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                    Notification Email <span className="font-normal text-[11px]" style={{ color: T.textDim }}>(optional — deal status updates only)</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={profileDraft.email}
+                    onChange={e => setDraft(d => ({ ...d, email: e.target.value }))}
+                    placeholder="you@example.com"
+                    className="w-full rounded-xl border px-4 py-3 text-[13px] outline-none transition-all"
+                    style={{ fontSize: 16, borderColor: T.border, color: T.text, background: T.card }}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.em; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(11,107,75,0.10)"; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
+                  />
+                  <p className="text-[11px] mt-1.5" style={{ color: T.textDim }}>
+                    When your deal status changes (accepted, verified, completed, etc.) we'll send you an email.
+                  </p>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
+                    Bio <span className="font-normal text-[11px]" style={{ color: T.textDim }}>(optional)</span>
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={profileDraft.bio}
+                    onChange={e => setDraft(d => ({ ...d, bio: e.target.value }))}
+                    placeholder="Tell other traders what you do…"
+                    maxLength={200}
+                    className="w-full resize-none rounded-xl border px-4 py-3 text-[13px] outline-none transition-all"
+                    style={{ fontSize: 16, borderColor: T.border, color: T.text, background: T.card }}
+                    onFocus={e => { e.currentTarget.style.borderColor = T.em; e.currentTarget.style.boxShadow = "0 0 0 3px rgba(11,107,75,0.10)"; }}
+                    onBlur={e  => { e.currentTarget.style.borderColor = T.border; e.currentTarget.style.boxShadow = "none"; }}
+                  />
+                </div>
+
+                {/* Skills */}
+                <div>
+                  <label className="block text-[12px] font-semibold mb-2" style={{ color: T.textSub }}>
+                    Skills <span className="font-normal text-[11px]" style={{ color: T.textDim }}>(optional — helps with deal matching)</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {ALL_SKILLS.map(skill => {
+                      const active = profileDraft.skills.includes(skill);
+                      return (
+                        <button
+                          key={skill}
+                          onClick={() => setDraft(d => ({
+                            ...d,
+                            skills: active
+                              ? d.skills.filter(s => s !== skill)
+                              : [...d.skills, skill],
+                          }))}
+                          className="rounded-full px-3 py-2 text-[12px] font-semibold transition-all"
+                          style={active
+                            ? { background: T.em,   color: "#fff",       border: `1px solid ${T.em}` }
+                            : { background: T.surface, color: T.textSub, border: `1px solid ${T.border}` }}>
+                          {skill}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Save button */}
+                <div className="flex items-center gap-3 pt-1">
+                  <button
+                    onClick={saveProfile}
+                    disabled={profileSaving}
+                    className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-[13px] font-semibold text-white transition-all disabled:opacity-50"
+                    style={{ background: T.em, boxShadow: "0 4px 12px rgba(11,107,75,0.18)" }}>
+                    {profileSaving ? (
+                      <>
+                        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                        </svg>
+                        Saving…
+                      </>
+                    ) : profileSaved ? (
+                      <>
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Saved!
+                      </>
+                    ) : "Save Profile"}
+                  </button>
+                  <p className="text-[11px]" style={{ color: T.textDim }}>
+                    {supabaseConfigured ? "Saved to Supabase + device" : "Saved to this device"}
+                  </p>
+                </div>
               </div>
             </div>
           )}

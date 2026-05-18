@@ -120,6 +120,72 @@ app.post('/tweet', (req, res) => {
   res.json({ ok: true, note: 'tweet endpoint acknowledged' });
 });
 
+// ── POST /notify — email notification for deal status change ──────────────────
+app.post('/notify', async (req, res) => {
+  const { email, dealId, status, msg } = req.body || {};
+
+  if (!email || !email.includes('@')) {
+    return res.json({ ok: false, note: 'invalid email' });
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.log(`[Notify] RESEND_API_KEY not set — would email ${email}: Deal #${dealId} ${msg}`);
+    return res.json({ ok: true, note: 'email logging only (RESEND_API_KEY not configured)' });
+  }
+
+  try {
+    const emailRes = await new Promise((resolve, reject) => {
+      const body = JSON.stringify({
+        from:    'Shadow OTC <notifications@shadowotc.xyz>',
+        to:      [email],
+        subject: `Deal #${dealId} Update — Shadow OTC`,
+        html: `
+          <div style="font-family:monospace;max-width:480px;margin:0 auto;background:#0F1412;
+                      color:#e2e8f0;padding:28px 24px;border-radius:14px;border:1px solid rgba(11,107,75,0.30)">
+            <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:0.12em;
+                      color:rgba(255,255,255,0.35);text-transform:uppercase">Shadow OTC · Ritual Testnet</p>
+            <p style="margin:0 0 16px;font-size:13px;color:rgba(255,255,255,0.60)">
+              Deal <strong style="color:#fff">#${dealId}</strong> status changed:
+            </p>
+            <p style="margin:0 0 20px;font-size:17px;font-weight:700;color:#4ade80">${msg}</p>
+            <a href="https://shadow-otc.vercel.app/#deal=${dealId}"
+               style="display:inline-block;background:#0B6B4B;color:#fff;padding:10px 20px;
+                      border-radius:10px;text-decoration:none;font-size:13px;font-weight:600">
+              View Deal →
+            </a>
+            <p style="margin:20px 0 0;font-size:11px;color:rgba(255,255,255,0.25)">
+              To stop receiving emails, remove your email from your profile on Shadow OTC.
+            </p>
+          </div>
+        `,
+      });
+
+      const opts = {
+        method:  'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type':  'application/json',
+        },
+      };
+
+      const reqHttp = require('https').request('https://api.resend.com/emails', opts, (r) => {
+        let data = '';
+        r.on('data', c => data += c);
+        r.on('end', () => resolve({ status: r.statusCode, body: data }));
+      });
+      reqHttp.on('error', reject);
+      reqHttp.write(body);
+      reqHttp.end();
+    });
+
+    console.log(`[Notify] Email sent to ${email} for deal #${dealId} (status ${status}) — HTTP ${emailRes.status}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[Notify] Email send failed:', err.message);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
 // ── GET /sellers — return all registered sellers with skills ──────────────────
 app.get('/sellers', (req, res) => {
   const usersFile = path.join(__dirname, '..', 'agents', 'data', 'telegram-users.json');

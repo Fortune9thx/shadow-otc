@@ -45,6 +45,20 @@
  *   CREATE POLICY "public read"   ON room_messages FOR SELECT USING (true);
  *   CREATE POLICY "public insert" ON room_messages FOR INSERT WITH CHECK (true);
  *
+ *   -- Wallet profiles (opt-in display info + notification email)
+ *   CREATE TABLE IF NOT EXISTS profiles (
+ *     wallet       text PRIMARY KEY,
+ *     display_name text,
+ *     bio          text,
+ *     email        text,
+ *     skills       jsonb DEFAULT '[]'::jsonb,
+ *     updated_at   bigint DEFAULT EXTRACT(EPOCH FROM now())::bigint * 1000
+ *   );
+ *   ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ *   CREATE POLICY "public read"   ON profiles FOR SELECT USING (true);
+ *   CREATE POLICY "public insert" ON profiles FOR INSERT WITH CHECK (true);
+ *   CREATE POLICY "public update" ON profiles FOR UPDATE USING (true);
+ *
  * ─────────────────────────────────────────────────────────────────────────
  */
 
@@ -154,6 +168,63 @@ export async function sbUpsertRoom(roomId, { buyerWallet, deal, dealId, status }
       ...(status      !== undefined && { status }),
     };
     const res = await fetch(`${SUPABASE_URL}/rest/v1/rooms`, {
+      method:  "POST",
+      headers: { ...headers(), Prefer: "resolution=merge-duplicates" },
+      body:    JSON.stringify(payload),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   WALLET PROFILES
+   Opt-in display name, bio, skills, email for notifications.
+   Falls back gracefully — all fields are optional.
+═══════════════════════════════════════════════════ */
+
+/**
+ * Fetch a profile by wallet address. Returns null if not found or not configured.
+ */
+export async function sbGetProfile(wallet) {
+  if (!supabaseConfigured || !wallet) return null;
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?wallet=eq.${encodeURIComponent(wallet.toLowerCase())}&select=*`,
+      { headers: headers() }
+    );
+    if (!res.ok) return null;
+    const rows = await res.json();
+    const row  = Array.isArray(rows) ? rows[0] : null;
+    if (!row) return null;
+    return {
+      displayName: row.display_name ?? "",
+      bio:         row.bio          ?? "",
+      email:       row.email        ?? "",
+      skills:      Array.isArray(row.skills) ? row.skills : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Create or update a profile.
+ * Only passes fields that are explicitly provided.
+ */
+export async function sbUpsertProfile(wallet, { displayName, bio, email, skills } = {}) {
+  if (!supabaseConfigured || !wallet) return false;
+  try {
+    const payload = {
+      wallet:      wallet.toLowerCase(),
+      updated_at:  Date.now(),
+      ...(displayName !== undefined && { display_name: displayName }),
+      ...(bio         !== undefined && { bio }),
+      ...(email       !== undefined && { email }),
+      ...(skills      !== undefined && { skills }),
+    };
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
       method:  "POST",
       headers: { ...headers(), Prefer: "resolution=merge-duplicates" },
       body:    JSON.stringify(payload),

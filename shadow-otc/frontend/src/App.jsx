@@ -8,6 +8,15 @@ import MarketPage      from "./components/MarketPage";
 import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
 import { getContract, parseDeal, fetchMyDeals, STATUS_LABELS } from "./lib/contract";
 
+// ── profile helpers (localStorage, no import needed) ──
+const PROFILE_LS_KEY = (w) => `shadowotc_profile_${w?.toLowerCase() ?? "anon"}`;
+function getLocalProfile(wallet) {
+  try {
+    const raw = localStorage.getItem(PROFILE_LS_KEY(wallet));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
 const API              = import.meta.env.VITE_API_URL || "https://shadow-otc.onrender.com";
 const LS_KEY           = "shadowotc_listings_v2";
 
@@ -58,9 +67,20 @@ export default function App() {
           if (prev !== undefined && prev !== d.status) {
             const msg = STATUS_CHANGE_MSGS[d.status];
             if (msg) {
+              // In-app toast
               const toastId = `${d.id}-${d.status}-${Date.now()}`;
               setToasts(t => [...t, { id: toastId, msg, dealId: d.id, ts: Date.now() }]);
               setTimeout(() => setToasts(t => t.filter(x => x.id !== toastId)), 6000);
+
+              // Email notification (non-fatal, fire-and-forget)
+              const profile = getLocalProfile(wallet);
+              if (profile?.email && profile.email.includes("@")) {
+                fetch(API + "/notify", {
+                  method:  "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body:    JSON.stringify({ email: profile.email, dealId: d.id, status: d.status, msg }),
+                }).catch(() => {});
+              }
             }
           }
           lastStates.current[d.id] = d.status;

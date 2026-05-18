@@ -27,16 +27,81 @@ const T = {
   shadow:  "0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06)",
 };
 
-/* ─── categories for step 1 (most common 6) ─────────── */
+/* ─── categories for step 1 ─────────────────────────── */
 // indices match CATEGORY_LABELS from contract.js
 const CATEGORY_GRID = [
   { id: 0,  icon: "📣", title: "Social Media",      desc: "Likes, followers, posts, or social deliverables verified by URL check." },
   { id: 2,  icon: "💼", title: "Freelance",          desc: "Dev work, design, writing — verified by delivery URL or live site check." },
-  { id: 3,  icon: "🖼️", title: "NFT Transfer",       desc: "NFT delivery, whitelist spot, or collection access." },
-  { id: 5,  icon: "🪂", title: "Airdrop",            desc: "Airdrop allocation delivery verified against wallet or claim page." },
-  { id: 6,  icon: "🪙", title: "Token Allocation",   desc: "Pre-TGE token deal with on-chain or off-chain delivery proof." },
+  { id: 3,  icon: "🖼️", title: "NFT Transfer",       desc: "NFT delivery confirmed directly on-chain via ownerOf() across any EVM chain." },
+  { id: 4,  icon: "🎫", title: "NFT Whitelist",      desc: "Verify a wallet is on a project's allowlist using their public checker URL." },
+  { id: 5,  icon: "🪂", title: "Airdrop",            desc: "Airdrop eligibility verified via the project's public claim checker URL." },
+  { id: 6,  icon: "🪙", title: "Token Allocation",   desc: "ERC-20 balance confirmed on-chain — no trust in seller reporting required." },
   { id: 11, icon: "⚡", title: "Conditional",        desc: "Custom condition verified by fetching a URL and checking the response." },
 ];
+
+/* ─── per-category field hints for step 2 ───────────── */
+const CATEGORY_HINTS = {
+  0:  {
+    url:    "Twitter/X post URL, or a social metrics API endpoint",
+    params: "likes: 100   or   followers: 500   or   views: 1000",
+    chips:  ["likes: 100", "followers: 500", "views: 1000", "retweets: 50"],
+  },
+  1:  {
+    url:    "URL of the published content (blog post, article, video, etc.)",
+    params: "keyword: ShadowOTC  — agent checks the page contains this word",
+    chips:  ["keyword: ShadowOTC", "keyword: Ritual", "status: published"],
+  },
+  2:  {
+    url:    "GitHub PR/issue URL or live delivery URL (must return HTTP 200)",
+    params: "Leave blank — URL accessibility is the verification signal",
+    chips:  [],
+  },
+  3:  {
+    url:    "NFT explorer URL, or leave blank and use conditionParams for on-chain check",
+    params: '{"nftContract":"0x...","tokenId":"42","chain":"eth"}',
+    chips:  [],
+  },
+  4:  {
+    url:    "Project allowlist checker URL — buyer wallet appended as ?wallet=0x...",
+    params: "keyword: whitelisted   or   keyword: eligible",
+    chips:  ["keyword: whitelisted", "keyword: allowlisted", "keyword: eligible"],
+  },
+  5:  {
+    url:    "Airdrop eligibility checker URL — buyer address appended as ?address=0x...",
+    params: "keyword: eligible   or   keyword: allocation",
+    chips:  ["keyword: eligible", "keyword: allocation", "keyword: claim"],
+  },
+  6:  {
+    url:    "Token balance page URL, or leave blank to check on-chain via conditionParams",
+    params: '{"tokenContract":"0x...","minBalance":"100","chain":"eth"}',
+    chips:  [],
+  },
+  7:  {
+    url:    "Price feed JSON endpoint (CoinGecko, CoinMarketCap, Binance API, etc.)",
+    params: '{"targetPrice":"0.50"}  — releases when price ≥ target',
+    chips:  [],
+  },
+  8:  {
+    url:    "URL of the page where the promotion must appear",
+    params: 'keyword: ShadowOTC   or   link: shadow-otc.vercel.app',
+    chips:  ["keyword: ShadowOTC", "keyword: Ritual", "link: shadow-otc.vercel.app"],
+  },
+  9:  {
+    url:    "GitHub issue/PR URL or bug report platform URL",
+    params: "Leave blank — URL accessibility and PR merge status are checked",
+    chips:  [],
+  },
+  10: {
+    url:    "Delivery proof URL the seller will submit (IPFS, Google Drive, Notion, etc.)",
+    params: "Leave blank — HTTP 200 on the proof URL confirms delivery",
+    chips:  [],
+  },
+  11: {
+    url:    "Any URL that returns readable data — API, dashboard, live page, etc.",
+    params: '{"contains":"active"}   or   {"minValue":1000}',
+    chips:  ['{"contains":"active"}', '{"minValue":1000}', '{"containsAll":["done","verified"]}'],
+  },
+};
 
 /* ─── collateral options ─────────────────────────────── */
 const COLLATERAL_OPTIONS = [
@@ -506,42 +571,61 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 <div>
                   <FieldLabel
                     required
-                    hint="The HTTP-fetch agent will GET this URL and inspect the response to verify delivery.">
+                    hint={CATEGORY_HINTS[form.category]?.url || "The HTTP-fetch agent will GET this URL to verify delivery."}>
                     Condition URL
                   </FieldLabel>
                   <TextInput
                     value={form.conditionUrl}
                     onChange={e => set("conditionUrl", e.target.value)}
-                    placeholder="https://api.example.com/check/..."
+                    placeholder="https://..."
                   />
+                  {/* Category-specific call-out */}
+                  {(form.category === 4) && (
+                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
+                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
+                      💡 The agent will automatically append <code className="font-mono">?wallet=0xBUYER</code> to your URL.
+                      Make sure the URL works without the parameter as a base.
+                    </p>
+                  )}
+                  {(form.category === 5) && (
+                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
+                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
+                      💡 The agent will automatically append <code className="font-mono">?address=0xBUYER</code> to your URL.
+                    </p>
+                  )}
+                  {(form.category === 3 || form.category === 6) && (
+                    <p className="mt-1.5 text-[11px] px-3 py-2 rounded-lg"
+                      style={{ background: T.emBg, color: "#084C38", border: `1px solid rgba(11,107,75,0.20)` }}>
+                      💡 For on-chain verification, leave URL blank and fill the JSON params with contract details.
+                    </p>
+                  )}
                 </div>
 
                 {/* Condition params */}
                 <div>
-                  <FieldLabel hint="Depends on category. Use key:value format. Leave blank for manual checks.">
+                  <FieldLabel hint={CATEGORY_HINTS[form.category]?.params
+                    ? `Format: ${CATEGORY_HINTS[form.category].params}`
+                    : "Leave blank for basic URL-accessibility checks."}>
                     Condition Parameters
                   </FieldLabel>
 
-                  {/* Hint chips */}
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    {[
-                      "likes: 50",
-                      "keyword: ShadowOTC",
-                      "followers: 1000",
-                      "status: delivered",
-                    ].map(h => (
-                      <button key={h}
-                        onClick={() => set("conditionParams", h)}
-                        className="text-[12px] font-mono px-3 py-2 rounded-lg transition-all"
-                        style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
-                        {h}
-                      </button>
-                    ))}
-                  </div>
+                  {/* Dynamic hint chips based on category */}
+                  {(CATEGORY_HINTS[form.category]?.chips?.length > 0) && (
+                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                      {CATEGORY_HINTS[form.category].chips.map(h => (
+                        <button key={h}
+                          onClick={() => set("conditionParams", h)}
+                          className="text-[12px] font-mono px-3 py-2 rounded-lg transition-all"
+                          style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
+                          {h}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <TextInput
                     value={form.conditionParams}
                     onChange={e => set("conditionParams", e.target.value)}
-                    placeholder='e.g. likes: 50  or  keyword: ShadowOTC'
+                    placeholder={CATEGORY_HINTS[form.category]?.params || "Optional — leave blank for basic checks"}
                   />
                 </div>
 

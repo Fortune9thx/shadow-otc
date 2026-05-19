@@ -42,7 +42,7 @@ const STATUS_CHANGE_MSGS = {
   7: "🚫 Deal cancelled",
 };
 
-const RITUAL_CHAIN_ID = "0x7BB"; // 1979 decimal
+const RITUAL_CHAIN_ID = "0x7bb"; // 1979 decimal — MetaMask returns lowercase
 
 export default function App() {
   const [page, setPage]                 = useState("home");
@@ -255,7 +255,7 @@ export default function App() {
   useEffect(() => {
     if (!window.ethereum) return;
     const onAccounts = (a) => setWallet(a[0] ?? null);
-    const onChain    = (chainId) => setWrongNetwork(chainId !== RITUAL_CHAIN_ID);
+    const onChain    = (chainId) => setWrongNetwork(chainId?.toLowerCase() !== RITUAL_CHAIN_ID);
     window.ethereum.on("accountsChanged", onAccounts);
     window.ethereum.on("chainChanged",    onChain);
     return () => {
@@ -272,7 +272,7 @@ export default function App() {
       .catch(() => {});
     // Check current chain
     window.ethereum.request({ method: "eth_chainId" })
-      .then(chainId => setWrongNetwork(chainId !== RITUAL_CHAIN_ID))
+      .then(chainId => setWrongNetwork(chainId?.toLowerCase() !== RITUAL_CHAIN_ID))
       .catch(() => {});
   }, []);
 
@@ -465,7 +465,7 @@ export default function App() {
               try {
                 await window.ethereum.request({
                   method: "wallet_switchEthereumChain",
-                  params: [{ chainId: RITUAL_CHAIN_ID }],
+                  params: [{ chainId: "0x7bb" }],
                 });
               } catch (e) {
                 if (e.code === 4902) {

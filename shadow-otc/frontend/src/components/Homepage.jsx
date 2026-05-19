@@ -21,7 +21,7 @@ const T = {
 
 /* ─── status badge config ────────────────────────────── */
 const STATUS_BADGE = {
-  0: { label: "Open",             bg: "#EAF4EF", color: "#0B6B4B", border: "rgba(11,107,75,0.28)", pulse: false },
+  0: { label: "Seeking",          bg: "#EAF4EF", color: "#0B6B4B", border: "rgba(11,107,75,0.28)", pulse: false },
   1: { label: "Accepted",         bg: "#EFF6FF", color: "#1d4ed8", border: "rgba(29,78,216,0.28)", pulse: false },
   2: { label: "Pending Delivery", bg: "#FFFBEB", color: "#b45309", border: "rgba(180,83,9,0.28)",  pulse: false },
   3: { label: "Verifying",        bg: "#F5F3FF", color: "#7c3aed", border: "rgba(124,58,237,0.35)", pulse: true },
@@ -35,7 +35,7 @@ const STATUS_BADGE = {
 /* ─── filter tabs ────────────────────────────────────── */
 const FILTERS = [
   { id: "all",       label: "All" },
-  { id: "open",      label: "Open",      status: 0 },
+  { id: "open",      label: "Seeking",   status: 0 },
   { id: "accepted",  label: "Accepted",  status: 1 },
   { id: "verifying", label: "Verifying", status: 3 },
   { id: "completed", label: "Completed", status: 4 },
@@ -286,9 +286,9 @@ function EmptyState({ onCreateDeal }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
         </svg>
       </div>
-      <h3 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>No deals on-chain yet</h3>
+      <h3 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>No intents posted yet</h3>
       <p className="text-[13px] mb-8 max-w-sm mx-auto leading-relaxed" style={{ color: T.textSub }}>
-        Be the first to lock funds in escrow. The agent verifier is running and ready to auto-settle your deal.
+        Be the first to post an intent. Describe what you're looking for and how much you'll pay in RITUAL — sellers with the goods will respond.
       </p>
       <button onClick={onCreateDeal}
         className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-[13px] font-semibold text-white transition-all active:scale-[0.98]"
@@ -298,7 +298,7 @@ function EmptyState({ onCreateDeal }) {
         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        Create First Deal
+        Post Your First Intent
       </button>
     </div>
   );
@@ -404,6 +404,9 @@ export default function Homepage({
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState("all");
   const [mobileNav, setMobileNav]     = useState(false);
+  const [welcomeDismissed, setWelcomeDismissed] = useState(
+    () => !!localStorage.getItem("shadowotc_welcome_v1")
+  );
 
   /* fetch on mount */
   useEffect(() => {
@@ -500,8 +503,8 @@ export default function Homepage({
               <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              <span className="hidden xs:inline sm:inline">Create Deal</span>
-              <span className="sm:hidden">Deal</span>
+              <span className="hidden xs:inline sm:inline">Post Intent</span>
+              <span className="sm:hidden">Intent</span>
             </button>
 
             {wallet ? (
@@ -680,8 +683,7 @@ export default function Homepage({
           </h1>
 
           <p className="text-[13px] sm:text-[14px] leading-relaxed max-w-lg mx-auto mb-7" style={{ color: T.textSub }}>
-            Lock funds in escrow. Seller delivers. HTTP-fetch agent verifies on-chain.
-            Funds release automatically — no middleman.
+            Post what you want, lock funds in escrow. A seller responds, delivers proof, and an AI agent releases payment automatically. No middleman, no trust required.
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 w-full sm:w-auto px-2 sm:px-0">
@@ -693,7 +695,7 @@ export default function Homepage({
               <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              Create Deal
+              Post Intent
             </button>
             <button onClick={onDashboard}
               className="flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-[14px] font-medium transition-all"
@@ -709,6 +711,42 @@ export default function Homepage({
       ═══════════════════════════════════════════════ */}
       <main className="mx-auto max-w-7xl px-4 pb-20">
 
+        {/* Welcome banner */}
+        {!welcomeDismissed && (
+          <div className="mb-6 rounded-2xl px-5 py-4 relative"
+            style={{ background: T.emBg, border: `1px solid rgba(11,107,75,0.28)`, boxShadow: T.shadow }}>
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                style={{ background: "#fff", border: `1px solid rgba(11,107,75,0.18)` }}>🤝</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold mb-1" style={{ color: T.emMid }}>
+                  New here? Welcome to Shadow OTC
+                </p>
+                <p className="text-[12px] leading-relaxed mb-3" style={{ color: T.textSub }}>
+                  This runs on <strong>Ritual Testnet</strong> (Chain ID 1979). You need MetaMask + testnet RITUAL tokens to post deals.{" "}
+                  <a href="https://faucet.ritualfoundation.org" target="_blank" rel="noopener noreferrer"
+                    style={{ color: T.em, fontWeight: 600, textDecoration: "none" }}>Get free testnet RITUAL →</a>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {["1 · Connect MetaMask", "2 · Get testnet RITUAL", "3 · Post an intent", "4 · AI settles it"].map(s => (
+                    <span key={s} className="text-[11px] font-medium rounded-lg px-2.5 py-1.5"
+                      style={{ background: "#fff", border: `1px solid rgba(11,107,75,0.16)`, color: T.textSub }}>
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <button onClick={() => { setWelcomeDismissed(true); localStorage.setItem("shadowotc_welcome_v1","1"); }}
+                className="flex-shrink-0 h-7 w-7 rounded-lg flex items-center justify-center"
+                style={{ background: "rgba(11,107,75,0.10)", color: T.em }}>
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Stats bar */}
         <StatsBar deals={deals} platformStats={platformStats} />
 
@@ -719,6 +757,23 @@ export default function Homepage({
         <AgentFeed />
 
         {/* ── Deal list ───────────────────────────────── */}
+        <div className="mb-3 flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: T.emBr }} />
+            <span className="text-[11px] font-mono" style={{ color: T.textDim }}>
+              Ritual Testnet · Chain 1979 · ShadowOTCV3
+            </span>
+          </div>
+          <a href="https://explorer.ritualfoundation.org/address/0x644417E2fC010E03E129a35761FF603e69Cc52aC"
+            target="_blank" rel="noopener noreferrer"
+            className="text-[11px] font-medium flex items-center gap-1"
+            style={{ color: T.em, textDecoration: "none" }}>
+            View contract
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
+        </div>
         <div className="rounded-2xl overflow-hidden"
           style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
@@ -727,7 +782,7 @@ export default function Homepage({
             style={{ borderBottom: `1px solid ${T.border}`, background: T.panel }}>
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-bold uppercase tracking-[0.12em]" style={{ color: T.textSub }}>
-                On-Chain Deals
+                Live Intent Board
               </span>
               {!loading && hasDeals && (
                 <div className="flex items-center gap-1.5">

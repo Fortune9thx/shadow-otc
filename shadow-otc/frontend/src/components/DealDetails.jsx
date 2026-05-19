@@ -206,7 +206,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
       const raw = await c.getDeal(deal.id);
       setDeal(parseDeal(deal.id, raw));
     } catch (e) {
-      if (e?.code !== 4001) setError(e?.reason || e?.message || "Transaction failed");
+      if (e?.code !== 4001) setError(e?.reason || e?.message || "Something went wrong — please try again or check your connection");
     } finally {
       submittingRef.current = false;
       setTxPending(false);
@@ -428,6 +428,15 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
               <InfoRow label="Buyer"       value={deal.buyer ? `${deal.buyer.slice(0,10)}…${deal.buyer.slice(-8)}` : "—"} mono />
               <InfoRow label="Seller"      value={deal.seller ? `${deal.seller.slice(0,10)}…${deal.seller.slice(-8)}` : "Awaiting seller"} mono />
               <InfoRow label="Status"      value={statusLabel} highlight />
+              <div className="flex items-center justify-between py-2.5" style={{ borderBottom:`1px solid ${T.border}` }}>
+                <span className="text-[12px]" style={{ color:T.textDim }}>Explorer</span>
+                <a href={`https://explorer.ritualfoundation.org/address/${deal.buyer}`}
+                  target="_blank" rel="noreferrer"
+                  className="text-[12px] font-semibold hover:underline"
+                  style={{ color:T.em }}>
+                  View on Ritual Explorer ↗
+                </a>
+              </div>
               <InfoRow label="Created"     value={new Date(deal.createdAt).toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})} />
               {deal.acceptedAt && <InfoRow label="Accepted" value={new Date(deal.acceptedAt).toLocaleDateString()} />}
               {deal.deliveryProof && (
@@ -533,7 +542,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                   <span className="text-[28px] font-bold tracking-tight" style={{ color:T.text }}>
                     {parseFloat(deal.payment).toFixed(4)}
                   </span>
-                  <span className="text-[14px] font-medium" style={{ color:T.textDim }}>RITUAL</span>
+                  <span className="text-[14px] font-medium" style={{ color:T.textDim }} title="RITUAL is the native token of Ritual Testnet">RITUAL</span>
                 </div>
                 <p className="mt-1 text-[11px]" style={{ color:T.textDim }}>
                   Locked in escrow on Ritual Chain
@@ -593,6 +602,12 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                       ✅ Accept Deal as Seller
                     </Btn>
                   </>
+                )}
+
+                {wallet && isOpen && isNobody && (
+                  <Alert>
+                    <strong>Looking for a seller</strong> — if you can fulfill this deal, open an OTC room and share the link with the buyer.
+                  </Alert>
                 )}
 
                 {wallet && isOpen && isBuyer && (

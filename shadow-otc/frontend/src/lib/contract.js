@@ -5,11 +5,13 @@
  */
 import { ethers } from "ethers";
 
-export const CONTRACT_ADDRESS = "0x644417E2fC010E03E129a35761FF603e69Cc52aC";
-export const RPC_URL          = "https://rpc.ritualfoundation.org";
+export const CONTRACT_ADDRESS  = "0x644417E2fC010E03E129a35761FF603e69Cc52aC";
+export const RPC_URL           = "https://rpc.ritualfoundation.org";
+export const RITUAL_FAUCET_URL   = "https://faucet.ritualfoundation.org";
+export const RITUAL_EXPLORER_URL = "https://explorer.ritualfoundation.org";
 
 export const STATUS_LABELS = [
-  "Open", "Accepted", "Pending Delivery",
+  "Seeking", "Accepted", "Pending Delivery",
   "Verifying", "Completed", "Failed",
   "Disputed", "Cancelled", "Expired",
 ];

@@ -140,7 +140,7 @@ function DealRow({ deal, role, onClick }) {
         <div className="text-[12px] sm:text-[13px] font-bold font-mono" style={{ color: T.em }}>
           {parseFloat(deal.payment || 0).toFixed(3)}
         </div>
-        <div className="text-[10px]" style={{ color: T.textDim }}>RITUAL</div>
+        <div className="text-[10px]" style={{ color: T.textDim }} title="RITUAL is the native token of Ritual Testnet">RITUAL</div>
       </div>
 
       {/* Status */}
@@ -518,9 +518,15 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                           {counts.all} deals
                         </span>
                         <span className="text-[11px] px-2.5 py-1 rounded-full font-medium"
-                          style={{ background: T.surface, color: T.textSub, border:`1px solid ${T.border}` }}>
+                          style={{ background: T.surface, color: T.textSub, border:`1px solid ${T.border}` }}
+                          title="RITUAL is the native token of Ritual Testnet">
                           {totalVolume} RITUAL
                         </span>
+                        <a href="https://faucet.ritualfoundation.org" target="_blank" rel="noopener noreferrer"
+                          className="text-[11px] font-medium px-2.5 py-1 rounded-full"
+                          style={{ color: T.em, background: T.emBg, border:`1px solid ${T.emBdr}`, textDecoration:"none" }}>
+                          Get testnet RITUAL →
+                        </a>
                         {counts.action > 0 && (
                           <span className="text-[11px] px-2.5 py-1 rounded-full font-medium"
                             style={{ background:"#fff7ed", color:"#c2410c", border:"1px solid #fed7aa" }}>
@@ -807,7 +813,7 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                       <p className="text-[13px] font-bold font-mono" style={{ color: T.em }}>
                         {parseFloat(deal.payment || 0).toFixed(4)}
                       </p>
-                      <p className="text-[11px]" style={{ color: T.textDim }}>RITUAL</p>
+                      <p className="text-[11px]" style={{ color: T.textDim }} title="RITUAL is the native token of Ritual Testnet">RITUAL</p>
                     </div>
                   </div>
                 ))
@@ -825,6 +831,22 @@ export default function Dashboard({ wallet, onConnect, onBack, onDealClick, onSt
                   Your On-Chain Reputation
                 </p>
                 <ReputationBadge address={wallet} compact={false}/>
+                {/* Tier label based on deal count */}
+                <div className="mt-4 rounded-xl px-4 py-3"
+                  style={{ background: T.emBg, border:`1px solid ${T.emBdr}` }}>
+                  <p className="text-[12px] font-semibold" style={{ color: T.emMid }}>
+                    {completedDeals.length >= 80 ? "Trusted trader"
+                      : completedDeals.length >= 50 ? "Building reputation"
+                      : completedDeals.length > 0  ? "Getting started"
+                      : "New to Shadow OTC"}
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: T.textDim }}>
+                    {completedDeals.length >= 80 ? "High-volume trader with proven delivery record."
+                      : completedDeals.length >= 50 ? "Steadily earning trust through on-chain settlements."
+                      : completedDeals.length > 0  ? "A few completed deals on-chain — keep going!"
+                      : "No completed deals yet. Post or accept a deal to build your score."}
+                  </p>
+                </div>
               </div>
 
               {/* How reputation is scored */}

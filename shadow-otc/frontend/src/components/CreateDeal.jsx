@@ -425,6 +425,12 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
     const err = validate();
     if (err) { setFieldError(err); return; }
     setFieldError(null);
+    // Quick Post mode: skip Escrow Setup (step 3) — use defaults and jump to Review
+    if (step === 2 && form.mode === "quick") {
+      setForm(f => ({ ...f, amountEth: f.amountEth || "", deadlineHours: f.deadlineHours || 72 }));
+      setStep(3); // still go to 3 since step 3 is Escrow Setup where they set the amount — quick mode needs amount
+      return;
+    }
     setStep(s => Math.min(s + 1, 4));
   }
   function back() {
@@ -549,7 +555,15 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
             Cancel
           </button>
           <div className="h-4 w-px" style={{ background: T.border }} />
-          <span className="text-[14px] font-semibold" style={{ color: T.text }}>Create Deal</span>
+          <span className="text-[14px] font-semibold" style={{ color: T.text }}>
+            Post Intent
+            {form.mode === "quick" && (
+              <span className="ml-2 rounded-md px-2 py-0.5 text-[11px] font-bold"
+                style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
+                Quick Post
+              </span>
+            )}
+          </span>
           <span className="text-[11px] ml-auto" style={{ color: T.textDim }}>
             Step {step} of {STEP_LABELS.length}
           </span>
@@ -564,9 +578,62 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
         <div className={step === 3 ? "grid grid-cols-1 lg:grid-cols-5 gap-6" : ""}>
 
           {/* ══════════════════════════════════════════
-              STEP 1 — Category
+              STEP 1 — Mode Select (gate) or Category
           ══════════════════════════════════════════ */}
-          {step === 1 && (
+          {step === 1 && !form.mode ? (
+            <div className="space-y-5">
+              <div className="text-center mb-6">
+                <h2 className="text-[22px] font-bold mb-2" style={{ color: T.text }}>How do you want to start?</h2>
+                <p className="text-[13px]" style={{ color: T.textSub }}>Choose a path — you can always adjust details later.</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Quick Post */}
+                <div className="rounded-2xl p-6 flex flex-col cursor-pointer border-2 transition-all"
+                  style={{ background: T.card, borderColor: T.em }}
+                  onClick={() => { setForm(f => ({...f, mode:"quick", category:10, verificationMethod:2, collateral:0, commitFeePercent:10})); setStep(2); }}>
+                  <div className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl mb-4"
+                    style={{ background: T.emBg, border: `1px solid ${T.border}` }}>🚀</div>
+                  <h3 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>Quick Intent</h3>
+                  <p className="text-[13px] leading-relaxed mb-4 flex-1" style={{ color: T.textSub }}>
+                    Describe what you want and set a price. Smart defaults handle everything else. Done in under 60 seconds.
+                  </p>
+                  <ul className="space-y-1 mb-5">
+                    {["60-second setup", "AI settles automatically", "Escrow secured on-chain"].map(t => (
+                      <li key={t} className="flex items-center gap-2 text-[12px]" style={{ color: T.textDim }}>
+                        <span style={{ color: T.em }}>✓</span>{t}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full rounded-xl py-2.5 text-[13px] font-semibold text-white"
+                    style={{ background: T.em }}>
+                    Quick Post →
+                  </button>
+                </div>
+                {/* Full Setup */}
+                <div className="rounded-2xl p-6 flex flex-col cursor-pointer border-2 transition-all"
+                  style={{ background: T.card, borderColor: T.border }}
+                  onClick={() => setForm(f => ({...f, mode:"wizard"}))}>
+                  <div className="h-12 w-12 rounded-xl flex items-center justify-center text-2xl mb-4"
+                    style={{ background: T.panel, border: `1px solid ${T.border}` }}>⚙️</div>
+                  <h3 className="text-[16px] font-bold mb-2" style={{ color: T.text }}>Advanced Deal</h3>
+                  <p className="text-[13px] leading-relaxed mb-4 flex-1" style={{ color: T.textSub }}>
+                    Full control over category, verification URL, collateral, and custom conditions.
+                  </p>
+                  <ul className="space-y-1 mb-5">
+                    {["Pick any category", "Custom verification URL", "Collateral & escrow options"].map(t => (
+                      <li key={t} className="flex items-center gap-2 text-[12px]" style={{ color: T.textDim }}>
+                        <span style={{ color: T.em }}>✓</span>{t}
+                      </li>
+                    ))}
+                  </ul>
+                  <button className="w-full rounded-xl py-2.5 text-[13px] font-semibold border"
+                    style={{ background: T.panel, color: T.textSub, borderColor: T.border }}>
+                    Full Setup →
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : step === 1 && form.mode === "wizard" ? (
             <div>
               <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>
                 What kind of deal?
@@ -601,7 +668,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* ══════════════════════════════════════════
               STEP 2 — Deal Terms
@@ -619,6 +686,14 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 ) : null;
               })()}
 
+              {form.mode === "quick" && (
+                <div className="rounded-xl px-4 py-3 mb-4"
+                  style={{ background: T.emBg, border: `1px solid rgba(11,107,75,0.20)` }}>
+                  <p className="text-[12px]" style={{ color: T.emMid }}>
+                    <strong>Quick Post mode:</strong> Just describe what you want and set your budget. The AI agent will handle verification automatically.
+                  </p>
+                </div>
+              )}
               <h2 className="text-[20px] font-bold mb-1 tracking-tight" style={{ color: T.text }}>Describe the deal</h2>
               <p className="text-[13px] mb-6" style={{ color: T.textSub }}>
                 Tell the seller what to deliver and how the agent should verify it.

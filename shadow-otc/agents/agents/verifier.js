@@ -101,6 +101,13 @@ async function main() {
     return;
   }
 
+  // 3b. Not yet ready for verification? (needs status Pending Delivery=2 or Verifying=3)
+  if (Number(deal.status) < 2) {
+    log(`\n[!] Deal is in "${STATUS[Number(deal.status)]}" status — not ready for verification.`);
+    log(`    Verifier runs after seller submits delivery proof (status = Pending Delivery).`);
+    return;
+  }
+
   // 4. Route to verifier
   log(`\n[2/4] Routing to ${categoryName} verifier...`);
 

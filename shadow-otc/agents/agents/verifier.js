@@ -1,5 +1,5 @@
 const { ethers } = require("ethers");
-const Anthropic   = require("@anthropic-ai/sdk");
+const Groq        = require("groq-sdk");
 require("dotenv").config();
 
 // ─────────────────────────────────────────────────────────────────
@@ -107,9 +107,9 @@ async function main() {
   // ── A: Try Claude AI first — it can reason over arbitrary evidence ──
   const aiResult = await ritualAIScaffold(deal, Number(deal.category));
   if (aiResult) {
-    log(`[Claude AI] Used AI verdict: ${aiResult.success ? "PASS ✅" : "FAIL ❌"} — ${aiResult.reason}`);
+    log(`[Groq AI] Used AI verdict: ${aiResult.success ? "PASS ✅" : "FAIL ❌"} — ${aiResult.reason}`);
   } else {
-    log("[Claude AI] No AI result — using rule-based verification.");
+    log("[Groq AI] No AI result — using rule-based verification.");
   }
 
   let result = { success: false, reason: "Verification not completed" };
@@ -168,22 +168,26 @@ async function main() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// CLAUDE AI VERIFICATION
-// Uses Claude claude-haiku-4-5 to reason over deal evidence.
-// Falls back to standard HTTP checks if API key is not set.
+// GROQ AI VERIFICATION  (free — no credit card required)
+// Uses Llama 3.3 70B via Groq's free API to reason over evidence.
+// Get a free key at: https://console.groq.com
+// Set GROQ_API_KEY in your .env file.
+//
+// Falls back to standard HTTP checks if GROQ_API_KEY is not set.
 // When Ritual Infernet TEE is live, this becomes the attestation
 // payload — the intent/conditionParams shape is already correct.
 // ─────────────────────────────────────────────────────────────────
 async function ritualAIScaffold(deal, category) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    log("[Claude AI] ANTHROPIC_API_KEY not set — skipping AI verification.");
+    log("[Groq AI] GROQ_API_KEY not set — skipping AI verification.");
+    log("[Groq AI] Get a free key at https://console.groq.com");
     return null;
   }
 
-  log("[Claude AI] Preparing verification request...");
+  log("[Groq AI] Preparing verification request (Llama 3.3 70B)...");
 
-  // Optionally fetch the delivery proof / condition URL for Claude to analyse
+  // Fetch delivery proof / condition URL so AI can read the actual evidence
   let pageContent = "";
   const proofUrl = deal.deliveryProof || deal.conditionUrl;
   if (proofUrl) {
@@ -194,61 +198,61 @@ async function ritualAIScaffold(deal, category) {
       });
       if (res.ok) {
         const raw = await res.text();
-        // Trim to ~4000 chars to stay within context budget
-        pageContent = raw.slice(0, 4000);
-        log(`[Claude AI] Fetched ${pageContent.length} chars from proof URL`);
+        pageContent = raw.slice(0, 4000); // stay within token budget
+        log(`[Groq AI] Fetched ${pageContent.length} chars from proof URL`);
       }
     } catch (e) {
-      log(`[Claude AI] Could not fetch proof URL: ${e.message}`);
+      log(`[Groq AI] Could not fetch proof URL: ${e.message}`);
     }
   }
 
   const categoryName = CATEGORY_NAMES[category] || "UNKNOWN";
 
-  const systemPrompt = `You are an autonomous OTC deal settlement agent running on the Shadow OTC protocol on Ritual Testnet.
-Your job: analyse the evidence for deal #${DEAL_ID} and decide whether delivery conditions have been met.
+  const prompt = `You are an autonomous OTC deal settlement agent on Shadow OTC (Ritual Testnet).
+Decide whether the seller has fulfilled the conditions for deal #${DEAL_ID}.
 
-Deal context:
-- Category: ${categoryName} (index ${category})
+Deal:
+- Category: ${categoryName} (${category})
 - Intent: ${deal.intent}
 - Condition URL: ${deal.conditionUrl || "none"}
 - Condition Params: ${deal.conditionParams || "none"}
-- Delivery Proof URL: ${deal.deliveryProof || "not yet submitted"}
+- Delivery Proof URL: ${deal.deliveryProof || "NOT SUBMITTED"}
 - Buyer: ${deal.buyer}
 - Seller: ${deal.seller}
 - Payment: ${ethers.formatEther(deal.paymentAmount)} RITUAL
 
-Evidence (page content from proof URL, truncated):
-${pageContent ? pageContent : "(no page content available)"}
+Page content from proof URL (truncated to 4000 chars):
+${pageContent || "(no content — URL not submitted or unreachable)"}
 
-Based ONLY on the evidence above, decide whether the seller has fulfilled the deal conditions.
-Be strict but fair. If no delivery proof URL was submitted, the deal should FAIL unless conditionParams prove on-chain delivery.
-Respond ONLY with a JSON object in this exact format (no markdown, no prose):
-{"success": true|false, "reason": "concise explanation max 120 chars"}`;
+Rules:
+- If no delivery proof URL was submitted, verdict is FAIL
+- Be strict but fair — only PASS if evidence clearly supports it
+- Respond ONLY with valid JSON, no markdown, no extra text:
+{"success": true, "reason": "brief reason under 120 chars"}`;
 
   try {
-    const client = new Anthropic({ apiKey });
-    const message = await client.messages.create({
-      model:      "claude-haiku-4-5",
-      max_tokens: 256,
-      messages: [{ role: "user", content: systemPrompt }],
+    const groq = new Groq({ apiKey });
+    const chat = await groq.chat.completions.create({
+      model:       "llama-3.3-70b-versatile",
+      max_tokens:  256,
+      temperature: 0,
+      messages: [{ role: "user", content: prompt }],
     });
 
-    const raw = message.content[0]?.text?.trim() ?? "";
-    log(`[Claude AI] Raw response: ${raw}`);
+    const raw = chat.choices[0]?.message?.content?.trim() ?? "";
+    log(`[Groq AI] Raw response: ${raw}`);
 
-    // Extract JSON from response
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON object in response");
+    if (!jsonMatch) throw new Error("No JSON in response");
 
     const parsed = JSON.parse(jsonMatch[0]);
     if (typeof parsed.success !== "boolean") throw new Error("Missing 'success' boolean");
 
-    log(`[Claude AI] Verdict: ${parsed.success ? "PASS" : "FAIL"} — ${parsed.reason}`);
+    log(`[Groq AI] Verdict: ${parsed.success ? "PASS" : "FAIL"} — ${parsed.reason}`);
     return { success: parsed.success, reason: `[AI] ${parsed.reason}` };
 
   } catch (e) {
-    log(`[Claude AI] Error: ${e.message} — falling through to standard verification`);
+    log(`[Groq AI] Error: ${e.message} — falling through to rule-based verification`);
     return null;
   }
 }

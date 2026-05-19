@@ -1,4 +1,5 @@
 const { ethers } = require("ethers");
+const Anthropic   = require("@anthropic-ai/sdk");
 require("dotenv").config();
 
 // ─────────────────────────────────────────────────────────────────
@@ -103,35 +104,42 @@ async function main() {
   // 4. Route to verifier
   log(`\n[2/4] Routing to ${categoryName} verifier...`);
 
-  // Try Ritual AI scaffold first (future TEE path)
+  // ── A: Try Claude AI first — it can reason over arbitrary evidence ──
   const aiResult = await ritualAIScaffold(deal, Number(deal.category));
   if (aiResult) {
-    log(`[Ritual AI] Attestation result: ${aiResult.success ? "PASS" : "FAIL"}`);
+    log(`[Claude AI] Used AI verdict: ${aiResult.success ? "PASS ✅" : "FAIL ❌"} — ${aiResult.reason}`);
+  } else {
+    log("[Claude AI] No AI result — using rule-based verification.");
   }
 
   let result = { success: false, reason: "Verification not completed" };
 
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-    log(`\n--- Attempt ${attempt} of ${MAX_RETRIES} ---`);
+  // ── B: If AI returned a verdict, use it. Otherwise fall to rules ──
+  if (aiResult) {
+    result = aiResult;
+  } else {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      log(`\n--- Attempt ${attempt} of ${MAX_RETRIES} ---`);
 
-    result = await verifyByCategory(
-      Number(deal.category),
-      deal.conditionUrl,
-      deal.conditionParams,
-      deal.deliveryProof,
-      deal.intent,
-      deal.buyer,
-      deal.seller,
-    );
+      result = await verifyByCategory(
+        Number(deal.category),
+        deal.conditionUrl,
+        deal.conditionParams,
+        deal.deliveryProof,
+        deal.intent,
+        deal.buyer,
+        deal.seller,
+      );
 
-    log(`Result: ${result.success ? "✅ SUCCESS" : "❌ FAILED"}`);
-    log(`Reason: ${result.reason}`);
+      log(`Result: ${result.success ? "✅ SUCCESS" : "❌ FAILED"}`);
+      log(`Reason: ${result.reason}`);
 
-    if (result.success) break;
+      if (result.success) break;
 
-    if (attempt < MAX_RETRIES) {
-      log(`\nRetrying in ${RETRY_DELAY / 1000}s...`);
-      await sleep(RETRY_DELAY);
+      if (attempt < MAX_RETRIES) {
+        log(`\nRetrying in ${RETRY_DELAY / 1000}s...`);
+        await sleep(RETRY_DELAY);
+      }
     }
   }
 
@@ -160,38 +168,89 @@ async function main() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// RITUAL AI SCAFFOLD
-// When Ritual infernet is live, replace the body of this function
-// with an actual infernet job submission. The payload structure
-// already matches what infernet expects — it's a drop-in upgrade.
+// CLAUDE AI VERIFICATION
+// Uses Claude claude-haiku-4-5 to reason over deal evidence.
+// Falls back to standard HTTP checks if API key is not set.
+// When Ritual Infernet TEE is live, this becomes the attestation
+// payload — the intent/conditionParams shape is already correct.
 // ─────────────────────────────────────────────────────────────────
 async function ritualAIScaffold(deal, category) {
-  log("[Ritual AI] Preparing inference request...");
-  log(`[Ritual AI] TEE Registry: ${process.env.RITUAL_TEE_REGISTRY || "0x9644e8562cE0Fe12b4deeC4163c064A8862Bf47F"}`);
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    log("[Claude AI] ANTHROPIC_API_KEY not set — skipping AI verification.");
+    return null;
+  }
 
-  const payload = {
-    jobId:    `shadow-otc-${DEAL_ID}-${Date.now()}`,
-    model:    category <= 1 ? "social-metrics-v1" : "content-verification-v1",
-    input: {
-      url:      deal.deliveryProof || deal.conditionUrl,
-      params:   deal.conditionParams,
-      intent:   deal.intent,
-      category,
-    },
-    requireAttestation: true,
-    attestationScheme:  "tdx",   // Intel TDX (Ritual's TEE)
-  };
+  log("[Claude AI] Preparing verification request...");
 
-  log("[Ritual AI] Job payload prepared. Waiting for infernet availability...");
-  // TODO: Replace with real infernet SDK call when live on testnet:
-  // const client = new InfernetClient(process.env.RITUAL_INFERNET_URL);
-  // const result = await client.submitJob(payload);
-  // const attested = await client.waitForResult(result.jobId, { timeout: 60000 });
-  // return attested;
+  // Optionally fetch the delivery proof / condition URL for Claude to analyse
+  let pageContent = "";
+  const proofUrl = deal.deliveryProof || deal.conditionUrl;
+  if (proofUrl) {
+    try {
+      const res = await fetch(proofUrl, {
+        headers: { "User-Agent": "ShadowOTC-Verifier/3.0 (Ritual Chain)" },
+        signal:  AbortSignal.timeout(10000),
+      });
+      if (res.ok) {
+        const raw = await res.text();
+        // Trim to ~4000 chars to stay within context budget
+        pageContent = raw.slice(0, 4000);
+        log(`[Claude AI] Fetched ${pageContent.length} chars from proof URL`);
+      }
+    } catch (e) {
+      log(`[Claude AI] Could not fetch proof URL: ${e.message}`);
+    }
+  }
 
-  log("[Ritual AI] ⚠ Simulation mode — no TEE attestation yet.");
-  log("[Ritual AI] Falling through to standard HTTP verification.");
-  return null; // null = not ready, fall through to standard path
+  const categoryName = CATEGORY_NAMES[category] || "UNKNOWN";
+
+  const systemPrompt = `You are an autonomous OTC deal settlement agent running on the Shadow OTC protocol on Ritual Testnet.
+Your job: analyse the evidence for deal #${DEAL_ID} and decide whether delivery conditions have been met.
+
+Deal context:
+- Category: ${categoryName} (index ${category})
+- Intent: ${deal.intent}
+- Condition URL: ${deal.conditionUrl || "none"}
+- Condition Params: ${deal.conditionParams || "none"}
+- Delivery Proof URL: ${deal.deliveryProof || "not yet submitted"}
+- Buyer: ${deal.buyer}
+- Seller: ${deal.seller}
+- Payment: ${ethers.formatEther(deal.paymentAmount)} RITUAL
+
+Evidence (page content from proof URL, truncated):
+${pageContent ? pageContent : "(no page content available)"}
+
+Based ONLY on the evidence above, decide whether the seller has fulfilled the deal conditions.
+Be strict but fair. If no delivery proof URL was submitted, the deal should FAIL unless conditionParams prove on-chain delivery.
+Respond ONLY with a JSON object in this exact format (no markdown, no prose):
+{"success": true|false, "reason": "concise explanation max 120 chars"}`;
+
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create({
+      model:      "claude-haiku-4-5",
+      max_tokens: 256,
+      messages: [{ role: "user", content: systemPrompt }],
+    });
+
+    const raw = message.content[0]?.text?.trim() ?? "";
+    log(`[Claude AI] Raw response: ${raw}`);
+
+    // Extract JSON from response
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object in response");
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (typeof parsed.success !== "boolean") throw new Error("Missing 'success' boolean");
+
+    log(`[Claude AI] Verdict: ${parsed.success ? "PASS" : "FAIL"} — ${parsed.reason}`);
+    return { success: parsed.success, reason: `[AI] ${parsed.reason}` };
+
+  } catch (e) {
+    log(`[Claude AI] Error: ${e.message} — falling through to standard verification`);
+    return null;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────

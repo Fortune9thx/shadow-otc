@@ -24,7 +24,7 @@ const T = {
 
 /* ─── status badge ────────────────────────────────────────── */
 const STATUS_STYLE = {
-  0: { bg: "#EAF4EF", color: "#0B6B4B", border: "rgba(11,107,75,0.28)",  label: "Open"             },
+  0: { bg: "#EAF4EF", color: "#0B6B4B", border: "rgba(11,107,75,0.28)",  label: "Seeking"          },
   1: { bg: "#EFF6FF", color: "#1d4ed8", border: "rgba(29,78,216,0.28)",  label: "Accepted"         },
   2: { bg: "#FFFBEB", color: "#b45309", border: "rgba(180,83,9,0.28)",   label: "Pending Delivery" },
   3: { bg: "#F5F3FF", color: "#7c3aed", border: "rgba(124,58,237,0.35)", label: "Verifying"        },
@@ -80,12 +80,13 @@ function SkelRow() {
 }
 
 /* ─── deal row ────────────────────────────────────────────── */
-function DealRow({ deal, wallet, onClick }) {
+function DealRow({ deal, wallet, onClick, onRespondToIntent }) {
   const icon  = CATEGORY_ICONS[deal.category] ?? "📦";
   const label = CATEGORY_LABELS[deal.category] ?? "Unknown";
   const cd    = countdown(deal.deadline);
   const w     = wallet?.toLowerCase();
   const isMine = (deal.buyer?.toLowerCase() === w) || (deal.seller?.toLowerCase() === w);
+  const canRespond = deal.status === 0 && !isMine && !!wallet && !!onRespondToIntent;
 
   return (
     <div
@@ -136,18 +137,35 @@ function DealRow({ deal, wallet, onClick }) {
       {/* Status */}
       <StatusBadge status={deal.status} />
 
+      {/* Respond button — open intents only, not your own */}
+      {canRespond && (
+        <button
+          onClick={e => { e.stopPropagation(); onRespondToIntent(deal); }}
+          className="flex-shrink-0 hidden sm:flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all"
+          style={{ background: T.em, color: "#fff", boxShadow: "0 2px 8px rgba(11,107,75,0.20)" }}
+          onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.10)"}
+          onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
+          Respond
+          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
       {/* Deadline — only show when not yet expired */}
-      {!cd.expired && (
+      {!cd.expired && !canRespond && (
         <div className="hidden md:block text-right flex-shrink-0 w-16">
           <p className="text-[11px] font-mono" style={{ color: T.textDim }}>{cd.text}</p>
         </div>
       )}
 
-      {/* Chevron */}
-      <svg className="h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: T.em }}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-      </svg>
+      {/* Chevron (shows when no respond button) */}
+      {!canRespond && (
+        <svg className="h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} style={{ color: T.em }}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      )}
     </div>
   );
 }
@@ -168,6 +186,7 @@ export default function MarketPage({
   onCreateListing,
   onDashboard,
   onStartOTCRoom,
+  onRespondToIntent,
 }) {
   const [deals, setDeals]           = useState([]);
   const [platform, setPlatform]     = useState(null);
@@ -280,7 +299,7 @@ export default function MarketPage({
 
           {/* Title */}
           <div className="flex items-center gap-2">
-            <span className="text-[14px] font-bold" style={{ color: T.text }}>Market</span>
+            <span className="text-[14px] font-bold" style={{ color: T.text }}>Intent Board</span>
             <span className="rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wider"
               style={{ background: T.emBg, border: `1px solid ${T.border}`, color: T.em }}>
               Live on-chain
@@ -288,7 +307,7 @@ export default function MarketPage({
             {openCount > 0 && (
               <span className="rounded-full px-2 py-0.5 text-[10px] font-bold"
                 style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
-                {openCount} open
+                {openCount} seeking
               </span>
             )}
           </div>
@@ -346,7 +365,7 @@ export default function MarketPage({
               </button>
             )}
 
-            {/* Create deal */}
+            {/* Post Intent */}
             <button onClick={onCreateListing}
               className="rounded-xl px-3 py-1.5 text-[12px] font-semibold text-white transition-all active:scale-[0.98] flex items-center gap-1.5"
               style={{ background: T.em, boxShadow: "0 4px 12px rgba(11,107,75,0.15)" }}
@@ -355,7 +374,7 @@ export default function MarketPage({
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
-              <span className="hidden xs:inline">Create</span>
+              <span className="hidden xs:inline">Post Intent</span>
             </button>
           </div>
         </div>
@@ -367,7 +386,7 @@ export default function MarketPage({
         <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
           {[
             { label: "Total Deals",  value: platform ? platform.total     : deals.length,        live: false },
-            { label: "Open Now",     value: openCount,                                            live: true  },
+            { label: "Seeking Now",  value: openCount,                                            live: true  },
             { label: "Completed",    value: platform ? platform.completed : deals.filter(d=>d.status===4).length, live: false },
             { label: "RITUAL Locked",value: platform
                 ? parseFloat(platform.locked).toFixed(2)
@@ -388,6 +407,22 @@ export default function MarketPage({
                 style={{ color: s.live ? T.em : T.text }}>{s.value}</span>
             </div>
           ))}
+        </div>
+
+        {/* ── Intent network info strip ────────────────────── */}
+        <div className="rounded-xl px-4 py-3 flex items-center gap-3"
+          style={{ background: T.card, border: `1px solid ${T.border}` }}>
+          <span className="text-base flex-shrink-0">🤖</span>
+          <p className="text-[12px] leading-relaxed flex-1" style={{ color: T.textSub }}>
+            Buyers post <strong style={{ color: T.em }}>intents</strong> — what they want and what they'll pay.
+            Sellers see open intents and respond directly. An AI agent escrows funds and settles automatically on verified delivery.
+          </p>
+          {wallet && openCount > 0 && (
+            <span className="text-[11px] font-semibold flex-shrink-0 px-2.5 py-1 rounded-lg"
+              style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
+              {openCount} open
+            </span>
+          )}
         </div>
 
         {/* ── Search + filters ─────────────────────────────── */}
@@ -436,7 +471,7 @@ export default function MarketPage({
             <div className="flex items-center gap-1.5 flex-wrap">
               {[
                 { id: "all",    label: "All"    },
-                { id: "open",   label: `Open${openCount > 0 ? ` (${openCount})` : ""}` },
+                { id: "open",   label: `Seeking${openCount > 0 ? ` (${openCount})` : ""}` },
                 { id: "active", label: `Active${activeCount > 0 ? ` (${activeCount})` : ""}` },
                 { id: "done",   label: "Done"   },
               ].map(f => (
@@ -533,6 +568,7 @@ export default function MarketPage({
                 deal={deal}
                 wallet={wallet}
                 onClick={() => onDealClick?.(deal)}
+                onRespondToIntent={onRespondToIntent}
               />
             ))
           )}
@@ -560,10 +596,10 @@ export default function MarketPage({
             <div className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 text-xl">🤖</div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold mb-0.5" style={{ color: T.emMid }}>
-                Get matched automatically
+                Respond to open intents
               </p>
               <p className="text-[12px] leading-relaxed" style={{ color: T.textSub }}>
-                Connect your wallet, then message <strong>@ShadowOTC_bot</strong> on Telegram to register as a seller and get instant alerts when a matching deal goes live.
+                Connect your wallet to respond to open intents you can fulfill. Open an OTC room, agree terms privately, and let the AI agent handle escrow and settlement automatically.
               </p>
             </div>
             <button onClick={onConnect}

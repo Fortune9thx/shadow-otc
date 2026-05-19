@@ -469,11 +469,13 @@ function OTCLobby({ wallet, onConnect, onBack, onEnterRoom }) {
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════ */
-export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
+export default function PrivateDealRoom({ wallet, onConnect, onBack, intentData }) {
   /* ── roomId: null shows lobby, string enters the room ─── */
   const [roomId, setRoomId] = useState(() => {
     const hash = window.location.hash;
     if (hash.startsWith("#room=")) return hash.split("=")[1];
+    // If an intent is being responded to, auto-create a room immediately
+    if (intentData) return generateRoomId();
     return null; // no hash → show lobby
   });
 
@@ -482,15 +484,33 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   const [chainDeal,  setChainDeal]  = useState(null);
   const [myRole,     setMyRole]     = useState(null);
   const [uiStep,     setUiStep]     = useState("loading");
-  const [form,       setForm]       = useState({ category:"premarket", settlement:"ai-auto" });
+  // Pre-fill form from intent data when responding
+  const [form,       setForm]       = useState(() => {
+    if (!intentData) return { category:"premarket", settlement:"ai-auto" };
+    // Map on-chain category number to OTC room category key
+    const catByNum = { 5:"airdrop", 3:"nft", 7:"premarket", 10:"bundle" };
+    const cat = catByNum[intentData.category] ?? "bundle";
+    return {
+      category:   cat,
+      settlement: "ai-auto",
+      asset:      intentData.intent || "",
+      price:      intentData.payment ? String(parseFloat(intentData.payment).toFixed(3)) : "",
+    };
+  });
   const [txPending,  setTxPending]  = useState(false);
   const [txLabel,    setTxLabel]    = useState("");
   const [error,      setError]      = useState(null);
   const [proofUrl,   setProofUrl]   = useState("");
   const [chatInput,  setChatInput]  = useState("");
-  const [msgs,       setMsgs]       = useState([
-    { wallet:"system", text:"Share the invite link with your counterparty to begin", ts: Date.now() }
-  ]);
+  const [msgs,       setMsgs]       = useState(() => {
+    if (intentData) {
+      return [
+        { wallet:"system", text:`Responding to Intent #${intentData.id} — "${intentData.intent || "unnamed"}" · ${parseFloat(intentData.payment || 0).toFixed(3)} RITUAL`, ts: Date.now() },
+        { wallet:"system", text:"Share this room link with the buyer to negotiate and finalise terms", ts: Date.now() + 1 },
+      ];
+    }
+    return [{ wallet:"system", text:"Share the invite link with your counterparty to begin", ts: Date.now() }];
+  });
   const [agentLogs,  setAgentLogs]  = useState([]);
   const [verifying,  setVerifying]  = useState(false);
   const [verifDone,  setVerifDone]  = useState(null);
@@ -499,6 +519,14 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   const chatContainerRef = useRef(null);
   const logEndRef        = useRef(null);
   const submittingRef    = useRef(false); // Security: double-submit guard (issue #5)
+
+  // Sync URL hash when intent auto-creates room on mount
+  useEffect(() => {
+    if (intentData && roomId && !window.location.hash.includes("room=")) {
+      history.replaceState(null, "", window.location.pathname + "#room=" + roomId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function enterRoom(id) {
     const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -893,6 +921,27 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
               <div className="rounded-2xl p-6 space-y-5"
                 style={{ background:T.card, border:`1px solid ${T.border}`, boxShadow:T.shadow }}>
                 <h2 className="text-[18px] font-bold" style={{ color:T.text }}>Set Deal Terms</h2>
+
+                {/* Intent context banner — shown when responding to a market intent */}
+                {intentData && (
+                  <div className="rounded-xl px-4 py-3 flex items-start gap-3"
+                    style={{ background: T.emBg, border: `1px solid ${T.emBdr}` }}>
+                    <span className="text-base flex-shrink-0 mt-0.5">📋</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-bold mb-0.5" style={{ color: T.emMid }}>
+                        Responding to Intent #{intentData.id}
+                      </p>
+                      <p className="text-[12px] leading-relaxed" style={{ color: T.textSub }}>
+                        <strong>"{intentData.intent || "unnamed intent"}"</strong>
+                        {" · "}<span className="font-mono font-bold" style={{ color: T.em }}>{parseFloat(intentData.payment || 0).toFixed(3)} RITUAL</span>
+                        {intentData.buyer && <span> · Buyer: {intentData.buyer.slice(0,6)}…{intentData.buyer.slice(-4)}</span>}
+                      </p>
+                      <p className="text-[11px] mt-1" style={{ color: T.textDim }}>
+                        Terms are pre-filled from the intent. Review and adjust before sharing the room link with the buyer.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Category */}
                 <Field label="Category">

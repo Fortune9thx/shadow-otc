@@ -46,6 +46,7 @@ export default function App() {
   const [page, setPage]                 = useState("home");
   const [wallet, setWallet]             = useState(null);
   const [selectedDeal, setSelectedDeal] = useState(null);
+  const [intentForRoom, setIntentForRoom] = useState(null);
   const [deals, setDeals]               = useState(() => loadLocalListings());
   const [settlements, setSettlements]   = useState([]);
   const [requests, setRequests]         = useState([]);
@@ -271,14 +272,21 @@ export default function App() {
     window.scrollTo(0, 0);
   }
 
+  function respondToIntent(deal) {
+    setIntentForRoom(deal);
+    setPage("private");
+  }
+
   function goHome() {
     setSelectedDeal(null);
+    setIntentForRoom(null);
     setPage("home");
     window.scrollTo(0, 0);
     history.pushState("", document.title, window.location.pathname);
   }
 
   function goMarket() {
+    setIntentForRoom(null);
     setPage("market");
     window.scrollTo(0, 0);
   }
@@ -400,6 +408,7 @@ export default function App() {
           wallet={wallet}
           onConnect={connectWallet}
           onBack={goHome}
+          intentData={intentForRoom}
         />
       );
     }
@@ -413,6 +422,7 @@ export default function App() {
           onCreateListing={() => setPage("create")}
           onDashboard={() => setPage("dashboard")}
           onStartOTCRoom={() => setPage("private")}
+          onRespondToIntent={respondToIntent}
         />
       );
     }
@@ -430,6 +440,7 @@ export default function App() {
         onDashboard={() => setPage("dashboard")}
         onStartOTCRoom={() => setPage("private")}
         onMarket={goMarket}
+        onRespondToIntent={respondToIntent}
       />
     );
   }

@@ -15,6 +15,7 @@
     "dotenv": "^16.0.0",
     "ethers": "^6.16.0",
     "express": "^4.22.1",
+    "express-rate-limit": "^8.5.2",
     "groq-sdk": "^0.13.0"
   }
 }

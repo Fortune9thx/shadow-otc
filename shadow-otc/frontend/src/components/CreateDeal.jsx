@@ -500,7 +500,7 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
             style={{ background: T.panel, border: `1px solid ${T.border}` }}>
             <p className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: T.textDim }}>Tx Hash</p>
             <a
-              href={`https://explorer.ritualchain.org/tx/${txResult.txHash}`}
+              href={`https://explorer.ritualfoundation.org/tx/${txResult.txHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[12px] font-mono break-all hover:underline"

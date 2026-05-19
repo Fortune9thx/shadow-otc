@@ -42,14 +42,16 @@ const STATUS_CHANGE_MSGS = {
   7: "🚫 Deal cancelled",
 };
 
+const RITUAL_CHAIN_ID = "0x7BB"; // 1979 decimal
+
 export default function App() {
   const [page, setPage]                 = useState("home");
   const [wallet, setWallet]             = useState(null);
+  const [wrongNetwork, setWrongNetwork] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [intentForRoom, setIntentForRoom] = useState(null);
   const [deals, setDeals]               = useState(() => loadLocalListings());
   const [settlements, setSettlements]   = useState([]);
-  const [requests, setRequests]         = useState([]);
   const [loading, setLoading]           = useState(true);
   const [toasts, setToasts]             = useState([]);  // [{id, msg, dealId, ts}]
   const lastStates                      = useRef({});    // dealId → status
@@ -252,9 +254,14 @@ export default function App() {
 
   useEffect(() => {
     if (!window.ethereum) return;
-    const h = (a) => setWallet(a[0] ?? null);
-    window.ethereum.on("accountsChanged", h);
-    return () => window.ethereum.removeListener("accountsChanged", h);
+    const onAccounts = (a) => setWallet(a[0] ?? null);
+    const onChain    = (chainId) => setWrongNetwork(chainId !== RITUAL_CHAIN_ID);
+    window.ethereum.on("accountsChanged", onAccounts);
+    window.ethereum.on("chainChanged",    onChain);
+    return () => {
+      window.ethereum.removeListener("accountsChanged", onAccounts);
+      window.ethereum.removeListener("chainChanged",    onChain);
+    };
   }, []);
 
   // Auto-reconnect wallet on page load (no prompt)
@@ -262,6 +269,10 @@ export default function App() {
     if (!window.ethereum) return;
     window.ethereum.request({ method: "eth_accounts" })
       .then(accounts => { if (accounts?.[0]) setWallet(accounts[0]); })
+      .catch(() => {});
+    // Check current chain
+    window.ethereum.request({ method: "eth_chainId" })
+      .then(chainId => setWrongNetwork(chainId !== RITUAL_CHAIN_ID))
       .catch(() => {});
   }, []);
 
@@ -342,22 +353,12 @@ export default function App() {
   }
 
   function handleJoinEarlyAccess() {
-    // TODO: replace with proper modal/form — window.prompt is not production-grade
-    const email = window.prompt("Enter your email for early access:");
-    if (email?.includes("@")) {
-      // Show a styled in-page notification instead of alert()
-      const toast = document.createElement("div");
-      toast.textContent = `✓ ${email} added to early access list`;
-      Object.assign(toast.style, {
-        position: "fixed", bottom: "24px", left: "50%", transform: "translateX(-50%)",
-        background: "#0B6B4B", color: "#fff", padding: "12px 20px",
-        borderRadius: "10px", fontSize: "13px", fontWeight: "600",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.20)", zIndex: "9999",
-        transition: "opacity 0.3s",
-      });
-      document.body.appendChild(toast);
-      setTimeout(() => { toast.style.opacity = "0"; setTimeout(() => toast.remove(), 300); }, 3000);
-    }
+    // Early access just navigates to the Dashboard where they can save their email
+    setPage("dashboard");
+  }
+
+  function disconnectWallet() {
+    setWallet(null);
   }
 
   /* ── routing ────────────────────────────────────────── */
@@ -430,10 +431,10 @@ export default function App() {
       <Homepage
         deals={deals}
         settlements={settlements}
-        requests={requests}
         loading={loading}
         wallet={wallet}
         onConnect={connectWallet}
+        onDisconnect={disconnectWallet}
         onDealClick={openDeal}
         onCreateListing={() => setPage("create")}
         onJoinEarlyAccess={handleJoinEarlyAccess}
@@ -448,6 +449,69 @@ export default function App() {
   return (
     <>
       {pageContent()}
+
+      {/* ── Wrong network banner ──────────────────────────────────────── */}
+      {wrongNetwork && wallet && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 10000,
+          background: "#7c2d12", color: "#fde8d8",
+          padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          fontSize: 13, fontWeight: 600, fontFamily: "monospace",
+        }}>
+          <span>⚠️ Wrong network — please switch to</span>
+          <button
+            onClick={async () => {
+              try {
+                await window.ethereum.request({
+                  method: "wallet_switchEthereumChain",
+                  params: [{ chainId: RITUAL_CHAIN_ID }],
+                });
+              } catch (e) {
+                if (e.code === 4902) {
+                  await window.ethereum.request({
+                    method: "wallet_addEthereumChain",
+                    params: [{
+                      chainId: RITUAL_CHAIN_ID,
+                      chainName: "Ritual Testnet",
+                      rpcUrls: ["https://rpc.ritualfoundation.org"],
+                      nativeCurrency: { name: "RITUAL", symbol: "RITUAL", decimals: 18 },
+                      blockExplorerUrls: ["https://explorer.ritualfoundation.org"],
+                    }],
+                  });
+                }
+              }
+            }}
+            style={{
+              background: "#fde8d8", color: "#7c2d12",
+              border: "none", borderRadius: 6, padding: "4px 12px",
+              fontSize: 12, fontWeight: 700, cursor: "pointer",
+            }}>
+            Switch to Ritual Testnet
+          </button>
+        </div>
+      )}
+
+      {/* ── Disconnect button (fixed top-right when wallet connected) ── */}
+      {wallet && (
+        <button
+          onClick={disconnectWallet}
+          title="Disconnect wallet"
+          style={{
+            position: "fixed", top: wrongNetwork && wallet ? 50 : 12, right: 14,
+            zIndex: 9998,
+            background: "rgba(15,20,18,0.85)", backdropFilter: "blur(8px)",
+            border: "1px solid rgba(11,107,75,0.35)",
+            borderRadius: 8, padding: "5px 10px",
+            color: "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 600,
+            cursor: "pointer", fontFamily: "monospace",
+            display: "flex", alignItems: "center", gap: 6,
+          }}>
+          <span style={{ color:"#4ade80" }}>●</span>
+          {wallet.slice(0, 6)}…{wallet.slice(-4)}
+          <span style={{ marginLeft: 4, opacity: 0.6 }}>✕</span>
+        </button>
+      )}
 
       {/* ── Notification toasts (fixed overlay — works on all pages) ── */}
       {toasts.length > 0 && (

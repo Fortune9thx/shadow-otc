@@ -141,14 +141,11 @@ function DealRow({ deal, wallet, onClick, onRespondToIntent }) {
       {canRespond && (
         <button
           onClick={e => { e.stopPropagation(); onRespondToIntent(deal); }}
-          className="flex-shrink-0 hidden sm:flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all"
+          className="flex-shrink-0 flex items-center gap-1 rounded-lg px-2.5 sm:px-3 py-1.5 text-[11px] font-semibold transition-all"
           style={{ background: T.em, color: "#fff", boxShadow: "0 2px 8px rgba(11,107,75,0.20)" }}
           onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.10)"}
           onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
-          Respond
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-          </svg>
+          <span className="hidden xs:inline">Respond </span>→
         </button>
       )}
 

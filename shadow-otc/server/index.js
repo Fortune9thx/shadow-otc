@@ -1,8 +1,9 @@
-const express = require('express');
-const cors    = require('cors');
-const https   = require('https');
+const express   = require('express');
+const cors      = require('cors');
+const https     = require('https');
 const { spawn } = require('child_process');
-const path    = require('path');
+const path      = require('path');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app  = express();
@@ -72,10 +73,17 @@ app.use(cors({
     'http://localhost:5000',
     /\.vercel\.app$/,
   ],
-  methods: ['GET', 'POST', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
 }));
-app.use(express.json());
+app.use(express.json({ limit: '32kb' })); // prevent large body abuse
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+const apiLimiter = rateLimit({ windowMs: 60_000, max: 60, standardHeaders: true, legacyHeaders: false });
+const writeLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
+app.use('/deals',   apiLimiter);
+app.use('/notify',  writeLimiter);
+app.use('/rooms',   apiLimiter);
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
@@ -207,10 +215,11 @@ app.get('/sellers', (req, res) => {
   }
 });
 
-// ── POST /verify/:dealId — trigger verifier agent via SSE stream ──────────────
-app.post('/verify/:dealId', (req, res) => {
+// ── GET /verify/:dealId — trigger verifier agent via SSE stream ──────────────
+app.get('/verify/:dealId', (req, res) => {
   const { dealId } = req.params;
-  const { maxRetries = 3, retryDelay = 15000 } = req.body;
+  const maxRetries = parseInt(req.query.maxRetries) || 3;
+  const retryDelay = parseInt(req.query.retryDelay) || 15000;
 
   // Stream server-sent events so the frontend gets live agent logs
   res.setHeader('Content-Type', 'text/event-stream');
@@ -317,6 +326,10 @@ app.post('/rooms/:roomId/message', (req, res) => {
   const { roomId } = req.params;
   const { wallet, text } = req.body;
   if (!text?.trim()) return res.status(400).json({ error: 'empty message' });
+  // Injection guard — never allow a client to impersonate system messages
+  if (!wallet || wallet.toLowerCase() === 'system') {
+    return res.status(400).json({ error: 'invalid wallet' });
+  }
   if (!rooms[roomId]) rooms[roomId] = { messages: [], updatedAt: Date.now() };
   if (!rooms[roomId].messages) rooms[roomId].messages = [];
   rooms[roomId].messages.push({ wallet: wallet || 'anon', text: text.trim(), ts: Date.now() });
@@ -333,22 +346,26 @@ app.listen(PORT, () => {
   // ── Auto-spawn Telegram bot if token is present ──────────────────────────
   if (process.env.TELEGRAM_BOT_TOKEN) {
     const botPath = path.join(__dirname, '..', 'agents', 'telegram-bot.js');
-    const bot = spawn('node', [botPath], {
-      env:   { ...process.env },
-      cwd:   path.join(__dirname, '..'),
-      stdio: 'inherit',
-    });
-    bot.on('error', err => console.error('[Bot] Failed to start:', err.message));
-    bot.on('exit',  code => {
-      console.warn(`[Bot] Exited with code ${code} — restarting in 5s…`);
-      setTimeout(() => {
-        const retry = spawn('node', [botPath], {
-          env: { ...process.env }, cwd: path.join(__dirname, '..'), stdio: 'inherit',
+    if (!require('fs').existsSync(botPath)) {
+      console.warn('⚠️  Telegram bot file not found — bot not started');
+    } else {
+      const spawnBot = () => {
+        const bot = spawn('node', [botPath], {
+          env:   { ...process.env },
+          cwd:   path.join(__dirname, '..'),
+          stdio: 'inherit',
         });
-        retry.on('error', e => console.error('[Bot] Retry failed:', e.message));
-      }, 5000);
-    });
-    console.log('🤖 Telegram bot spawned (@ShadowOTC_bot)');
+        bot.on('error', err => console.error('[Bot] Failed to start:', err.message));
+        bot.on('exit',  code => {
+          if (code !== 0) {
+            console.warn(`[Bot] Exited with code ${code} — restarting in 5s…`);
+            setTimeout(spawnBot, 5000);
+          }
+        });
+      };
+      spawnBot();
+      console.log('🤖 Telegram bot spawned (@ShadowOTC_bot)');
+    }
   } else {
     console.warn('⚠️  TELEGRAM_BOT_TOKEN not set — bot not started');
   }

@@ -83,11 +83,11 @@ async function main() {
   log(`Amount:    ${ethers.formatEther(deal.paymentAmount)} RITUAL`);
   log(`Buyer:     ${deal.buyer}`);
   log(`Seller:    ${deal.seller}`);
-  log(`Deadline:  ${new Date(Number(deal.deadline) * 1000).toLocaleString()}`);
+  log(`Deadline:  ${new Date(Number(deal.deadline)).toLocaleString()}`);
   log(`Proof URL: ${deal.deliveryProof || "Not submitted yet"}`);
 
-  // 2. Check expiry
-  if (Date.now() / 1000 > Number(deal.deadline)) {
+  // 2. Check expiry  (Ritual stores block.timestamp in ms — no *1000 needed)
+  if (Date.now() > Number(deal.deadline)) {
     log("\n[!] Deal has expired. Triggering auto-refund...");
     const tx = await contract.checkExpiry(DEAL_ID);
     await tx.wait();
@@ -762,15 +762,10 @@ function extractSocialMetrics(html) {
     }
   }
 
-  const anyFound = Object.values(result).some(v => v > 0);
-  if (!anyFound) {
-    // Simulation fallback — clearly flagged
-    result.likes     = Math.floor(Math.random() * 200);
-    result.followers = Math.floor(Math.random() * 1000);
-    result.views     = Math.floor(Math.random() * 5000);
-    result.comments  = Math.floor(Math.random() * 50);
-    result.retweets  = Math.floor(Math.random() * 80);
-    log("⚠ Simulated metrics — page did not expose raw engagement numbers");
+  // No random fallback — if we can't read real metrics, return zeros so the
+  // AI layer or a retry makes the call rather than fabricated numbers settling a deal.
+  if (!Object.values(result).some(v => v > 0)) {
+    log("⚠ Could not extract metrics from page — returning zeros (Groq AI will adjudicate)");
   }
   return result;
 }

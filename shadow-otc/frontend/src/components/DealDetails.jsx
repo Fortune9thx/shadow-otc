@@ -408,6 +408,42 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 </a>
               )}
 
+              {/* Share strip */}
+              <div className="flex items-center gap-2 mt-1 mb-2 flex-wrap">
+                {/* Copy link */}
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/#deal=${deal.id}`;
+                    navigator.clipboard.writeText(url).catch(()=>{});
+                    setCopied("link");
+                    setTimeout(()=>setCopied(null), 2000);
+                  }}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all"
+                  style={{
+                    background: copied==="link" ? T.em : T.panel,
+                    color: copied==="link" ? "#fff" : T.textSub,
+                    border: `1px solid ${T.border}`,
+                  }}>
+                  {copied==="link" ? "✓ Copied!" : "🔗 Copy link"}
+                </button>
+
+                {/* Share on X */}
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    `I'm offering ${parseFloat(deal.payment).toFixed(2)} RITUAL for: "${(deal.intent||"").slice(0,80)}${deal.intent?.length>80?"…":""}" on @ShadowOTC 👉 ${window.location.origin}/#deal=${deal.id} #ShadowOTC #RitualTestnet`
+                  )}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all"
+                  style={{ background:"#000", color:"#fff", border:"1px solid rgba(255,255,255,0.10)" }}
+                  onMouseEnter={e=>e.currentTarget.style.opacity="0.85"}
+                  onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+                  <svg viewBox="0 0 24 24" className="h-3 w-3 fill-current">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.849L1.254 2.25H8.08l4.258 5.632 5.906-5.632zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  Share on X
+                </a>
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[
                   ["Payment",    `${parseFloat(deal.payment).toFixed(4)} RITUAL`, true],

@@ -3,6 +3,9 @@ export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
+      screens: {
+        xs: "480px",   // custom xs breakpoint — used throughout components
+      },
       colors: {
         emeraldPrimary: "#0B6B4B",
         emeraldDark:    "#084C38",

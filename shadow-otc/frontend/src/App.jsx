@@ -6,7 +6,8 @@ import Dashboard       from "./components/Dashboard";
 import PrivateDealRoom from "./components/PrivateDealRoom";
 import MarketPage      from "./components/MarketPage";
 import { sbGetDeals, sbUpsertDeal, supabaseConfigured } from "./lib/supabase";
-import { getContract, parseDeal, fetchMyDeals, STATUS_LABELS } from "./lib/contract";
+import { getContract, parseDeal, fetchMyDeals, STATUS_LABELS, RITUAL_FAUCET_URL } from "./lib/contract";
+import { ethers } from "ethers";
 
 // ── profile helpers (localStorage, no import needed) ──
 const PROFILE_LS_KEY = (w) => `shadowotc_profile_${w?.toLowerCase() ?? "anon"}`;
@@ -48,6 +49,10 @@ export default function App() {
   const [page, setPage]                 = useState("home");
   const [wallet, setWallet]             = useState(null);
   const [wrongNetwork, setWrongNetwork] = useState(false);
+  const [ritualBalance, setRitualBalance] = useState(null); // null = unknown
+  const [faucetDismissed, setFaucetDismissed] = useState(
+    () => localStorage.getItem("shadowotc_faucet_dismissed") === "1"
+  );
   const [selectedDeal, setSelectedDeal] = useState(null);
   const [intentForRoom, setIntentForRoom] = useState(null);
   const [deals, setDeals]               = useState(() => loadLocalListings());
@@ -276,6 +281,16 @@ export default function App() {
       .catch(() => {});
   }, []);
 
+  // Check RITUAL balance when wallet changes
+  useEffect(() => {
+    if (!wallet || !window.ethereum) { setRitualBalance(null); return; }
+    const { JsonRpcProvider } = ethers;
+    const provider = new JsonRpcProvider("https://rpc.ritualfoundation.org");
+    provider.getBalance(wallet)
+      .then(bal => setRitualBalance(parseFloat(ethers.formatEther(bal))))
+      .catch(() => setRitualBalance(null));
+  }, [wallet]);
+
   /* ── navigation helpers ─────────────────────────────── */
   function openDeal(deal) {
     setSelectedDeal(deal);
@@ -450,6 +465,32 @@ export default function App() {
     <>
       {pageContent()}
 
+      {/* ── Zero-balance faucet prompt ──────────────────────────────── */}
+      {wallet && ritualBalance !== null && ritualBalance === 0 && !faucetDismissed && !wrongNetwork && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 10001,
+          background: "linear-gradient(90deg,#0B6B4B,#0d8a5e)",
+          color: "#fff", padding: "10px 16px",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 12,
+          fontSize: 13, fontWeight: 600, fontFamily: "monospace",
+          flexWrap: "wrap",
+        }}>
+          <span>🪙 Your wallet has 0 RITUAL — you need testnet tokens to create deals.</span>
+          <a href={RITUAL_FAUCET_URL} target="_blank" rel="noopener noreferrer"
+            style={{
+              background: "rgba(255,255,255,0.20)", border: "1px solid rgba(255,255,255,0.35)",
+              borderRadius: 6, padding: "4px 12px", color: "#fff",
+              fontSize: 12, fontWeight: 700, textDecoration: "none",
+            }}>
+            Get free RITUAL →
+          </a>
+          <button onClick={() => { setFaucetDismissed(true); localStorage.setItem("shadowotc_faucet_dismissed","1"); }}
+            style={{ background:"none", border:"none", color:"rgba(255,255,255,0.60)", fontSize:16, cursor:"pointer", padding:"0 4px" }}>
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* ── Wrong network banner ──────────────────────────────────────── */}
       {wrongNetwork && wallet && (
         <div style={{
@@ -559,6 +600,76 @@ export default function App() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* ── Mobile bottom nav (only on main pages, not detail/room views) ── */}
+      {["home","market","create","dashboard"].includes(page) && (
+        <nav style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9990,
+          background: "rgba(240,244,242,0.97)", backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(11,107,75,0.14)",
+          display: "flex", alignItems: "stretch",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }} className="sm:hidden">
+          {[
+            { id:"home",      icon:"🏠", label:"Home"    },
+            { id:"market",    icon:"📋", label:"Market"  },
+            { id:"create",    icon:"✚",  label:"Post"    },
+            { id:"dashboard", icon:"👤", label:"Profile" },
+          ].map(tab => {
+            const active = page === tab.id;
+            return (
+              <button key={tab.id}
+                onClick={() => {
+                  if (tab.id === "market") goMarket();
+                  else { setPage(tab.id); setIntentForRoom(null); window.scrollTo(0,0); }
+                }}
+                style={{
+                  flex: 1, display:"flex", flexDirection:"column",
+                  alignItems:"center", justifyContent:"center",
+                  gap: 3, padding:"8px 4px 10px",
+                  background:"none", border:"none", cursor:"pointer",
+                  color: active ? "#0B6B4B" : "#7B8A84",
+                  position: "relative",
+                }}>
+                {/* Active indicator */}
+                {active && (
+                  <span style={{
+                    position:"absolute", top:0, left:"50%", transform:"translateX(-50%)",
+                    width:24, height:2, borderRadius:"0 0 2px 2px",
+                    background:"#0B6B4B",
+                  }}/>
+                )}
+                <span style={{
+                  fontSize: tab.id === "create" ? 20 : 18,
+                  lineHeight: 1,
+                  fontWeight: tab.id === "create" ? 300 : "normal",
+                  color: tab.id === "create" && active ? "#0B6B4B"
+                       : tab.id === "create" ? "#0B6B4B" : "inherit",
+                }}>
+                  {tab.id === "create" ? (
+                    <span style={{
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                      width:32, height:32, borderRadius:"50%",
+                      background: active ? "#0B6B4B" : "#EAF4EF",
+                      border: "1.5px solid rgba(11,107,75,0.30)",
+                      fontSize:20, color: active ? "#fff" : "#0B6B4B",
+                      fontWeight:300,
+                    }}>+</span>
+                  ) : tab.icon}
+                </span>
+                <span style={{ fontSize:10, fontWeight: active ? 700 : 500, letterSpacing:"0.02em" }}>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+      )}
+
+      {/* Bottom padding on mobile so nav doesn't cover content */}
+      {["home","market","create","dashboard"].includes(page) && (
+        <div className="h-16 sm:hidden" />
       )}
 
       {/* Toast slide-in keyframe */}

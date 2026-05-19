@@ -549,26 +549,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Disconnect button (fixed top-right when wallet connected) ── */}
-      {wallet && (
-        <button
-          onClick={disconnectWallet}
-          title="Disconnect wallet"
-          style={{
-            position: "fixed", top: wrongNetwork && wallet ? 50 : 12, right: 14,
-            zIndex: 9998,
-            background: "rgba(15,20,18,0.85)", backdropFilter: "blur(8px)",
-            border: "1px solid rgba(11,107,75,0.35)",
-            borderRadius: 8, padding: "5px 10px",
-            color: "rgba(255,255,255,0.55)", fontSize: 11, fontWeight: 600,
-            cursor: "pointer", fontFamily: "monospace",
-            display: "flex", alignItems: "center", gap: 6,
-          }}>
-          <span style={{ color:"#4ade80" }}>●</span>
-          {wallet.slice(0, 6)}…{wallet.slice(-4)}
-          <span style={{ marginLeft: 4, opacity: 0.6 }}>✕</span>
-        </button>
-      )}
 
       {/* ── Notification toasts (fixed overlay — works on all pages) ── */}
       {toasts.length > 0 && (
@@ -618,63 +598,89 @@ export default function App() {
         </div>
       )}
 
-      {/* ── Mobile bottom nav (only on main pages, not detail/room views) ── */}
+      {/* ── Mobile bottom nav ── */}
       {["home","market","create","dashboard"].includes(page) && (
         <nav style={{
           position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9990,
-          background: "rgba(240,244,242,0.97)", backdropFilter: "blur(20px)",
-          borderTop: "1px solid rgba(11,107,75,0.14)",
+          background: "rgba(255,255,255,0.97)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          borderTop: "1px solid rgba(0,0,0,0.07)",
           display: "flex", alignItems: "stretch",
           paddingBottom: "env(safe-area-inset-bottom)",
+          boxShadow: "0 -2px 20px rgba(0,0,0,0.06)",
         }} className="sm:hidden">
           {[
-            { id:"home",      icon:"🏠", label:"Home"    },
-            { id:"market",    icon:"📋", label:"Market"  },
-            { id:"create",    icon:"✚",  label:"Post"    },
-            { id:"dashboard", icon:"👤", label:"Profile" },
+            {
+              id: "home", label: "Home",
+              paths: ["M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"],
+            },
+            {
+              id: "market", label: "Market",
+              paths: ["M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"],
+            },
+            { id: "create", label: "Post", special: true },
+            {
+              id: "dashboard", label: "Profile",
+              paths: ["M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2", "M12 11a4 4 0 100-8 4 4 0 000 8z"],
+            },
           ].map(tab => {
             const active = page === tab.id;
+            if (tab.special) {
+              return (
+                <button key={tab.id}
+                  onClick={() => { setPage("create"); window.scrollTo(0, 0); }}
+                  style={{
+                    flex: 1, display:"flex", flexDirection:"column",
+                    alignItems:"center", justifyContent:"center",
+                    gap: 3, padding:"8px 4px 10px",
+                    background:"none", border:"none", cursor:"pointer",
+                  }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    background: active ? "#0B6B4B" : "#EAF4EF",
+                    border: "1.5px solid rgba(11,107,75,0.28)",
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    boxShadow: "0 2px 12px rgba(11,107,75,0.22)",
+                  }}>
+                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24"
+                      stroke={active ? "#fff" : "#0B6B4B"} strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                  </div>
+                  <span style={{ fontSize:10, fontWeight: active ? 700 : 500, color: active ? "#0B6B4B" : "#9CA3AF", letterSpacing:"0.01em" }}>
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            }
             return (
               <button key={tab.id}
                 onClick={() => {
                   if (tab.id === "market") goMarket();
-                  else { setPage(tab.id); setIntentForRoom(null); window.scrollTo(0,0); }
+                  else { setPage(tab.id); setIntentForRoom(null); window.scrollTo(0, 0); }
                 }}
                 style={{
                   flex: 1, display:"flex", flexDirection:"column",
                   alignItems:"center", justifyContent:"center",
-                  gap: 3, padding:"8px 4px 10px",
+                  gap: 4, padding:"10px 4px 12px",
                   background:"none", border:"none", cursor:"pointer",
-                  color: active ? "#0B6B4B" : "#7B8A84",
-                  position: "relative",
+                  position:"relative",
                 }}>
-                {/* Active indicator */}
                 {active && (
                   <span style={{
-                    position:"absolute", top:0, left:"50%", transform:"translateX(-50%)",
-                    width:24, height:2, borderRadius:"0 0 2px 2px",
+                    position:"absolute", top: 0, left:"50%", transform:"translateX(-50%)",
+                    width: 20, height: 2, borderRadius:"0 0 2px 2px",
                     background:"#0B6B4B",
                   }}/>
                 )}
-                <span style={{
-                  fontSize: tab.id === "create" ? 20 : 18,
-                  lineHeight: 1,
-                  fontWeight: tab.id === "create" ? 300 : "normal",
-                  color: tab.id === "create" && active ? "#0B6B4B"
-                       : tab.id === "create" ? "#0B6B4B" : "inherit",
-                }}>
-                  {tab.id === "create" ? (
-                    <span style={{
-                      display:"flex", alignItems:"center", justifyContent:"center",
-                      width:32, height:32, borderRadius:"50%",
-                      background: active ? "#0B6B4B" : "#EAF4EF",
-                      border: "1.5px solid rgba(11,107,75,0.30)",
-                      fontSize:20, color: active ? "#fff" : "#0B6B4B",
-                      fontWeight:300,
-                    }}>+</span>
-                  ) : tab.icon}
-                </span>
-                <span style={{ fontSize:10, fontWeight: active ? 700 : 500, letterSpacing:"0.02em" }}>
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24"
+                  stroke={active ? "#0B6B4B" : "#9CA3AF"}
+                  strokeWidth={active ? 2.2 : 1.7}
+                  strokeLinecap="round" strokeLinejoin="round">
+                  {tab.paths.map((p, i) => <path key={i} d={p}/>)}
+                </svg>
+                <span style={{ fontSize:10, fontWeight: active ? 700 : 500, color: active ? "#0B6B4B" : "#9CA3AF", letterSpacing:"0.01em" }}>
                   {tab.label}
                 </span>
               </button>

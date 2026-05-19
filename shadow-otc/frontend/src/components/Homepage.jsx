@@ -393,6 +393,7 @@ function StatsBar({ deals, platformStats }) {
 export default function Homepage({
   wallet,
   onConnect,
+  onDisconnect,
   onDealClick,
   onCreateListing,
   onDashboard,
@@ -404,9 +405,22 @@ export default function Homepage({
   const [loading, setLoading]         = useState(true);
   const [filter, setFilter]           = useState("all");
   const [mobileNav, setMobileNav]     = useState(false);
+  const [walletMenu, setWalletMenu]   = useState(false);
+  const [addrCopied, setAddrCopied]   = useState(false);
+  const walletMenuRef                 = useRef(null);
   const [welcomeDismissed, setWelcomeDismissed] = useState(
     () => !!localStorage.getItem("shadowotc_welcome_v1")
   );
+
+  /* close wallet menu on outside click */
+  useEffect(() => {
+    if (!walletMenu) return;
+    function handler(e) {
+      if (!walletMenuRef.current?.contains(e.target)) setWalletMenu(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [walletMenu]);
 
   /* fetch on mount */
   useEffect(() => {
@@ -508,17 +522,112 @@ export default function Homepage({
             </button>
 
             {wallet ? (
-              <button onClick={onDashboard}
-                className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-medium transition-all"
-                style={{ background: "#f7f8fa", border: `1px solid ${T.border}`, color: "#2d3340" }}>
-                <span className="relative flex h-2 w-2 flex-shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
-                    style={{ background: T.emBr }} />
-                  <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: T.emBr }} />
-                </span>
-                <span className="hidden sm:inline">{wallet.slice(0,6)}...{wallet.slice(-4)}</span>
-                <span className="sm:hidden text-[11px]">Connected</span>
-              </button>
+              <div className="relative" ref={walletMenuRef}>
+                <button
+                  onClick={() => setWalletMenu(v => !v)}
+                  className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-medium transition-all"
+                  style={{
+                    background: walletMenu ? T.emBg : "#f7f8fa",
+                    border: `1px solid ${walletMenu ? T.borderS : T.border}`,
+                    color: "#2d3340",
+                  }}>
+                  <span className="relative flex h-2 w-2 flex-shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+                      style={{ background: T.emBr }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: T.emBr }} />
+                  </span>
+                  <span className="hidden sm:inline">{wallet.slice(0,6)}...{wallet.slice(-4)}</span>
+                  <span className="sm:hidden text-[11px] font-semibold" style={{ color: T.em }}>Connected</span>
+                  <svg className="h-3 w-3 ml-0.5 hidden sm:block transition-transform"
+                    style={{ transform: walletMenu ? "rotate(180deg)" : "rotate(0)" }}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+
+                {walletMenu && (
+                  <div className="absolute right-0 top-full mt-1.5 w-52 rounded-2xl overflow-hidden"
+                    style={{
+                      background: "#fff",
+                      border: `1px solid ${T.border}`,
+                      boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)",
+                      zIndex: 100,
+                    }}>
+                    {/* Identity header */}
+                    <div className="px-4 py-3" style={{ borderBottom: `1px solid ${T.border}`, background: T.panel }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="relative flex h-2 w-2 flex-shrink-0">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+                            style={{ background: T.emBr }} />
+                          <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: T.emBr }} />
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: T.em }}>
+                          Connected
+                        </span>
+                      </div>
+                      <p className="text-[12px] font-mono font-semibold" style={{ color: T.text }}>
+                        {wallet.slice(0, 8)}…{wallet.slice(-6)}
+                      </p>
+                      <p className="text-[10px] mt-0.5" style={{ color: T.textDim }}>
+                        Ritual Testnet · Chain 1979
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="py-1">
+                      {[
+                        {
+                          label: addrCopied ? "Copied!" : "Copy Address",
+                          icon: "M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z",
+                          color: addrCopied ? T.em : T.textSub,
+                          fn: () => {
+                            navigator.clipboard.writeText(wallet).catch(() => {});
+                            setAddrCopied(true);
+                            setTimeout(() => setAddrCopied(false), 2000);
+                          },
+                        },
+                        {
+                          label: "View on Explorer",
+                          icon: "M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14",
+                          color: T.textSub,
+                          href: `https://explorer.ritualfoundation.org/address/${wallet}`,
+                        },
+                        {
+                          label: "My Deals",
+                          icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+                          color: T.textSub,
+                          fn: () => { onDashboard?.(); setWalletMenu(false); },
+                        },
+                        {
+                          label: "Disconnect",
+                          icon: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
+                          color: "#dc2626",
+                          hoverBg: "#fff1f2",
+                          fn: () => { onDisconnect?.(); setWalletMenu(false); },
+                        },
+                      ].map(item => {
+                        const El = item.href ? "a" : "button";
+                        const extra = item.href
+                          ? { href: item.href, target: "_blank", rel: "noreferrer" }
+                          : { type: "button", onClick: item.fn };
+                        return (
+                          <El key={item.label} {...extra}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-[12px] font-medium text-left transition-colors"
+                            style={{ color: item.color, textDecoration: "none" }}
+                            onMouseEnter={e => e.currentTarget.style.background = item.hoverBg ?? T.panel}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                              stroke="currentColor" strokeWidth={1.8}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon}/>
+                            </svg>
+                            {item.label}
+                          </El>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <button onClick={onConnect}
                 className="hidden sm:block rounded-xl px-3 py-1.5 text-[12px] font-semibold transition-all"

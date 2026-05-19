@@ -397,8 +397,24 @@ export default function App() {
           onViewDeal={async (dealId) => {
             try {
               const contract = getContract();
-              const raw = await contract.getDeal(dealId);
+              const raw  = await contract.getDeal(dealId);
               const deal = parseDeal(dealId, raw);
+
+              // Persist with correct on-chain ID to all backends
+              const stamped = { ...deal, walletAddress: wallet || null };
+              setDeals(prev => {
+                if (prev.some(d => String(d.id) === String(dealId))) return prev;
+                const updated = [stamped, ...prev];
+                saveLocalListings(updated);
+                return updated;
+              });
+              if (supabaseConfigured) sbUpsertDeal(stamped).catch(() => {});
+              fetch(API + "/deals", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(stamped),
+              }).catch(() => {});
+
               openDeal(deal);
             } catch {
               openDeal({ id: dealId, stub: true });

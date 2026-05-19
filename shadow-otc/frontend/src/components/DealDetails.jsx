@@ -3,6 +3,7 @@ import ReputationBadge from "./ReputationBadge";
 import {
   getContract, getWriteContract, parseDeal,
   acceptDeal, submitDelivery, cancelDeal, executeDeal,
+  addMilestones, approveMilestone,
   CATEGORY_LABELS, CATEGORY_ICONS, STATUS_LABELS,
 } from "../lib/contract";
 import { ethers } from "ethers";
@@ -111,6 +112,11 @@ function countdown(ms) {
   return `${h}h ${m}m left`;
 }
 
+/* ── Milestone localStorage helpers ─────────────────────────── */
+const MS_KEY     = (id) => `shadowotc_milestones_${id}`;
+function loadMilestones(id)     { try { return JSON.parse(localStorage.getItem(MS_KEY(id)) || "[]"); } catch { return []; } }
+function saveMilestones(id, ms) { try { localStorage.setItem(MS_KEY(id), JSON.stringify(ms)); } catch {} }
+
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════════ */
@@ -128,6 +134,9 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
   const [verifying,  setVerifying]  = useState(false);
   const [verifDone,  setVerifDone]  = useState(null);    // {success, reason}
   const [copied,     setCopied]     = useState(null);
+  const [milestones,        setMilestones]        = useState([]);
+  const [showMilestoneForm, setShowMilestoneForm] = useState(false);
+  const [milestoneRows,     setMilestoneRows]     = useState([{ description: "", amount: "" }]);
   const logEndRef    = useRef(null);
   const submittingRef = useRef(false); // Security: double-submit guard (issue #5)
 
@@ -165,6 +174,49 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
 
   // Scroll log to bottom
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior:"smooth" }); }, [agentLogs]);
+
+  // Load milestones from localStorage; check chain events for approvals
+  useEffect(() => {
+    setMilestones([]);
+    setShowMilestoneForm(false);
+    if (!deal?.id) return;
+    const stored = loadMilestones(deal.id);
+    if (!stored.length) return;
+    (async () => {
+      try {
+        const c      = getContract();
+        const events = await c.queryFilter(c.filters.MilestoneCompleted(deal.id));
+        const done   = new Set(events.map(e => Number(e.args.milestoneIndex)));
+        setMilestones(stored.map((m, i) => ({ ...m, approved: done.has(i) })));
+      } catch {
+        setMilestones(stored);
+      }
+    })();
+  }, [deal?.id]);
+
+  /* ── milestone handlers ──────────────────────────────────── */
+  async function handleAddMilestones(e) {
+    e.preventDefault();
+    const valid = milestoneRows.filter(r => r.description.trim() && parseFloat(r.amount) > 0);
+    if (!valid.length) { setError("Add at least one milestone with a description and amount."); return; }
+    await withTx("Setting milestones…", () =>
+      addMilestones(deal.id, valid.map(r => r.description.trim()), valid.map(r => r.amount))
+    );
+    const newMs = valid.map(r => ({ description: r.description.trim(), amount: r.amount, approved: false }));
+    saveMilestones(deal.id, newMs);
+    setMilestones(newMs);
+    setShowMilestoneForm(false);
+    setMilestoneRows([{ description: "", amount: "" }]);
+  }
+
+  async function handleApproveMilestone(index) {
+    await withTx(`Approving milestone ${index + 1}…`, () => approveMilestone(deal.id, index));
+    setMilestones(prev => {
+      const updated = prev.map((m, i) => i === index ? { ...m, approved: true } : m);
+      saveMilestones(deal.id, updated);
+      return updated;
+    });
+  }
 
   if (!dealProp) return null;
 
@@ -489,6 +541,143 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 </div>
               )}
             </div>
+
+            {/* ── MILESTONES ─────────────────────────────── */}
+            {deal && st >= 1 && st <= 4 && (isBuyer || milestones.length > 0) && (
+              <div className="rounded-2xl p-5" style={{ background:T.card, border:`1px solid ${T.border}`, boxShadow:T.shadow }}>
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-bold" style={{ color:T.text }}>🏁 Milestones</span>
+                    {milestones.length > 0 && (
+                      <span className="rounded-full px-2 py-0.5 text-[10px] font-bold"
+                        style={{ background:T.emBg, color:T.em, border:`1px solid ${T.emBdr}` }}>
+                        {milestones.filter(m=>m.approved).length}/{milestones.length}
+                      </span>
+                    )}
+                  </div>
+                  {isBuyer && isAccepted && milestones.length === 0 && !showMilestoneForm && (
+                    <Btn small outline onClick={() => setShowMilestoneForm(true)}>+ Add</Btn>
+                  )}
+                </div>
+                <p className="text-[11px] mb-4" style={{ color:T.textDim }}>
+                  Break the deal into stages. Approve each stage to release partial payment to the seller.
+                </p>
+
+                {/* Add milestones form */}
+                {showMilestoneForm && (
+                  <form onSubmit={handleAddMilestones} className="space-y-3 mb-4 pb-4"
+                    style={{ borderBottom:`1px solid ${T.border}` }}>
+                    <p className="text-[11px] font-semibold" style={{ color:T.textSub }}>
+                      Deal total: {parseFloat(deal.payment).toFixed(4)} RITUAL — stages should sum to this.
+                    </p>
+                    {milestoneRows.map((row, i) => (
+                      <div key={i} className="flex gap-2 items-center">
+                        <input
+                          className="flex-1 rounded-xl border px-3 py-2.5 text-[12px] outline-none"
+                          style={{ fontSize:16, borderColor:T.borderS, background:"white", color:T.text }}
+                          placeholder={`Phase ${i+1}: e.g. Research & mockups`}
+                          value={row.description}
+                          onChange={e => setMilestoneRows(prev => prev.map((r,j) => j===i ? {...r, description:e.target.value} : r))}
+                        />
+                        <div className="relative w-36">
+                          <input
+                            type="number" min="0.001" step="0.001"
+                            className="w-full rounded-xl border px-3 py-2.5 text-[12px] outline-none"
+                            style={{ fontSize:16, borderColor:T.borderS, background:"white", color:T.text, paddingRight:"56px" }}
+                            placeholder="0.00"
+                            value={row.amount}
+                            onChange={e => setMilestoneRows(prev => prev.map((r,j) => j===i ? {...r, amount:e.target.value} : r))}
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold pointer-events-none"
+                            style={{ color:T.textDim }}>RITUAL</span>
+                        </div>
+                        {milestoneRows.length > 1 && (
+                          <button type="button"
+                            onClick={() => setMilestoneRows(prev => prev.filter((_,j) => j!==i))}
+                            className="w-8 h-9 flex items-center justify-center rounded-lg flex-shrink-0 text-[11px]"
+                            style={{ background:T.dangerBg, border:`1px solid #fecdd3`, color:T.danger }}>
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {milestoneRows.some(r => parseFloat(r.amount) > 0) && (() => {
+                      const total  = milestoneRows.reduce((s, r) => s + (parseFloat(r.amount)||0), 0);
+                      const target = parseFloat(deal.payment);
+                      const diff   = Math.abs(total - target);
+                      return diff > 0.0001 ? (
+                        <p className="text-[11px]" style={{ color:T.warn }}>
+                          ⚠ Total {total.toFixed(4)} ≠ {target.toFixed(4)} RITUAL (off by {diff.toFixed(4)})
+                        </p>
+                      ) : (
+                        <p className="text-[11px]" style={{ color:"#16a34a" }}>
+                          ✓ {total.toFixed(4)} RITUAL — amounts balanced
+                        </p>
+                      );
+                    })()}
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button"
+                        onClick={() => setMilestoneRows(prev => [...prev, { description:"", amount:"" }])}
+                        className="rounded-xl px-4 py-2 text-[12px] font-semibold"
+                        style={{ background:T.panel, border:`1px solid ${T.border}`, color:T.textSub }}>
+                        + Add stage
+                      </button>
+                      <Btn small loading={txPending && txLabel.includes("milestone")}>
+                        Set on Chain
+                      </Btn>
+                      <Btn small outline
+                        onClick={() => { setShowMilestoneForm(false); setMilestoneRows([{ description:"", amount:"" }]); }}>
+                        Cancel
+                      </Btn>
+                    </div>
+                  </form>
+                )}
+
+                {/* Milestone list */}
+                {milestones.length > 0 && (
+                  <div className="space-y-2">
+                    {milestones.map((m, i) => (
+                      <div key={i} className="flex items-center gap-3 rounded-xl px-4 py-3"
+                        style={{
+                          background: m.approved ? "#f0fdf4" : T.panel,
+                          border: `1px solid ${m.approved ? "#bbf7d0" : T.border}`,
+                        }}>
+                        <span className="text-[14px] flex-shrink-0">{m.approved ? "✅" : "⏳"}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-semibold" style={{ color:T.text }}>
+                            {i+1}. {m.description}
+                          </p>
+                          <p className="text-[11px]" style={{ color:T.textDim }}>
+                            {parseFloat(m.amount).toFixed(4)} RITUAL
+                          </p>
+                        </div>
+                        {m.approved ? (
+                          <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg flex-shrink-0"
+                            style={{ background:"#dcfce7", border:"1px solid #bbf7d0", color:"#16a34a" }}>
+                            Released ✓
+                          </span>
+                        ) : isBuyer && (
+                          <Btn small
+                            loading={txPending && txLabel === `Approving milestone ${i + 1}…`}
+                            onClick={() => handleApproveMilestone(i)}>
+                            Approve
+                          </Btn>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {milestones.length === 0 && !showMilestoneForm && (
+                  <p className="text-[12px]" style={{ color:T.textDim }}>
+                    {isBuyer && isAccepted
+                      ? "No milestones yet. Add stages above to pay the seller incrementally."
+                      : "No milestones — full payment releases on deal completion."}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* ── AGENT VERIFICATION TERMINAL ────────────── */}
             {(verifying || agentLogs.length > 0 || verifDone) && (

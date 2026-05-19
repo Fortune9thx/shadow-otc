@@ -136,11 +136,12 @@ function DealRow({ deal, wallet, onClick }) {
       {/* Status */}
       <StatusBadge status={deal.status} />
 
-      {/* Deadline */}
-      <div className="hidden md:block text-right flex-shrink-0 w-16">
-        <p className="text-[11px] font-mono"
-          style={{ color: cd.expired ? "#dc2626" : T.textDim }}>{cd.text}</p>
-      </div>
+      {/* Deadline — only show when not yet expired */}
+      {!cd.expired && (
+        <div className="hidden md:block text-right flex-shrink-0 w-16">
+          <p className="text-[11px] font-mono" style={{ color: T.textDim }}>{cd.text}</p>
+        </div>
+      )}
 
       {/* Chevron */}
       <svg className="h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -562,9 +563,7 @@ export default function MarketPage({
                 Get matched automatically
               </p>
               <p className="text-[12px] leading-relaxed" style={{ color: T.textSub }}>
-                Connect your wallet and register on @ShadowOTC_bot with <code className="font-mono text-[11px] px-1 py-0.5 rounded"
-                  style={{ background: "rgba(11,107,75,0.10)" }}>/sell 0xYourWallet 0 2 7</code> to receive
-                instant Telegram alerts when a deal matching your skills goes live.
+                Connect your wallet, then message <strong>@ShadowOTC_bot</strong> on Telegram to register as a seller and get instant alerts when a matching deal goes live.
               </p>
             </div>
             <button onClick={onConnect}

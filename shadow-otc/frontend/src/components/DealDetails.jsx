@@ -7,6 +7,16 @@ import {
 } from "../lib/contract";
 import { ethers } from "ethers";
 
+/* ── security: only allow http/https URLs to prevent javascript: XSS (issue #1) ── */
+function safeUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return url;
+  } catch {}
+  return null;
+}
+
 /* ── design tokens ─────────────────────────────────────────── */
 const T = {
   bg:      "#F0F4F2",
@@ -118,7 +128,8 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
   const [verifying,  setVerifying]  = useState(false);
   const [verifDone,  setVerifDone]  = useState(null);    // {success, reason}
   const [copied,     setCopied]     = useState(null);
-  const logEndRef = useRef(null);
+  const logEndRef    = useRef(null);
+  const submittingRef = useRef(false); // Security: double-submit guard (issue #5)
 
   /* ── fetch on-chain deal ─────────────────────────────── */
   useEffect(() => {
@@ -182,6 +193,9 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
 
   async function withTx(label, fn) {
     if (!wallet) { onConnect?.(); return; }
+    // Security: prevent double-submit (issue #5)
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setTxPending(true);
     setTxLabel(label);
@@ -194,6 +208,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
     } catch (e) {
       if (e?.code !== 4001) setError(e?.reason || e?.message || "Transaction failed");
     } finally {
+      submittingRef.current = false;
       setTxPending(false);
       setTxLabel("");
     }
@@ -382,8 +397,8 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 {deal.intent || `Deal #${deal.id}`}
               </h1>
 
-              {deal.conditionUrl && (
-                <a href={deal.conditionUrl} target="_blank" rel="noreferrer"
+              {deal.conditionUrl && safeUrl(deal.conditionUrl) && (
+                <a href={safeUrl(deal.conditionUrl)} target="_blank" rel="noreferrer"
                   className="inline-flex items-center gap-1 text-[12px] font-medium mb-4 hover:underline"
                   style={{ color:T.em }}>
                   🔗 Condition URL
@@ -418,9 +433,14 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
               {deal.deliveryProof && (
                 <div className="flex items-center justify-between py-2.5" style={{ borderBottom:`1px solid ${T.border}` }}>
                   <span className="text-[12px]" style={{ color:T.textDim }}>Proof URL</span>
-                  <a href={deal.deliveryProof} target="_blank" rel="noreferrer"
-                    className="text-[12px] font-semibold hover:underline truncate max-w-[200px]"
-                    style={{ color:T.em }}>{deal.deliveryProof}</a>
+                  {safeUrl(deal.deliveryProof) ? (
+                    <a href={safeUrl(deal.deliveryProof)} target="_blank" rel="noreferrer"
+                      className="text-[12px] font-semibold hover:underline truncate max-w-[200px]"
+                      style={{ color:T.em }}>{deal.deliveryProof}</a>
+                  ) : (
+                    <span className="text-[12px] font-semibold truncate max-w-[200px]"
+                      style={{ color:T.textDim }}>{deal.deliveryProof}</span>
+                  )}
                 </div>
               )}
             </div>
@@ -480,6 +500,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                 </p>
                 <textarea rows={3} value={disputeMsg} onChange={e=>setDisputeMsg(e.target.value)}
                   placeholder="e.g. Seller has not responded in 48h. Proof URL is inaccessible."
+                  maxLength={300}
                   className="w-full resize-none rounded-xl border px-4 py-2.5 text-[12px] outline-none"
                   style={{ fontSize: 16, borderColor:"#fecdd3", background:T.dangerBg, color:T.text }}/>
                 <div className="flex gap-2">
@@ -598,6 +619,7 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                         value={proofUrl}
                         onChange={e=>setProofUrl(e.target.value)}
                         placeholder="https://your-proof-url.com"
+                        maxLength={500}
                         className="w-full rounded-xl border px-4 py-2.5 text-[13px] outline-none"
                         style={{ fontSize: 16, borderColor:T.borderS, background:T.panel, color:T.text }}
                       />
@@ -628,8 +650,8 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                     <Alert>
                       Seller submitted proof. Trigger the verification agent to check the condition on-chain.
                     </Alert>
-                    {deal.deliveryProof && (
-                      <a href={deal.deliveryProof} target="_blank" rel="noreferrer"
+                    {deal.deliveryProof && safeUrl(deal.deliveryProof) && (
+                      <a href={safeUrl(deal.deliveryProof)} target="_blank" rel="noreferrer"
                         className="flex items-center justify-between rounded-xl px-4 py-2.5"
                         style={{ background:T.panel, border:`1px solid ${T.border}` }}>
                         <span className="text-[12px]" style={{ color:T.textDim }}>Proof URL</span>
@@ -644,10 +666,10 @@ export default function DealDetails({ deal: dealProp, wallet, onConnect, onBack 
                     {(!deal.verifier || deal.verifier === "0x0000000000000000000000000000000000000000") && isBuyer && (
                       <div className="rounded-xl p-3" style={{ background: T.warnBg, border:"1px solid #fde68a" }}>
                         <p className="text-[11px] font-semibold mb-2" style={{ color: T.warn }}>
-                          ⚡ Manual Settlement (testnet)
+                          Settle this deal manually
                         </p>
                         <p className="text-[10px] mb-2" style={{ color: T.warn }}>
-                          No verifier set on this deal. You can settle it directly from your wallet.
+                          This deal uses manual settlement. Once you've confirmed the seller delivered, release their funds — or get a refund if they didn't.
                         </p>
                         <div className="flex gap-2">
                           <Btn small full

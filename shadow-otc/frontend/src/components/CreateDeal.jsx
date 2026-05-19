@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createDeal, CATEGORY_LABELS, CATEGORY_ICONS } from "../lib/contract";
+import { ethers } from "ethers";
 
 /**
  * CreateDeal — 4-step on-chain deal creation wizard.
@@ -113,8 +114,8 @@ const COLLATERAL_OPTIONS = [
 
 /* ─── verification method ────────────────────────────── */
 const VERIFY_OPTIONS = [
-  { value: 0, label: "HTTP Fetch", desc: "Agent fetches the condition URL and checks the response for your params." },
-  { value: 2, label: "Manual",     desc: "Both parties must manually confirm delivery. No automated check." },
+  { value: 0, label: "AI Auto",  desc: "The agent fetches your condition URL and confirms delivery automatically. Recommended." },
+  { value: 2, label: "Manual",   desc: "You and the seller both confirm when the deal is done. Good for Discord roles and offline handoffs." },
 ];
 
 /* ─── step indicator ─────────────────────────────────── */
@@ -295,7 +296,14 @@ function LivePreview({ form }) {
           <div>
             <span style={{ color: "rgba(74,222,128,0.70)" }}>condition</span>
             <span style={{ color: "rgba(255,255,255,0.45)" }}> = </span>
-            <span>{form.conditionParams}</span>
+            <span>{(() => {
+              try {
+                const p = JSON.parse(form.conditionParams);
+                if (p.tokenContract) return `Balance ≥ ${p.minBalance || "?"} tokens${p.receiverAddress ? ` → ${p.receiverAddress.slice(0,8)}…` : ""}`;
+                if (p.nftContract)   return `Holds NFT${p.tokenId ? ` #${p.tokenId}` : ""}${p.receiverAddress ? ` → ${p.receiverAddress.slice(0,8)}…` : ""}`;
+                return form.conditionParams;
+              } catch { return form.conditionParams; }
+            })()}</span>
           </div>
         )}
         <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: 12 }}>
@@ -340,7 +348,42 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
     verificationMethod: 0,
   });
 
+  // Known Ritual Testnet contracts — pre-filled for user convenience
+  const RITUAL_TOKEN = { address: "0x92BF263ac34f756783DA7B6E82b53895cF81bF7f", symbol: "RITUAL", name: "Ritual Testnet Token" };
+
+  // Sub-fields for on-chain categories (3=NFT, 6=Token) — assembled into conditionParams JSON
+  const [onChainFields, setOnChainFields] = useState({
+    contract:       "",
+    tokenId:        "",
+    minBalance:     "",
+    receiverWallet: wallet || "",   // defaults to connected wallet
+  });
+  const [customContract, setCustomContract] = useState(false); // toggle custom address input
+
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
+  // Update an on-chain sub-field and immediately sync conditionParams JSON
+  function setOnChain(key, val) {
+    setOnChainFields(prev => {
+      const next = { ...prev, [key]: val };
+      const params = form.category === 3
+        ? { nftContract: next.contract, tokenId: next.tokenId, receiverAddress: next.receiverWallet, chain: "ritual" }
+        : { tokenContract: next.contract, minBalance: next.minBalance, receiverAddress: next.receiverWallet, chain: "ritual" };
+      setForm(f => ({ ...f, conditionParams: JSON.stringify(params) }));
+      return next;
+    });
+  }
+
+  // Pre-fill Ritual token address
+  function selectRitualToken() {
+    setCustomContract(false);
+    setOnChainFields(prev => {
+      const next = { ...prev, contract: RITUAL_TOKEN.address };
+      const params = { tokenContract: next.contract, minBalance: next.minBalance, receiverAddress: next.receiverWallet, chain: "ritual" };
+      setForm(f => ({ ...f, conditionParams: JSON.stringify(params) }));
+      return next;
+    });
+  }
 
   /* ── validation ── */
   function validate() {
@@ -348,8 +391,24 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
       if (form.category === null) return "Please select a category.";
     }
     if (step === 2) {
-      if (!form.intent.trim())        return "Please describe what you want done.";
-      if (!form.conditionUrl.trim())  return "Please enter the condition URL the agent will check.";
+      if (!form.intent.trim()) return "Please describe what you want done.";
+      // On-chain categories (NFT Transfer, Token Allocation) verify without a URL
+      const onChain = form.category === 3 || form.category === 6;
+      if (!onChain && form.category !== 10 && !form.conditionUrl.trim())
+        return "Please enter a condition URL — the agent needs this to verify delivery.";
+      if (onChain && !onChainFields.contract.trim())
+        return form.category === 3
+          ? "Please enter the NFT contract address."
+          : "Please select or enter the token contract address.";
+      // Security: validate Ethereum addresses (issue #3)
+      if (onChain && onChainFields.contract.trim() && !ethers.isAddress(onChainFields.contract.trim()))
+        return "Contract address is invalid. Please enter a valid 0x… Ethereum address.";
+      if (form.category === 6 && !onChainFields.minBalance)
+        return "Please enter how many tokens the seller is sending you.";
+      if (onChain && !onChainFields.receiverWallet.trim())
+        return "Please enter the receiving wallet address.";
+      if (onChain && onChainFields.receiverWallet.trim() && !ethers.isAddress(onChainFields.receiverWallet.trim()))
+        return "Receiving wallet address is invalid. Please enter a valid 0x… Ethereum address.";
     }
     if (step === 3) {
       if (!form.amountEth || parseFloat(form.amountEth) <= 0)
@@ -396,7 +455,9 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
       });
       setTxResult(result);
     } catch (e) {
-      const msg = e?.reason ?? e?.message ?? "Transaction failed";
+      // Prefer short contract revert reason; fall back to full message; strip ethers boilerplate
+      const raw = e?.reason ?? e?.shortMessage ?? e?.message ?? "Transaction failed";
+      const msg = raw.replace(/\s*\(action=.*$/s, "").trim();
       setTxError(msg.length > 200 ? msg.slice(0, 200) + "…" : msg);
     } finally {
       setTxPending(false);
@@ -590,49 +651,177 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                 <div className="rounded-2xl overflow-hidden"
                   style={{ background: T.card, border: `1px solid ${T.border}`, boxShadow: T.shadow }}>
 
-                  {/* On-chain categories (3, 6) — show params first, URL optional */}
+                  {/* On-chain categories (3, 6) — clean picker, no chain selector needed */}
                   {(form.category === 3 || form.category === 6) ? (
                     <div className="p-5 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-[0.10em]" style={{ color: T.em }}>
-                          On-chain verification
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                          style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
-                          No URL needed
+
+                      {/* Header */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[11px] font-bold uppercase tracking-[0.10em]" style={{ color: T.em }}>
+                            On-chain verification
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
+                            style={{ background: T.emBg, color: T.em, border: `1px solid ${T.border}` }}>
+                            No URL needed
+                          </span>
+                        </div>
+                        {/* Fixed chain badge */}
+                        <span className="flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg"
+                          style={{ background: T.panel, border: `1px solid ${T.border}`, color: T.textSub }}>
+                          <span className="h-1.5 w-1.5 rounded-full inline-block" style={{ background: T.em }}/>
+                          Ritual Testnet
                         </span>
                       </div>
-                      <p className="text-[12px]" style={{ color: T.textSub }}>
-                        {form.category === 3
-                          ? "The agent checks NFT ownership directly on-chain. Fill in the contract details below."
-                          : "The agent checks token balance directly on-chain via balanceOf(). Fill in the contract details below."}
-                      </p>
+
+                      {/* TOKEN CONTRACT — pre-filled for cat 6, custom input for cat 3 */}
+                      {form.category === 6 ? (
+                        <div className="space-y-2">
+                          <label className="block text-[12px] font-semibold" style={{ color: T.textSub }}>Token</label>
+
+                          {/* Ritual token pre-fill card */}
+                          {!customContract ? (
+                            <div>
+                              <button type="button" onClick={selectRitualToken}
+                                className="w-full flex items-center justify-between rounded-xl px-4 py-3 transition-all"
+                                style={onChainFields.contract === RITUAL_TOKEN.address
+                                  ? { background: T.emBg, border: `2px solid ${T.em}` }
+                                  : { background: T.panel, border: `1px solid ${T.border}` }
+                                }>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full text-[13px]"
+                                    style={{ background: T.em, color: "#fff", fontWeight: 700 }}>R</div>
+                                  <div className="text-left">
+                                    <p className="text-[13px] font-semibold" style={{ color: T.text }}>Ritual Testnet Token</p>
+                                    <p className="text-[11px] font-mono" style={{ color: T.textDim }}>
+                                      {RITUAL_TOKEN.address.slice(0,10)}…{RITUAL_TOKEN.address.slice(-6)}
+                                    </p>
+                                  </div>
+                                </div>
+                                {onChainFields.contract === RITUAL_TOKEN.address && (
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} style={{ color: T.em }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+                                  </svg>
+                                )}
+                              </button>
+                              <button type="button" onClick={() => setCustomContract(true)}
+                                className="mt-2 text-[11px] font-medium underline-offset-2 hover:underline"
+                                style={{ color: T.textDim }}>
+                                Use a different contract address →
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <TextInput
+                                value={onChainFields.contract}
+                                onChange={e => setOnChain("contract", e.target.value)}
+                                placeholder="0x... token contract address"
+                              />
+                              <button type="button" onClick={selectRitualToken}
+                                className="mt-2 text-[11px] font-medium underline-offset-2 hover:underline"
+                                style={{ color: T.textDim }}>
+                                ← Use Ritual Testnet Token
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* NFT — no known contract to pre-fill, just clean input */
+                        <div>
+                          <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                            NFT Contract Address <span style={{ color: "#dc2626" }}>*</span>
+                          </label>
+                          <p className="text-[11px] mb-1.5" style={{ color: T.textDim }}>
+                            The collection contract address on Ritual Testnet.
+                          </p>
+                          <TextInput
+                            value={onChainFields.contract}
+                            onChange={e => setOnChain("contract", e.target.value)}
+                            placeholder="0x..."
+                          />
+                        </div>
+                      )}
+
+                      {/* Token ID (NFT) or Min Balance (Token) */}
+                      {form.category === 3 ? (
+                        <div>
+                          <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                            Token ID
+                            <span className="font-normal ml-1" style={{ color: T.textDim }}>(optional)</span>
+                          </label>
+                          <p className="text-[11px] mb-1.5" style={{ color: T.textDim }}>
+                            Leave blank to verify ownership of any NFT from this collection.
+                          </p>
+                          <TextInput
+                            value={onChainFields.tokenId}
+                            onChange={e => setOnChain("tokenId", e.target.value)}
+                            placeholder="e.g. 42"
+                          />
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                            How many tokens is the seller sending you? <span style={{ color: "#dc2626" }}>*</span>
+                          </label>
+                          <p className="text-[11px] mb-1.5" style={{ color: T.textDim }}>
+                            The agent verifies your wallet received at least this many tokens before releasing escrow to the seller.
+                          </p>
+                          <TextInput
+                            type="number" min="0"
+                            value={onChainFields.minBalance}
+                            onChange={e => setOnChain("minBalance", e.target.value)}
+                            placeholder="e.g. 500"
+                          />
+                        </div>
+                      )}
+
+                      {/* Receiving wallet — always shown for on-chain deals */}
                       <div>
-                        <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
-                          Contract Details <span style={{ color: "#dc2626" }}>*</span>
+                        <label className="block text-[12px] font-semibold mb-1" style={{ color: T.textSub }}>
+                          Your receiving wallet <span style={{ color: "#dc2626" }}>*</span>
                         </label>
-                        <TextInput
-                          value={form.conditionParams}
-                          onChange={e => set("conditionParams", e.target.value)}
-                          placeholder={
-                            form.category === 3
-                              ? '{"nftContract":"0x...","tokenId":"42","chain":"eth"}'
-                              : '{"tokenContract":"0x...","minBalance":"100","chain":"eth"}'
-                          }
-                        />
-                        <p className="text-[11px] mt-1.5" style={{ color: T.textDim }}>
-                          Supported chains: eth · bsc · poly · ritual
+                        <p className="text-[11px] mb-1.5" style={{ color: T.textDim }}>
+                          {form.category === 3
+                            ? "The NFT must land in this wallet. The agent checks this address on-chain."
+                            : "The seller sends tokens to this address. The agent checks the balance here before releasing payment."}
                         </p>
-                      </div>
-                      <div>
-                        <label className="block text-[12px] font-semibold mb-1.5" style={{ color: T.textSub }}>
-                          Explorer URL <span className="font-normal" style={{ color: T.textDim }}>(optional fallback)</span>
-                        </label>
-                        <TextInput
-                          value={form.conditionUrl}
-                          onChange={e => set("conditionUrl", e.target.value)}
-                          placeholder="https://opensea.io/assets/... or leave blank"
-                        />
+                        {wallet && onChainFields.receiverWallet === wallet ? (
+                          <div>
+                            <div className="flex items-center justify-between rounded-xl px-4 py-3"
+                              style={{ background: T.emBg, border: `1px solid ${T.border}` }}>
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ background: T.em }} />
+                                <span className="text-[12px] font-mono" style={{ color: T.em }}>
+                                  {wallet.slice(0, 10)}…{wallet.slice(-8)}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: T.em, color: "#fff" }}>Connected</span>
+                            </div>
+                            <button type="button"
+                              onClick={() => setOnChain("receiverWallet", "")}
+                              className="mt-2 text-[11px] font-medium underline-offset-2 hover:underline"
+                              style={{ color: T.textDim }}>
+                              Use a different wallet address →
+                            </button>
+                          </div>
+                        ) : (
+                          <div>
+                            <TextInput
+                              value={onChainFields.receiverWallet}
+                              onChange={e => setOnChain("receiverWallet", e.target.value)}
+                              placeholder="0x..."
+                            />
+                            {wallet && (
+                              <button type="button"
+                                onClick={() => setOnChain("receiverWallet", wallet)}
+                                className="mt-2 text-[11px] font-medium underline-offset-2 hover:underline"
+                                style={{ color: T.textDim }}>
+                                ← Use my connected wallet
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : form.category === 10 ? (
@@ -800,8 +989,8 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
 
                   {/* Verification method */}
                   <div>
-                    <FieldLabel hint="OnChain and Dual verification are not available in this version.">
-                      Verification Method
+                    <FieldLabel hint="AI Auto: the agent fetches a URL and checks delivery automatically. Manual: both parties confirm.">
+                      How should delivery be verified?
                     </FieldLabel>
                     <div className="space-y-2">
                       {VERIFY_OPTIONS.map(opt => (
@@ -864,20 +1053,33 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                       <p className="text-[14px] font-bold" style={{ color: T.text }}>
                         {CATEGORY_LABELS[form.category]}
                       </p>
-                      <p className="text-[11px]" style={{ color: T.textDim }}>Category #{form.category}</p>
+                      <p className="text-[11px]" style={{ color: T.textDim }}>On-chain · Ritual Testnet</p>
                     </div>
                   </div>
                 )}
 
                 <ReviewRow label="Intent"       value={form.intent || "—"} />
                 <ReviewRow label="Condition URL" value={form.conditionUrl || "—"} />
-                {form.conditionParams && <ReviewRow label="Condition Params" value={form.conditionParams} />}
+                {form.conditionParams && (() => {
+                  try {
+                    const p = JSON.parse(form.conditionParams);
+                    if (p.tokenContract) return <>
+                      <ReviewRow label="Verification" value={`Token balance ≥ ${p.minBalance || "?"} on ritual`} />
+                      {p.receiverAddress && <ReviewRow label="Receiving wallet" value={p.receiverAddress} />}
+                    </>;
+                    if (p.nftContract) return <>
+                      <ReviewRow label="Verification" value={`Holds NFT${p.tokenId ? ` #${p.tokenId}` : ""} on ritual`} />
+                      {p.receiverAddress && <ReviewRow label="Receiving wallet" value={p.receiverAddress} />}
+                    </>;
+                  } catch {}
+                  return <ReviewRow label="Condition" value={form.conditionParams} />;
+                })()}
                 <ReviewRow label="Amount to Lock" value={`${form.amountEth} RITUAL`} highlight />
-                <ReviewRow label="Commit Fee"     value={`${form.commitFeePercent}%`} />
+                <ReviewRow label="Upfront fee"    value={`${form.commitFeePercent}%`} />
                 <ReviewRow label="Collateral"
                   value={COLLATERAL_OPTIONS.find(c => c.value === form.collateral)?.label ?? "None"} />
-                <ReviewRow label="Verification"
-                  value={VERIFY_OPTIONS.find(v => v.value === form.verificationMethod)?.label ?? "HTTP Fetch"} />
+                <ReviewRow label="Settlement"
+                  value={VERIFY_OPTIONS.find(v => v.value === form.verificationMethod)?.label ?? "AI Auto"} />
               </div>
 
               {/* Wallet guard */}
@@ -921,9 +1123,8 @@ export default function CreateDeal({ wallet, onConnect, onBack, onViewDeal }) {
                   style={{ accentColor: T.em }}
                 />
                 <span className="text-[12px] leading-relaxed" style={{ color: T.textSub }}>
-                  I understand that my funds will be locked in an escrow smart contract.
-                  The HTTP-fetch agent will verify delivery automatically — not a human intermediary.
-                  If verification fails, I can cancel and reclaim after the deadline.
+                  I understand that my funds will be locked in an escrow smart contract until the deal is verified or cancelled.
+                  The AI agent verifies delivery automatically — no human intermediary. If delivery isn't confirmed, I can cancel and reclaim my funds after the deadline.
                 </span>
               </label>
 

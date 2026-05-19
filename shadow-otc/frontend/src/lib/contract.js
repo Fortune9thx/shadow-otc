@@ -170,11 +170,26 @@ export async function createDeal({
   verificationMethod, // 0=HTTP 1=OnChain 2=Manual 3=Dual
   amountEth,       // RITUAL amount as string e.g. "0.1"
 }) {
+  // Security: guard parseEther against invalid input (issue #4)
+  let value;
+  try {
+    value = ethers.parseEther(String(amountEth));
+  } catch {
+    throw new Error("Invalid amount — please enter a valid number (e.g. 0.1)");
+  }
+  if (value <= 0n) throw new Error("Amount must be greater than zero");
   const contract = await getWriteContract();
-  const value    = ethers.parseEther(amountEth);
+  const hours   = Math.min(Math.max(Number(deadlineHours) || 72, 1), 2160); // 1h–90d (contract max=2160)
+  const fee     = Math.min(Math.max(Number(commitFeePercent) || 10, 0), 50); // 0–50%
   const tx = await contract.createDeal(
-    category, intent, conditionUrl, conditionParams ?? "{}",
-    87600000, commitFeePercent, collateral, verificationMethod,
+    Number(category),
+    String(intent),
+    String(conditionUrl ?? ""),
+    String(conditionParams ?? "{}"),
+    hours,
+    fee,
+    Number(collateral),
+    Number(verificationMethod),
     { value }
   );
   const receipt = await tx.wait();
@@ -188,7 +203,13 @@ export async function createDeal({
 /* ── seller accepts a deal ── */
 export async function acceptDeal(dealId, collateralEth = "0") {
   const contract = await getWriteContract();
-  const value    = ethers.parseEther(collateralEth);
+  // Security: guard parseEther against invalid input (issue #4)
+  let value;
+  try {
+    value = ethers.parseEther(String(collateralEth));
+  } catch {
+    throw new Error("Invalid collateral amount");
+  }
   const tx = await contract.acceptDeal(dealId, { value });
   return tx.wait();
 }
@@ -240,7 +261,13 @@ export async function fetchPlatformStats() {
 /* ── V3: add milestones to a deal ── */
 export async function addMilestones(dealId, descriptions, amountsEth) {
   const contract = await getWriteContract();
-  const amounts  = amountsEth.map(a => ethers.parseEther(String(a)));
+  // Security: guard parseEther against invalid input (issue #4)
+  let amounts;
+  try {
+    amounts = amountsEth.map(a => ethers.parseEther(String(a)));
+  } catch {
+    throw new Error("Invalid milestone amount — please enter valid numbers");
+  }
   const tx = await contract.addMilestones(dealId, descriptions, amounts);
   return tx.wait();
 }

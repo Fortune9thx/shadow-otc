@@ -25,3 +25,14 @@ Thumbs.db
 
 # PowerShell fix scripts (local tooling only)
 frontend/*.ps1
+
+.vercel
+.env*.local
+
+# Hardhat / Foundry artifacts
+artifacts/
+cache/
+typechain-types/
+
+# Local deploy tooling
+C:/tmp/

@@ -12,6 +12,23 @@ import {
 } from "../lib/supabase";
 import { ethers } from "ethers";
 
+/* ── security: only allow http/https URLs (issue #1) ── */
+function safeUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.protocol === "http:" || u.protocol === "https:") return url;
+  } catch {}
+  return null;
+}
+
+/* ── security: cryptographically secure room ID (issue #6) ── */
+function generateRoomId() {
+  const array = new Uint8Array(6);
+  crypto.getRandomValues(array);
+  return Array.from(array, b => b.toString(36).padStart(2, "0")).join("").toUpperCase().slice(0, 8);
+}
+
 /* ── constants ───────────────────────────────────────────────── */
 const API = import.meta.env.VITE_API_URL || "https://shadow-otc.onrender.com";
 
@@ -282,7 +299,8 @@ function OTCLobby({ wallet, onConnect, onBack, onEnterRoom }) {
   const [joinErr,   setJoinErr]   = useState("");
 
   function handleCreate() {
-    const id = Math.random().toString(36).slice(2, 10).toUpperCase();
+    // Security: use crypto.getRandomValues for unguessable room IDs (issue #6)
+    const id = generateRoomId();
     onEnterRoom(id);
   }
 
@@ -480,6 +498,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   const chatEndRef       = useRef(null);
   const chatContainerRef = useRef(null);
   const logEndRef        = useRef(null);
+  const submittingRef    = useRef(false); // Security: double-submit guard (issue #5)
 
   function enterRoom(id) {
     const clean = id.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -631,6 +650,14 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   /* ── BUYER: lock funds (createDeal) ─────────────────────── */
   async function handleLockFunds() {
     if (!wallet) { onConnect?.(); return; }
+    // Security: double-submit guard (issue #5)
+    if (submittingRef.current) return;
+    // Security: validate counterparty address if provided (issue #3)
+    if (form.counterparty && !ethers.isAddress(form.counterparty)) {
+      setError("Counterparty wallet address is invalid. Please enter a valid 0x… Ethereum address.");
+      return;
+    }
+    submittingRef.current = true;
     setError(null);
     setTxPending(true);
     setTxLabel("Locking funds in escrow…");
@@ -654,6 +681,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     } catch (e) {
       if (e?.code !== 4001) setError(e?.reason || e?.message || "Transaction failed");
     } finally {
+      submittingRef.current = false;
       setTxPending(false);
       setTxLabel("");
     }
@@ -662,6 +690,9 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
   /* ── SELLER: accept deal ─────────────────────────────────── */
   async function handleAccept() {
     if (!wallet) { onConnect?.(); return; }
+    // Security: double-submit guard (issue #5)
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setTxPending(true);
     setTxLabel("Accepting deal…");
@@ -675,6 +706,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     } catch (e) {
       if (e?.code !== 4001) setError(e?.reason || e?.message || "Transaction failed");
     } finally {
+      submittingRef.current = false;
       setTxPending(false);
       setTxLabel("");
     }
@@ -685,6 +717,9 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     e?.preventDefault();
     if (!proofUrl.trim()) { setError("Please enter a proof URL"); return; }
     if (!wallet) { onConnect?.(); return; }
+    // Security: double-submit guard (issue #5)
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError(null);
     setTxPending(true);
     setTxLabel("Submitting delivery proof…");
@@ -697,6 +732,7 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
     } catch (e) {
       if (e?.code !== 4001) setError(e?.reason || e?.message || "Transaction failed");
     } finally {
+      submittingRef.current = false;
       setTxPending(false);
       setTxLabel("");
     }
@@ -1032,8 +1068,8 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
                 <Alert>
                   📦 Seller submitted delivery proof. Click below to trigger the AI verification agent.
                 </Alert>
-                {chainDeal?.deliveryProof && (
-                  <a href={chainDeal.deliveryProof} target="_blank" rel="noreferrer"
+                {chainDeal?.deliveryProof && safeUrl(chainDeal.deliveryProof) && (
+                  <a href={safeUrl(chainDeal.deliveryProof)} target="_blank" rel="noreferrer"
                     className="flex items-center justify-between rounded-xl px-4 py-3"
                     style={{ background:T.panel, border:`1px solid ${T.border}` }}>
                     <span className="text-[12px]" style={{ color:T.textDim }}>Proof URL</span>
@@ -1154,16 +1190,22 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
                 </Alert>
                 <div className="space-y-3">
                   <Alert type="info">
-                    <p className="font-semibold mb-1">What counts as valid proof?</p>
+                    <p className="font-semibold mb-1">What to submit as proof</p>
                     <ul className="space-y-0.5 text-[11px]">
-                      {["On-chain transaction hash", "Token transfer confirmation", "Smart contract interaction URL", "Verifiable API endpoint"].map(i => (
+                      {[
+                        "A transaction link showing you sent tokens or an NFT",
+                        "A public link confirming you completed the task",
+                        "A screenshot link (Google Drive, Imgur) showing the work done",
+                        "Any public URL the buyer can open to confirm delivery",
+                      ].map(i => (
                         <li key={i} className="flex items-center gap-1.5"><span style={{ color:T.em }}>+</span>{i}</li>
                       ))}
                     </ul>
                   </Alert>
                   <form onSubmit={handleSubmitDelivery} className="space-y-3">
                     <Field label="Proof URL *">
-                      <Input type="url" placeholder="https://…" value={proofUrl} onChange={e=>setProofUrl(e.target.value)}/>
+                      {/* maxLength prevents layout attacks; safeUrl enforced on submit (issue #12) */}
+                      <Input type="url" placeholder="https://…" value={proofUrl} onChange={e=>setProofUrl(e.target.value)} maxLength={500}/>
                     </Field>
                     <Btn type="submit" full loading={txPending} disabled={txPending||!proofUrl}>
                       📤 Submit Delivery Proof
@@ -1187,8 +1229,8 @@ export default function PrivateDealRoom({ wallet, onConnect, onBack }) {
                     <strong>Verification in progress.</strong> The AI agent is checking your delivery. Funds will be released automatically upon confirmation.
                   </div>
                 </Alert>
-                {chainDeal?.deliveryProof && (
-                  <a href={chainDeal.deliveryProof} target="_blank" rel="noreferrer"
+                {chainDeal?.deliveryProof && safeUrl(chainDeal.deliveryProof) && (
+                  <a href={safeUrl(chainDeal.deliveryProof)} target="_blank" rel="noreferrer"
                     className="flex items-center justify-between rounded-xl px-4 py-3"
                     style={{ background:T.panel, border:`1px solid ${T.border}` }}>
                     <span className="text-[12px]" style={{ color:T.textDim }}>Your proof URL</span>

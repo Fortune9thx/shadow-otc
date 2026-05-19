@@ -197,19 +197,22 @@ function AgentFeed() {
         : (data.activity ?? data.logs ?? data.lines ?? []);
       if (raw.length) {
         // Normalize: items may be strings or {dealId, msg, ts} objects
-        const formatted = raw.slice(-20).map(item =>
-          typeof item === "string"
+        // Security: truncate each line to 200 chars to prevent layout attacks (issue #7)
+        const MAX_LINE = 200;
+        const formatted = raw.slice(-20).map(item => {
+          const line = typeof item === "string"
             ? item
-            : `[Deal #${item.dealId}] ${item.msg}`
-        );
+            : `[Deal #${item.dealId}] ${item.msg}`;
+          return String(line).slice(0, MAX_LINE);
+        });
         setLines(formatted);
       }
     } catch {
       // backend may be down; show placeholder
       setLines(prev => prev.length ? prev : [
-        "[agent] Waiting for delivery submissions...",
-        "[chain] Connected to Ritual Testnet (1979)",
-        "[agent] HTTP-fetch verifier idle",
+        "Agent online — waiting for deals to verify",
+        "Connected to Ritual Testnet",
+        "No activity yet — create a deal to see live logs here",
       ]);
     } finally {
       setLoading(false);
@@ -243,9 +246,9 @@ function AgentFeed() {
           <span className="text-[12px] font-bold" style={{ color: "rgba(255,255,255,0.88)" }}>
             Agent Activity Feed
           </span>
-          <span className="text-[11px] font-mono px-2 py-0.5 rounded"
+          <span className="text-[11px] font-semibold px-2 py-0.5 rounded"
             style={{ background: "rgba(74,222,128,0.12)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.20)" }}>
-            HTTP-FETCH
+            Live
           </span>
         </div>
         <span className="text-[10px] font-mono" style={{ color: "rgba(255,255,255,0.30)" }}>
@@ -487,8 +490,20 @@ export default function Homepage({
             ))}
           </nav>
 
-          {/* Right */}
+          {/* Right — order: Create Deal → Wallet → Hamburger */}
           <div className="ml-auto flex items-center gap-2">
+            <button onClick={onCreateListing}
+              className="rounded-xl px-3 py-1.5 sm:px-4 text-[12px] sm:text-[13px] font-semibold text-white transition-all active:scale-[0.98] flex items-center gap-1.5"
+              style={{ background: T.em, boxShadow: "0 4px 12px rgba(11,107,75,0.15)" }}
+              onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.08)"}
+              onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
+              <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span className="hidden xs:inline sm:inline">Create Deal</span>
+              <span className="sm:hidden">Deal</span>
+            </button>
+
             {wallet ? (
               <button onClick={onDashboard}
                 className="flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[12px] font-medium transition-all"
@@ -508,18 +523,6 @@ export default function Homepage({
                 Connect Wallet
               </button>
             )}
-
-            <button onClick={onCreateListing}
-              className="rounded-xl px-3 py-1.5 sm:px-4 text-[12px] sm:text-[13px] font-semibold text-white transition-all active:scale-[0.98] flex items-center gap-1.5"
-              style={{ background: T.em, boxShadow: "0 4px 12px rgba(11,107,75,0.15)" }}
-              onMouseEnter={e => e.currentTarget.style.filter = "brightness(1.08)"}
-              onMouseLeave={e => e.currentTarget.style.filter = "brightness(1)"}>
-              <svg className="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              <span className="hidden xs:inline sm:inline">Create Deal</span>
-              <span className="sm:hidden">Deal</span>
-            </button>
 
             {/* Hamburger */}
             <button
@@ -548,7 +551,52 @@ export default function Homepage({
         {mobileNav && (
           <div className="md:hidden"
             style={{ borderTop: `1px solid ${T.border}`, background: "rgba(230,235,233,0.98)", backdropFilter: "blur(20px)" }}>
-            <div className="px-4 py-3 flex flex-col gap-1">
+            <div className="px-4 pt-4 pb-3 flex flex-col gap-1">
+
+              {/* ── Profile card ── */}
+              {(() => {
+                const h1 = Math.floor((wallet ? parseInt(wallet.slice(2, 4), 16) : 160) * 1.41) % 360;
+                const h2 = (h1 + 120) % 360;
+                const avatarBg = `linear-gradient(135deg,hsl(${h1},65%,44%),hsl(${h2},60%,35%))`;
+                return (
+                  <div className="mb-3 rounded-2xl p-3.5 flex items-center gap-3"
+                    style={{ background: "rgba(11,107,75,0.07)", border: `1px solid ${T.border}`, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    <div className="flex-shrink-0 flex items-center justify-center rounded-full text-white font-bold"
+                      style={{
+                        width: 46, height: 46,
+                        background: wallet ? avatarBg : `linear-gradient(135deg,#0B6B4B,#084C38)`,
+                        border: "2.5px solid rgba(255,255,255,0.45)",
+                        boxShadow: "0 2px 10px rgba(0,0,0,0.18)",
+                        fontSize: 18,
+                      }}>
+                      {wallet ? wallet.slice(2, 3).toUpperCase() : "?"}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-bold truncate" style={{ color: T.text }}>
+                        {wallet ? `${wallet.slice(0,6)}...${wallet.slice(-4)}` : "Not connected"}
+                      </p>
+                      <p className="text-[11px] font-mono mt-0.5 truncate" style={{ color: T.textDim }}>
+                        {wallet ? "Ritual Testnet · Chain 1979" : "Connect wallet to start"}
+                      </p>
+                    </div>
+                    {wallet ? (
+                      <button onClick={() => { onDashboard?.(); setMobileNav(false); }}
+                        className="flex-shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-xl transition-all active:scale-[0.96]"
+                        style={{ background: T.em, color: "#fff", boxShadow: "0 2px 8px rgba(11,107,75,0.22)" }}>
+                        Profile →
+                      </button>
+                    ) : (
+                      <button onClick={() => { onConnect?.(); setMobileNav(false); }}
+                        className="flex-shrink-0 text-[11px] font-semibold px-3 py-1.5 rounded-xl transition-all"
+                        style={{ background: T.em, color: "#fff" }}>
+                        Connect
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* ── Nav items ── */}
               {[
                 { label: "Market",         fn: () => { onMarket?.();       setMobileNav(false); }, icon: "M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" },
                 { label: "My Deals",       fn: () => { onDashboard?.();    setMobileNav(false); }, icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" },

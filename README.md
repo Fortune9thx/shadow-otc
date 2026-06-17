@@ -1,20 +1,17 @@
-# Shadow OTC — The Future of Trustless Deal Execution on Ritual Chain
-
----
+# Shadow OTC : The Future of Trustless Deal Execution on Ritual Chain
 
 ## What is Shadow OTC?
 
-Shadow OTC is an autonomous over-the-counter deal protocol built natively on Ritual Chain. It enables two parties to negotiate, execute, and settle any deal — from social media promotions to NFT whitelist transfers to token allocations — without a middleman, without a centralized platform, and without trusting each other.
+Shadow OTC is an autonomous over the counter deal protocol built natively on Ritual Chain. It enables two parties to negotiate, execute, and settle any deal from social media promotions to NFT whitelist transfers to token allocations,  without a middleman, without a centralized platform, and without trusting each other.
 
-Every deal is governed by a smart contract. Every payment is locked in escrow. Every condition is verified by an AI agent that reads the real world via HTTP. Every settlement happens automatically on-chain the moment the condition is met.
+Every deal is governed by a smart contract. Every payment is locked in escrow. Every condition is verified by an AI agent that reads the real world via HTTP. Every settlement happens automatically on chain the moment the condition is met.
 
 No one can steal your funds. No one can fake a delivery. No one can disappear after receiving payment. The protocol enforces everything.
 
----
 
 ## The Problem with Traditional OTC
 
-Over-the-counter deals have existed in crypto for years. They are private agreements between two parties to exchange value outside of public markets. The problem is that they have always depended entirely on trust — and trust in crypto is a liability.
+Over the counter deals have existed in crypto for years. They are private agreements between two parties to exchange value outside of public markets. The problem is that they have always depended entirely on trust and trust in crypto is a liability.
 
 Here is how traditional OTC deals fail:
 
@@ -30,21 +27,19 @@ Here is how traditional OTC deals fail:
 
 Shadow OTC eliminates every one of these problems.
 
----
-
 ## How Shadow OTC Works
 
-Shadow OTC replaces the human middleman with three autonomous AI agents and a smart contract. The entire deal lifecycle — from creation to verification to payment — runs on Ritual Chain with no human intervention required.
+Shadow OTC replaces the human middleman with three autonomous AI agents and a smart contract. The entire deal lifecycle, from creation to verification to payment runs on Ritual Chain with no human intervention required.
 
 ### The Deal Lifecycle
 
-**Step 1 — Buyer creates a deal.**
+**Step 1 Buyer creates a deal.**
 The buyer describes the task, sets a budget, chooses a deadline, and locks their payment in the smart contract. The funds are now in escrow and neither party can touch them until the deal is resolved.
 
-**Step 2 — Seller accepts.**
+**Step 2  Seller accepts.**
 The seller reads the deal on-chain, evaluates the offer, and accepts by depositing collateral. The collateral is their skin in the game. If they fail to deliver, they lose it. If they succeed, it comes back to them along with the payment.
 
-**Step 3 — Seller completes the task and submits proof.**
+**Step 3  Seller completes the task and submits proof.**
 Once the work is done, the seller submits a proof URL — a link to the tweet with 50 likes, the allowlist checker showing the buyer's wallet, the GitHub PR, the live website. This proof is recorded on-chain.
 
 **Step 4 — Verifier agent checks the condition.**
@@ -55,7 +50,6 @@ If the condition is met, the smart contract releases payment to the seller and r
 
 Everything is on-chain. Everything is transparent. Everything is final.
 
----
 
 ## The 12 Deal Categories
 
@@ -96,8 +90,6 @@ Any two-party exchange of value where the outcome can be posted at a URL can be 
 
 ### Conditional Payments
 The most flexible category. Any payment that should only execute if a specific condition on the internet is true. A GitHub repo reaching 100 stars. A token listing above a certain price. A product going live on a specific date. Shadow OTC handles all of it.
-
----
 
 ## How Ritual Chain Makes This Possible
 
